@@ -6,7 +6,7 @@ A modern web application for Jewish women's Halachic calendar tracking, built wi
 
 Luach Tahara is a comprehensive web-based tool for tracking the Jewish laws of family purity (Taharat HaMishpacha). It helps users manage entries (ראיות), calculate flagged dates (זמני שמירה), track patterns (וסתות/Kavuahs), and maintain tahara events (הפסק טהרה, בדיקות, מקווה).
 
-This project is a modern web reimagining of the [Luach React Native app](https://github.com/cbsom/Luach_RN60), featuring a beautiful glassmorphism UI, full Hebrew/English bilingual support, and progressive web app capabilities.
+This project is a modern web reimagining of the [Luach React Native app](https://github.com/ComputeHalacha/Luach), featuring a beautiful glassmorphism UI, full Hebrew/English bilingual support, and progressive web app capabilities.
 
 ## ✨ Current Features (Implemented)
 
@@ -344,7 +344,7 @@ This project is private and proprietary.
 
 ## 🙏 Acknowledgments
 
-- Based on the [Luach React Native app](https://github.com/cbsom/Luach_RN60)
+- Based on the [Luach React Native app](https://github.com/ComputeHalacha/Luach)
 - Uses the [jcal-zmanim](https://github.com/cbsom/jcal-zmanim) library
 - Inspired by the need for a modern, accessible tahara tracking tool
 
