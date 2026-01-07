@@ -1,0 +1,30 @@
+/* Language Switcher Styles */
+.language-switcher {
+  display: inline-block;
+}
+
+.language-select {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 0.375rem;
+  background-color: var(--bg-color, white);
+  color: var(--text-color, #333);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.language-select:hover {
+  border-color: var(--primary-color, #3b82f6);
+}
+
+.language-select:focus {
+  outline: none;
+  border-color: var(--primary-color, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* RTL Support */
+[dir='rtl'] .language-select {
+  text-align: right;
+}

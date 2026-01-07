@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/services/firebase/auth.ts","./src/services/firebase/config.ts","./src/services/firebase/firestore.ts","./src/services/firebase/index.ts","./src/stores/authstore.ts","./src/types/index.ts"],"errors":true,"version":"5.9.3"}

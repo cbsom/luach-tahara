@@ -1,0 +1,138 @@
+{
+  "app": {
+    "name": "Luach Tahara",
+    "tagline": "Niddah Tracking & Halachic Calendar"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "close": "Close",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "yes": "Yes",
+    "no": "No",
+    "optional": "Optional",
+    "required": "Required"
+  },
+  "navigation": {
+    "home": "Home",
+    "calendar": "Calendar",
+    "entries": "Entries",
+    "kavuahs": "Kavuahs",
+    "settings": "Settings",
+    "help": "Help"
+  },
+  "calendar": {
+    "today": "Today",
+    "month": "Month",
+    "year": "Year",
+    "jewishDate": "Jewish Date",
+    "secularDate": "Secular Date",
+    "showJewish": "Show Jewish Calendar",
+    "showSecular": "Show Secular Calendar"
+  },
+  "entry": {
+    "title": "Entry",
+    "newEntry": "New Entry",
+    "editEntry": "Edit Entry",
+    "deleteEntry": "Delete Entry",
+    "date": "Date",
+    "time": "Time",
+    "onah": "Onah",
+    "day": "Day",
+    "night": "Night",
+    "haflaga": "Haflaga",
+    "comments": "Comments",
+    "ignoreForFlaggedDates": "Ignore for flagged dates",
+    "ignoreForKavuah": "Ignore for Kavuah calculations",
+    "hefsekTahara": "Hefsek Tahara",
+    "bedikos": "Bedikos",
+    "mikvah": "Mikvah"
+  },
+  "kavuah": {
+    "title": "Kavuah",
+    "kavuahs": "Kavuahs",
+    "newKavuah": "New Kavuah",
+    "active": "Active",
+    "inactive": "Inactive",
+    "ignored": "Ignored",
+    "types": {
+      "haflagah": "Haflaga",
+      "dayOfMonth": "Day of Month",
+      "dayOfWeek": "Day of Week",
+      "sirug": "Sirug",
+      "dilugHaflaga": "Dilug Haflaga",
+      "dilugDayOfMonth": "Dilug Day of Month",
+      "haflagaOnahs": "Haflaga of Onahs"
+    },
+    "cancelsOnahBeinunis": "Cancels Onah Beinonis"
+  },
+  "flaggedDates": {
+    "title": "Flagged Dates",
+    "zmaneiShemira": "Zmanei Shemira",
+    "noFlaggedDates": "No flagged dates",
+    "onahBeinonis": "Onah Beinonis",
+    "yomHachodesh": "Yom Hachodesh",
+    "thirtieth": "Thirtieth Day",
+    "thirtyFirst": "Thirty First Day",
+    "ohrZarua": "Ohr Zarua"
+  },
+  "settings": {
+    "title": "Settings",
+    "general": "General",
+    "halachic": "Halachic Settings",
+    "location": "Location",
+    "language": "Language",
+    "theme": "Theme",
+    "notifications": "Notifications",
+    "keepThirtyOne": "Keep day 31",
+    "onahBeinunis24Hours": "24-hour Onah Beinonis",
+    "showOhrZeruah": "Show Ohr Zarua",
+    "keepLongerHaflagah": "Keep longer Haflagas (Ta\"z)",
+    "haflagaOfOnahs": "Haflaga of Onahs",
+    "kavuahDiffOnahs": "Allow Kavuahs with different Onahs",
+    "numberMonthsAheadToWarn": "Months ahead to calculate"
+  },
+  "errors": {
+    "generic": "An error occurred",
+    "networkError": "Network error. Please check your connection.",
+    "notFound": "Not found",
+    "unauthorized": "Unauthorized",
+    "validation": "Please check your input",
+    "polarRegion": "Cannot calculate sun times for polar regions during certain times of year"
+  },
+  "dates": {
+    "months": {
+      "nissan": "Nissan",
+      "iyar": "Iyar",
+      "sivan": "Sivan",
+      "tamuz": "Tamuz",
+      "av": "Av",
+      "elul": "Elul",
+      "tishrei": "Tishrei",
+      "cheshvan": "Cheshvan",
+      "kislev": "Kislev",
+      "teves": "Teves",
+      "shevat": "Shevat",
+      "adar": "Adar",
+      "adarI": "Adar I",
+      "adarII": "Adar II"
+    },
+    "daysOfWeek": {
+      "sunday": "Sunday",
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Shabbos"
+    }
+  }
+}

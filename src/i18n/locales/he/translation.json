@@ -1,0 +1,138 @@
+{
+  "app": {
+    "name": "לוח טהרה",
+    "tagline": "מעקב נידה ולוח הלכתי"
+  },
+  "common": {
+    "save": "שמור",
+    "cancel": "בטל",
+    "delete": "מחק",
+    "edit": "ערוך",
+    "add": "הוסף",
+    "close": "סגור",
+    "confirm": "אשר",
+    "back": "חזור",
+    "next": "הבא",
+    "loading": "טוען...",
+    "error": "שגיאה",
+    "success": "הצלחה",
+    "yes": "כן",
+    "no": "לא",
+    "optional": "אופציונלי",
+    "required": "חובה"
+  },
+  "navigation": {
+    "home": "בית",
+    "calendar": "לוח",
+    "entries": "ראיות",
+    "kavuahs": "וסתות",
+    "settings": "הגדרות",
+    "help": "עזרה"
+  },
+  "calendar": {
+    "today": "היום",
+    "month": "חודש",
+    "year": "שנה",
+    "jewishDate": "תאריך עברי",
+    "secularDate": "תאריך לועזי",
+    "showJewish": "הצג לוח עברי",
+    "showSecular": "הצג לוח לועזי"
+  },
+  "entry": {
+    "title": "ראייה",
+    "newEntry": "ראייה חדשה",
+    "editEntry": "ערוך ראייה",
+    "deleteEntry": "מחק ראייה",
+    "date": "תאריך",
+    "time": "שעה",
+    "onah": "עונה",
+    "day": "יום",
+    "night": "לילה",
+    "haflaga": "הפלגה",
+    "comments": "הערות",
+    "ignoreForFlaggedDates": "התעלם לזמני שמירה",
+    "ignoreForKavuah": "התעלם לחישוב וסת",
+    "hefsekTahara": "הפסק טהרה",
+    "bedikos": "בדיקות",
+    "mikvah": "מקווה"
+  },
+  "kavuah": {
+    "title": "וסת",
+    "kavuahs": "וסתות",
+    "newKavuah": "וסת חדש",
+    "active": "פעיל",
+    "inactive": "לא פעיל",
+    "ignored": "מתעלם",
+    "types": {
+      "haflagah": "הפלגה",
+      "dayOfMonth": "יום החודש",
+      "dayOfWeek": "יום בשבוע",
+      "sirug": "סירוג",
+      "dilugHaflaga": "דילוג הפלגה",
+      "dilugDayOfMonth": "דילוג יום החודש",
+      "haflagaOnahs": "הפלגת עונות"
+    },
+    "cancelsOnahBeinunis": "מבטל עונה בינונית"
+  },
+  "flaggedDates": {
+    "title": "תאריכים מסומנים",
+    "zmaneiShemira": "זמני שמירה",
+    "noFlaggedDates": "אין תאריכים מסומנים",
+    "onahBeinonis": "עונה בינונית",
+    "yomHachodesh": "יום החודש",
+    "thirtieth": "יום שלושים",
+    "thirtyFirst": "יום שלושים ואחד",
+    "ohrZarua": "אור זרוע"
+  },
+  "settings": {
+    "title": "הגדרות",
+    "general": "כללי",
+    "halachic": "הגדרות הלכתיות",
+    "location": "מיקום",
+    "language": "שפה",
+    "theme": "ערכת נושא",
+    "notifications": "התראות",
+    "keepThirtyOne": "שמור יום 31",
+    "onahBeinunis24Hours": "עונה בינונית 24 שעות",
+    "showOhrZeruah": "הצג אור זרוע",
+    "keepLongerHaflagah": "שמור הפלגות ארוכות (ט\"ז)",
+    "haflagaOfOnahs": "הפלגת עונות",
+    "kavuahDiffOnahs": "אפשר וסתות עם עונות שונות",
+    "numberMonthsAheadToWarn": "חודשים קדימה לחישוב"
+  },
+  "errors": {
+    "generic": "אירעה שגיאה",
+    "networkError": "שגיאת רשת. אנא בדוק את החיבור שלך.",
+    "notFound": "לא נמצא",
+    "unauthorized": "לא מורשה",
+    "validation": "אנא בדוק את הקלט שלך",
+    "polarRegion": "לא ניתן לחשב זמני שמש לאזורים קוטביים בתקופות מסוימות בשנה"
+  },
+  "dates": {
+    "months": {
+      "nissan": "ניסן",
+      "iyar": "אייר",
+      "sivan": "סיון",
+      "tamuz": "תמוז",
+      "av": "אב",
+      "elul": "אלול",
+      "tishrei": "תשרי",
+      "cheshvan": "חשוון",
+      "kislev": "כסלו",
+      "teves": "טבת",
+      "shevat": "שבט",
+      "adar": "אדר",
+      "adarI": "אדר א'",
+      "adarII": "אדר ב'"
+    },
+    "daysOfWeek": {
+      "sunday": "ראשון",
+      "monday": "שני",
+      "tuesday": "שלישי",
+      "wednesday": "רביעי",
+      "thursday": "חמישי",
+      "friday": "שישי",
+      "saturday": "שבת"
+    }
+  }
+}
