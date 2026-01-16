@@ -4,6 +4,7 @@ import { UserEvent, Themes } from '../types-luach-web';
 import { CalendarDay } from './CalendarDay';
 import { Entry } from '../types';
 import { fromJDate } from '../lib/jcal';
+import { ProblemOnah } from '../lib/chashavshavon/ProblemOnah';
 
 interface CalendarProps {
   lang: 'en' | 'he';
@@ -21,6 +22,7 @@ interface CalendarProps {
   calendarView: 'jewish' | 'secular';
   theme: Themes;
   entries?: Entry[];
+  flaggedOnahs?: ProblemOnah[];
 }
 
 export const Calendar: React.FC<CalendarProps> = ({
@@ -36,6 +38,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   today,
   calendarView,
   entries,
+  flaggedOnahs,
 }) => {
   return (
     <main className="calendar-container">
@@ -80,13 +83,16 @@ export const Calendar: React.FC<CalendarProps> = ({
                 e.date.day === targetDate.day
             );
 
+            // Filter Flagged Dates
+            // Use simplified comparison to avoid issues with different jDate instances
+            const dayFlaggedOnahs = flaggedOnahs?.filter(po => po.jdate.Abs === date.Abs) || [];
+
             // Filter user events
             const dayEvents = getEventsForDate(date);
 
             // Holiday info
             const isYomTov = date.isYomTov(location.Israel);
             const isShabbos = date.getDayOfWeek() === 6;
-            // const holidayName = Utils.getJewishHoliday(date, location.Israel);
             const holidayName = undefined;
 
             return (
@@ -100,7 +106,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                 calendarView={calendarView}
                 lang={lang as 'en' | 'he'}
                 taharaEvents={[]}
-                flaggedOnahs={[]}
+                flaggedOnahs={dayFlaggedOnahs}
                 userEvents={dayEvents}
                 isHoliday={isYomTov}
                 isShabbos={isShabbos}

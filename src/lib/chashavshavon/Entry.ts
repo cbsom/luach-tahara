@@ -29,15 +29,15 @@ export default class Entry {
         entryId?: string,
         ignoreForFlaggedDates?: boolean,
         ignoreForKavuah?: boolean,
-        comments?: string
+        comments?: string,
+        haflaga?: number
     ) {
         this.onah = onah;
         this.entryId = entryId;
         this.ignoreForFlaggedDates = !!ignoreForFlaggedDates;
         this.ignoreForKavuah = !!ignoreForKavuah;
         this.comments = comments;
-        // Initial value only...
-        this._haflaga = 0;
+        this._haflaga = haflaga || 0;
     }
 
     /**
@@ -49,10 +49,11 @@ export default class Entry {
         entryId?: string,
         ignoreForFlaggedDates?: boolean,
         ignoreForKavuah?: boolean,
-        comments?: string
+        comments?: string,
+        haflaga?: number
     ): Entry {
         const onahObj = Onah.fromJewishDate(jewishDate, onah);
-        return new Entry(onahObj, entryId, ignoreForFlaggedDates, ignoreForKavuah, comments);
+        return new Entry(onahObj, entryId, ignoreForFlaggedDates, ignoreForKavuah, comments, haflaga);
     }
 
     /**
@@ -275,6 +276,10 @@ export default class Entry {
 
     get hasId(): boolean {
         return !!this.entryId;
+    }
+
+    get id(): string {
+        return this.entryId || '';
     }
 
     get haflaga(): number {
