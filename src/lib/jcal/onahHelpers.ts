@@ -1,6 +1,6 @@
 // Onah (Day/Night) Helper Functions
 import { Location, Zmanim } from 'jcal-zmanim';
-import { JewishDate } from '@/types';
+import { JewishDate, NightDay } from '@/types';
 import { toJDate } from './dateHelpers';
 import { Time } from './zmanimHelpers';
 
@@ -52,10 +52,10 @@ export interface OnahBoundaries {
  * Determine the Onah (day or night) based on a JavaScript Date and location
  * @param jsDate The JavaScript Date to check
  * @param location The location for calculating sunrise/sunset
- * @returns 'day' or 'night'
+ * @returns NightDay.Night or NightDay.Day
  * @throws {Error} If sun times cannot be calculated
  */
-export const determineOnah = (jsDate: Date, location: Location): Onah => {
+export const determineOnah = (jsDate: Date, location: Location): NightDay => {
     // Get the Jewish date for this time
     const jd = toJDate({
         year: jsDate.getFullYear(),
@@ -75,11 +75,11 @@ export const determineOnah = (jsDate: Date, location: Location): Onah => {
 
     // If time is between sunset and sunrise (next day), it's night onah
     if (currentMinutes >= sunsetMinutes || currentMinutes < sunriseMinutes) {
-        return 'night';
+        return NightDay.Night;
     }
 
     // Otherwise it's day onah
-    return 'day';
+    return NightDay.Day;
 };
 
 /**
@@ -106,22 +106,22 @@ export const getOnahBoundaries = (
 /**
  * Get the opposite Onah
  */
-export const getOppositeOnah = (onah: Onah): Onah => {
-    return onah === 'day' ? 'night' : 'day';
+export const getOppositeOnah = (onah: NightDay): NightDay => {
+    return onah === NightDay.Day ? NightDay.Night : NightDay.Day;
 };
 
 /**
  * Format Onah as display string
  */
-export const formatOnah = (onah: Onah): string => {
-    return onah === 'day' ? 'Day' : 'Night';
+export const formatOnah = (onah: NightDay): string => {
+    return onah === NightDay.Day ? 'Day' : 'Night';
 };
 
 /**
  * Get Onah icon/emoji
  */
-export const getOnahIcon = (onah: Onah): string => {
-    return onah === 'day' ? '☀️' : '🌙';
+export const getOnahIcon = (onah: NightDay): string => {
+    return onah === NightDay.Day ? '☀️' : '🌙';
 };
 
 /**
@@ -132,7 +132,7 @@ export const getOnahForTime = (
     time: Date,
     jewishDate: JewishDate,
     location: Location
-): Onah => {
+): NightDay => {
     const boundaries = getOnahBoundaries(jewishDate, location);
 
     // Extract just the time portion for comparison
@@ -142,10 +142,10 @@ export const getOnahForTime = (
 
     // If time is between sunrise and sunset, it's day
     if (timeInMinutes >= sunriseInMinutes && timeInMinutes < sunsetInMinutes) {
-        return 'day';
+        return NightDay.Day;
     }
 
-    return 'night';
+    return NightDay.Night;
 };
 
 /**

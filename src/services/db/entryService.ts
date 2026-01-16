@@ -1,12 +1,12 @@
 // Entry Service - CRUD operations for entries
 import { getDB, type LuachTaharaDB } from './schema';
-import type { JewishDate } from '@/types';
+import type { JewishDate, NightDay } from '@/types';
 import { nanoid } from 'nanoid';
 
 export interface EntryData {
     id?: string;
     jewishDate: JewishDate;
-    onah: Onah;
+    onah: NightDay;
     haflaga: number;
     ignoreForFlaggedDates: boolean;
     ignoreForKavuah: boolean;

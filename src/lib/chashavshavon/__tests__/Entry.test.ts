@@ -282,7 +282,7 @@ describe('Entry', () => {
     describe('fromJewishDate', () => {
         it('should create Entry from JewishDate interface', () => {
             const jewishDate = { year: 5784, month: 1, day: 15 };
-            const entry = Entry.fromJewishDate(jewishDate, 'day', 'entry-1', false, false, 'Test');
+            const entry = Entry.fromJewishDate(jewishDate, NightDay.Day, 'entry-1', false, false, 'Test');
 
             expect(entry.year).toBe(5784);
             expect(entry.month).toBe(1);
@@ -305,7 +305,7 @@ describe('Entry', () => {
             expect(converted.jewishDate.year).toBe(5784);
             expect(converted.jewishDate.month).toBe(1);
             expect(converted.jewishDate.day).toBe(15);
-            expect(converted.onah).toBe('night');
+            expect(converted.onah).toBe(NightDay.Night);
             expect(converted.id).toBe('entry-1');
             expect(converted.haflaga).toBe(0);
             expect(converted.ignoreForFlaggedDates).toBe(false);

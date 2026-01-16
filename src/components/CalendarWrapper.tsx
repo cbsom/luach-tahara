@@ -1,9 +1,12 @@
 // Simplified Calendar wrapper for luach-tahara
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { jDate } from 'jcal-zmanim';
 import { Calendar as LuachWebCalendar } from './Calendar';
-import { Themes } from '../types-luach-web';
+import { Themes, type UserEvent } from '../types-luach-web';
 import type { Location } from 'jcal-zmanim';
+import { EntryForm } from './EntryForm';
+import { useEntries } from '../services/db/hooks';
+import type { Entry } from '../types';
 
 interface CalendarWrapperProps {
   currentJDate: jDate;
@@ -16,8 +19,8 @@ interface CalendarWrapperProps {
   onDayClick: (date: jDate) => void;
   location: Location;
   lang: string;
-  events: any[];
-  getEventsForDate: (date: jDate) => any[];
+  events?: any[];
+  getEventsForDate?: (date: jDate) => any[];
 }
 
 export function Calendar({
@@ -30,6 +33,31 @@ export function Calendar({
   getEventsForDate,
 }: CalendarWrapperProps) {
   const today = new jDate();
+
+  // DB Hooks
+  const { entries: entryRecords, addEntry, modifyEntry, removeEntry } = useEntries();
+
+  // Transform EntryRecord to Entry
+  const entries: Entry[] = useMemo(
+    () =>
+      entryRecords.map(r => ({
+        id: r.id,
+        date: r.jewishDate,
+        onah: r.onah,
+        haflaga: r.haflaga,
+        ignoreForFlaggedDates: r.ignoreForFlaggedDates,
+        ignoreForKavuah: r.ignoreForKavuah,
+        notes: r.comments,
+        createdAt: r.createdAt,
+        updatedAt: r.updatedAt,
+      })),
+    [entryRecords]
+  );
+
+  // Entry Form State
+  const [isEntryFormOpen, setIsEntryFormOpen] = useState(false);
+  const [entryFormInitialDate, setEntryFormInitialDate] = useState<jDate | undefined>(undefined);
+  const [editingEntry, setEditingEntry] = useState<Entry | undefined>(undefined);
 
   // Calculate month info
   const monthInfo = useMemo(() => {
@@ -71,36 +99,87 @@ export function Calendar({
     };
   }, [currentJDate, calendarView]);
 
+  // Open form for new entry
+  const handleAddNewEntry = (date: jDate) => {
+    setEntryFormInitialDate(date);
+    setEditingEntry(undefined);
+    setIsEntryFormOpen(true);
+  };
+
+  // Open form for existing entry
+  const handleEditEntry = (entry: Entry) => {
+    setEditingEntry(entry);
+    setEntryFormInitialDate(undefined);
+    setIsEntryFormOpen(true);
+  };
+
+  // Handle form save
+  const handleSaveEntry = async (entry: Entry) => {
+    // Map to EntryData format expected by hook
+    const entryData = {
+      id: entry.id,
+      jewishDate: entry.date,
+      onah: entry.onah,
+      haflaga: entry.haflaga || 0,
+      ignoreForFlaggedDates: entry.ignoreForFlaggedDates || false,
+      ignoreForKavuah: entry.ignoreForKavuah || false,
+      comments: entry.notes,
+    };
+
+    if (editingEntry) {
+      await modifyEntry(entry.id, entryData);
+    } else {
+      await addEntry(entryData);
+    }
+  };
+
+  // Handle delete
+  const handleDeleteEntry = async (entry: Entry) => {
+    await removeEntry(entry.id);
+  };
+
   const textInLanguage = {
-    addEvent: lang === 'he' ? 'הוסף אירוע' : 'Add Event',
+    addEvent: lang === 'he' ? 'הוסף ראייה' : 'Add Entry',
   };
 
   return (
-    <LuachWebCalendar
-      lang={lang as 'en' | 'he'}
-      textInLanguage={textInLanguage}
-      currentJDate={currentJDate}
-      monthInfo={monthInfo}
-      selectedJDate={selectedJDate}
-      location={location}
-      setSelectedJDate={onDayClick}
-      handleAddNewEventForDate={(e, date) => {
-        e.stopPropagation();
-        console.log('Add event for date:', date.toString());
-        // TODO: Open entry form
-      }}
-      handleEditEvent={(event, date) => {
-        console.log('Edit event:', event, 'for date:', date.toString());
-        // TODO: Open event edit modal
-      }}
-      getEventsForDate={getEventsForDate}
-      navigateMonth={direction => {
-        console.log('Navigate month:', direction);
-        // Handled by parent
-      }}
-      today={today}
-      calendarView={calendarView}
-      theme={Themes.Warm}
-    />
+    <>
+      <LuachWebCalendar
+        lang={lang as 'en' | 'he'}
+        textInLanguage={textInLanguage}
+        currentJDate={currentJDate}
+        monthInfo={monthInfo}
+        selectedJDate={selectedJDate}
+        location={location}
+        setSelectedJDate={onDayClick}
+        handleAddNewEventForDate={(e, date) => {
+          e?.stopPropagation();
+          handleAddNewEntry(date);
+        }}
+        handleEditEvent={(event: UserEvent | Entry, date: jDate) => {
+          // Check if it's an entry
+          if ('date' in event) {
+            handleEditEntry(event as Entry);
+          }
+        }}
+        getEventsForDate={getEventsForDate || (() => [])}
+        navigateMonth={() => {}}
+        today={today}
+        calendarView={calendarView}
+        theme={Themes.Warm}
+        entries={entries}
+      />
+
+      <EntryForm
+        isOpen={isEntryFormOpen}
+        onClose={() => setIsEntryFormOpen(false)}
+        onSave={handleSaveEntry}
+        onDelete={handleDeleteEntry}
+        initialDate={entryFormInitialDate}
+        existingEntry={editingEntry}
+        lang={lang as 'en' | 'he'}
+        location={location}
+      />
+    </>
   );
 }

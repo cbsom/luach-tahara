@@ -28,6 +28,7 @@ interface CalendarDayProps {
   onAddEvent: () => void;
   onAddMikvah: () => void;
   onRemoveTaharaEvent: (event: TaharaEvent) => void;
+  onEditEntry?: (entry: Entry) => void;
 }
 
 export function CalendarDay({
@@ -52,6 +53,7 @@ export function CalendarDay({
   onAddEvent,
   onAddMikvah,
   onRemoveTaharaEvent,
+  onEditEntry,
 }: CalendarDayProps) {
   const hasNightEntry = entry && entry.onah === NightDay.Night;
   const hasDayEntry = entry && entry.onah === NightDay.Day;
@@ -139,7 +141,14 @@ export function CalendarDay({
 
       {/* Entry Label */}
       {entry && (
-        <div className="entry-label">
+        <div
+          className="entry-label"
+          onClick={e => {
+            e.stopPropagation();
+            onEditEntry?.(entry);
+          }}
+          style={{ cursor: 'pointer' }}
+        >
           <div className="entry-text">
             {lang === 'he' ? 'ראייה - ' : 'Entry - '}
             {entry.onah === NightDay.Night

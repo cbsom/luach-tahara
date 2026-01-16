@@ -191,7 +191,7 @@ describe('Onah', () => {
     describe('fromJewishDate and toJewishDateAndOnah', () => {
         it('should convert from JewishDate interface and back', () => {
             const jewishDate = { year: 5784, month: 1, day: 15 };
-            const onah = Onah.fromJewishDate(jewishDate, 'day');
+            const onah = Onah.fromJewishDate(jewishDate, NightDay.Day);
 
             expect(onah.jdate.Year).toBe(5784);
             expect(onah.jdate.Month).toBe(1);
@@ -202,17 +202,17 @@ describe('Onah', () => {
             expect(converted.jewishDate.year).toBe(5784);
             expect(converted.jewishDate.month).toBe(1);
             expect(converted.jewishDate.day).toBe(15);
-            expect(converted.onah).toBe('day');
+            expect(converted.onah).toBe(NightDay.Day);
         });
 
         it('should handle night onah conversion', () => {
             const jewishDate = { year: 5784, month: 1, day: 15 };
-            const onah = Onah.fromJewishDate(jewishDate, 'night');
+            const onah = Onah.fromJewishDate(jewishDate, NightDay.Night);
 
             expect(onah.nightDay).toBe(NightDay.Night);
 
             const converted = onah.toJewishDateAndOnah();
-            expect(converted.onah).toBe('night');
+            expect(converted.onah).toBe(NightDay.Night);
         });
     });
 
