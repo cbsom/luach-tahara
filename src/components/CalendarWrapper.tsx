@@ -1,6 +1,7 @@
 // Simplified Calendar wrapper for luach-tahara
 import { useState, useMemo, useEffect } from 'react';
 import { jDate } from 'jcal-zmanim';
+import { fromJDate } from '../lib/jcal';
 import { Calendar as LuachWebCalendar } from './Calendar';
 import { Themes, type UserEvent } from '../types-luach-web';
 import type { Location } from 'jcal-zmanim';
@@ -12,6 +13,12 @@ import FlaggedDatesGenerator from '../lib/chashavshavon/FlaggedDatesGenerator';
 import Kavuah, { type KavuahSuggestion } from '../lib/chashavshavon/Kavuah';
 import { ProblemOnah } from '../lib/chashavshavon/ProblemOnah';
 import { KavuahSuggestionDialog } from './KavuahSuggestionDialog';
+import { SettingsPanel } from './settings/SettingsPanel';
+import { EntryList } from './entries/EntryList';
+import { KavuahList } from './kavuah/KavuahList';
+import TaharaEventGenerator from '../lib/chashavshavon/TaharaEventGenerator';
+
+import { toJDate } from '../lib/jcal';
 
 interface CalendarWrapperProps {
   currentJDate: jDate;
@@ -26,6 +33,12 @@ interface CalendarWrapperProps {
   lang: string;
   events?: UserEvent[];
   getEventsForDate?: (date: jDate) => UserEvent[];
+  isSettingsOpen?: boolean;
+  onCloseSettings?: () => void;
+  isEntryListOpen?: boolean;
+  onCloseEntryList?: () => void;
+  isKavuahListOpen?: boolean;
+  onCloseKavuahList?: () => void;
 }
 
 export function Calendar({
@@ -36,6 +49,12 @@ export function Calendar({
   location,
   lang,
   getEventsForDate,
+  isSettingsOpen = false,
+  onCloseSettings = () => {},
+  isEntryListOpen = false,
+  onCloseEntryList = () => {},
+  isKavuahListOpen = false,
+  onCloseKavuahList = () => {},
 }: CalendarWrapperProps) {
   const today = new jDate();
 
@@ -47,17 +66,35 @@ export function Calendar({
   // 1. Logic Objects: Transform EntryRecord to Entry Class Instances
   const entryInstances = useMemo(
     () =>
-      entryRecords.map(r =>
-        Entry.fromJewishDate(
+      entryRecords.map(r => {
+        // Sanitize onah
+        let onahVal = (r as any).onah;
+        if (typeof onahVal === 'object' && onahVal !== null && 'nightDay' in onahVal) {
+          onahVal = onahVal.nightDay;
+        }
+
+        // NightDay Enum: Night = -1, Day = 1.
+        // If we see 0, assume it meant Night.
+        if (onahVal === 0) onahVal = -1;
+
+        if (onahVal !== -1 && onahVal !== 1) {
+          console.warn('Invalid onah value in entryRecords, defaulting to Night(-1)', {
+            id: r.id,
+            onah: onahVal,
+          });
+          onahVal = -1;
+        }
+
+        return Entry.fromJewishDate(
           r.jewishDate,
-          r.onah,
+          onahVal,
           r.id,
           r.ignoreForFlaggedDates,
           r.ignoreForKavuah,
           r.comments,
           r.haflaga
-        )
-      ),
+        );
+      }),
     [entryRecords]
   );
 
@@ -121,6 +158,29 @@ export function Calendar({
     }
     return [];
   }, [entryInstances, kavuahs, settings]);
+
+  // Calculate Tahara Events
+  const taharaEvents = useMemo(() => {
+    if (!settings || entryInstances.length === 0) return [];
+    try {
+      // Use robust entryInstances directly (they are already Entry Class Instances)
+      const entryClasses = entryInstances;
+
+      const rawEvents = TaharaEventGenerator.generate(entryClasses, settings as any);
+
+      // Map class instances to Interface expected by Calendar
+      return rawEvents.map(e => ({
+        id: e.taharaEventId || `generated-${e.jdate.Abs}-${e.taharaEventType}`,
+        date: fromJDate(e.jdate), // Interface expects 'date' as JewishDate
+        type: e.toTypeString() as 'hefsek' | 'bedika' | 'shailah' | 'mikvah',
+        createdAt: 0, // Using 0 for calculated events
+        updatedAt: 0,
+      }));
+    } catch (e) {
+      console.error('Error generating tahara events:', e);
+      return [];
+    }
+  }, [entryInstances, settings]);
 
   const handleCreateKavuah = async (suggestion: KavuahSuggestion, isIgnored: boolean) => {
     const kData = {
@@ -201,22 +261,99 @@ export function Calendar({
 
   // Handle form save
   const handleSaveEntry = async (entry: EntryData) => {
-    // Map to EntryData format expected by hook
+    // Calculate Haflaga
+    // 1. Convert current date
+    const currentDate = (entry.date as any).Abs
+      ? (entry.date as unknown as jDate)
+      : toJDate(entry.date);
+
+    // 2. Sort all entries
+    const otherEntries = entryInstances.filter(e => e.id !== entry.id);
+    const sorted = [...otherEntries].sort((a, b) => {
+      const dateA = toJDate((a as any).date || (a as any).jewishDate);
+      const dateB = toJDate((b as any).date || (b as any).jewishDate);
+      return dateA.Abs - dateB.Abs;
+    });
+
+    // 3. Find previous
+    const prevEntry = sorted
+      .filter(e => {
+        const d = toJDate((e as any).date || (e as any).jewishDate);
+        return d.Abs < currentDate.Abs;
+      })
+      .pop();
+
+    // 4. Calculate haflaga
+    let haflaga = 0;
+    if (prevEntry) {
+      const prevDate = toJDate((prevEntry as any).date || (prevEntry as any).jewishDate);
+      haflaga = prevDate.diffDays(currentDate) + 1;
+      console.log('Calculated Haflaga:', {
+        current: currentDate.toString(),
+        prev: prevDate.toString(),
+        diff: haflaga,
+      });
+    } else {
+      console.log('No previous entry found for Haflaga calculation', {
+        current: currentDate.toString(),
+      });
+    }
+
+    // Map to EntryData format handling Onah object vs enum
+    const onahVal =
+      (entry.onah as any).nightDay !== undefined ? (entry.onah as any).nightDay : entry.onah;
+
     const entryData = {
       id: entry.id,
       jewishDate: entry.date,
-      onah: entry.onah,
-      haflaga: entry.haflaga || 0,
-      ignoreForFlaggedDates: entry.ignoreForFlaggedDates || false,
-      ignoreForKavuah: entry.ignoreForKavuah || false,
-      comments: entry.notes,
+      onah: onahVal,
+      haflaga: haflaga,
+      ignoreForFlaggedDates: entry.ignoreForFlaggedDates,
+      ignoreForKavuah: entry.ignoreForKavuah,
+      comments: (entry as any).notes || (entry as any).comments,
     };
 
-    if (editingEntry) {
+    // Ensure jewishDate is plain object (convert class or reference)
+    const plainJewishDate = {
+      year: currentDate.Year,
+      month: currentDate.Month,
+      day: currentDate.Day,
+    };
+    (entryData as any).jewishDate = plainJewishDate;
+
+    // Check if entry exists to determine Add vs Modify
+    const exists = entryInstances.some(e => e.id === entry.id);
+    if (exists) {
       await modifyEntry(entry.id, entryData);
     } else {
       await addEntry(entryData);
     }
+
+    // 5. Update NEXT entry's haflaga
+    const nextEntry = sorted.find(e => {
+      const d = toJDate((e as any).date || (e as any).jewishDate);
+      return d.Abs > currentDate.Abs;
+    });
+
+    if (nextEntry) {
+      const nextDate = toJDate((nextEntry as any).date || (nextEntry as any).jewishDate);
+      const newNextHaflaga = currentDate.diffDays(nextDate) + 1;
+      if ((nextEntry as any).haflaga !== newNextHaflaga) {
+        // Prepare update for next entry
+        const nextEntryData = {
+          ...nextEntry,
+          haflaga: newNextHaflaga,
+        };
+        // Ensure structure validity for update
+        if ((nextEntryData as any).date) {
+          const jd = toJDate((nextEntryData as any).date);
+          (nextEntryData as any).jewishDate = { year: jd.Year, month: jd.Month, day: jd.Day };
+        }
+        await modifyEntry(nextEntry.id, nextEntryData);
+      }
+    }
+
+    setIsEntryFormOpen(false);
   };
 
   // Handle delete
@@ -255,6 +392,7 @@ export function Calendar({
         theme={Themes.Warm}
         entries={entriesForView}
         flaggedOnahs={flaggedOnahs}
+        taharaEvents={taharaEvents}
       />
 
       <EntryForm
@@ -274,6 +412,26 @@ export function Calendar({
         suggestions={kavuahSuggestions}
         onAccept={s => handleCreateKavuah(s, false)}
         onIgnore={s => handleCreateKavuah(s, true)}
+        lang={lang as 'en' | 'he'}
+      />
+
+      <SettingsPanel isOpen={isSettingsOpen} onClose={onCloseSettings} lang={lang as 'en' | 'he'} />
+
+      <EntryList
+        isOpen={isEntryListOpen}
+        onClose={onCloseEntryList}
+        lang={lang as 'en' | 'he'}
+        onEdit={entry => {
+          handleEditEntry(entry);
+          onCloseEntryList();
+        }}
+        entries={entryInstances}
+        onRemove={removeEntry}
+      />
+
+      <KavuahList
+        isOpen={isKavuahListOpen}
+        onClose={onCloseKavuahList}
         lang={lang as 'en' | 'he'}
       />
     </>

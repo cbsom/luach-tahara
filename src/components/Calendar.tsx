@@ -5,6 +5,8 @@ import { CalendarDay } from './CalendarDay';
 import { Entry } from '../types';
 import { fromJDate } from '../lib/jcal';
 import { ProblemOnah } from '../lib/chashavshavon/ProblemOnah';
+import type { TaharaEvent } from '../types';
+import './calendar/Calendar.css';
 
 interface CalendarProps {
   lang: 'en' | 'he';
@@ -23,6 +25,7 @@ interface CalendarProps {
   theme: Themes;
   entries?: Entry[];
   flaggedOnahs?: ProblemOnah[];
+  taharaEvents?: TaharaEvent[];
 }
 
 export const Calendar: React.FC<CalendarProps> = ({
@@ -39,18 +42,19 @@ export const Calendar: React.FC<CalendarProps> = ({
   calendarView,
   entries,
   flaggedOnahs,
+  taharaEvents,
 }) => {
   return (
     <main className="calendar-container">
       <section className="calendar-body">
-        <div className="weekdays-header">
+        <div className="calendar-weekdays">
           {(calendarView === 'jewish'
             ? ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
             : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Shabbos']
           ).map(d => (
             <div
               key={d}
-              className={d === (lang === 'he' ? 'שבת' : 'Shabbos') ? 'text-accent-amber' : ''}
+              className={`calendar-weekday ${d === (lang === 'he' ? 'שבת' : 'Shabbos') ? 'text-accent-amber' : ''}`}
             >
               {d}
             </div>
@@ -58,7 +62,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         </div>
 
         <div
-          className="calendar-grid"
+          className="calendar-days"
           style={
             {
               gridTemplateRows: `repeat(${monthInfo.weeksNeeded}, 1fr)`,
@@ -95,6 +99,15 @@ export const Calendar: React.FC<CalendarProps> = ({
             const isShabbos = date.getDayOfWeek() === 6;
             const holidayName = undefined;
 
+            // Filter Tahara events for this day
+            const dayTaharaEvents =
+              taharaEvents?.filter(
+                e =>
+                  e.date.year === date.Year &&
+                  e.date.month === date.Month &&
+                  e.date.day === date.Day
+              ) || [];
+
             return (
               <CalendarDay
                 key={i}
@@ -105,7 +118,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                 entry={entry}
                 calendarView={calendarView}
                 lang={lang as 'en' | 'he'}
-                taharaEvents={[]}
+                taharaEvents={dayTaharaEvents}
                 flaggedOnahs={dayFlaggedOnahs}
                 userEvents={dayEvents}
                 isHoliday={isYomTov}

@@ -53,6 +53,11 @@ function App() {
     return (localStorage.getItem('luach-tahara-calendar-view') as 'jewish' | 'secular') || 'jewish';
   });
 
+  // UI State
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isEntryListOpen, setIsEntryListOpen] = useState(false);
+  const [isKavuahListOpen, setIsKavuahListOpen] = useState(false);
+
   // Apply theme
   useEffect(() => {
     const themeName = Themes[theme].toLowerCase();
@@ -109,9 +114,10 @@ function App() {
         lang={currentLang}
         onLangChange={lang => i18n.changeLanguage(lang)}
         onSettingsClick={() => {
-          // TODO: Open settings sidebar
-          console.log('Settings clicked');
+          setIsSettingsOpen(true);
         }}
+        onEntriesClick={() => setIsEntryListOpen(true)}
+        onKavuahsClick={() => setIsKavuahListOpen(true)}
         onLogin={() => {
           // TODO: Implement login
           console.log('Login clicked');
@@ -138,6 +144,12 @@ function App() {
             lang={currentLang}
             events={[]} // TODO: Get from IndexedDB
             getEventsForDate={() => []} // TODO: Implement
+            isSettingsOpen={isSettingsOpen}
+            onCloseSettings={() => setIsSettingsOpen(false)}
+            isEntryListOpen={isEntryListOpen}
+            onCloseEntryList={() => setIsEntryListOpen(false)}
+            isKavuahListOpen={isKavuahListOpen}
+            onCloseKavuahList={() => setIsKavuahListOpen(false)}
           />
         </div>
       </div>
@@ -149,12 +161,10 @@ function App() {
           console.log('Calendar clicked');
         }}
         onEventsClick={() => {
-          // TODO: Open events list
-          console.log('Events clicked');
+          setIsEntryListOpen(true);
         }}
         onSettingsClick={() => {
-          // TODO: Open settings
-          console.log('Settings clicked');
+          setIsSettingsOpen(true);
         }}
         lang={currentLang as 'en' | 'he'}
       />

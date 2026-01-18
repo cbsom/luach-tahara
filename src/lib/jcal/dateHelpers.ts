@@ -5,8 +5,14 @@ import { JewishDate } from '@/types';
 /**
  * Convert JewishDate interface to jDate object
  */
-export const toJDate = (jewishDate: JewishDate): jDate => {
-    return new jDate(jewishDate.year, jewishDate.month, jewishDate.day);
+export const toJDate = (jewishDate: JewishDate | jDate): jDate => {
+    // Check if it's already a jDate class (capitalized properties)
+    if ((jewishDate as any).Year) {
+        const jd = jewishDate as jDate;
+        return new jDate(jd.Year, jd.Month, jd.Day);
+    }
+    const interfaceDate = jewishDate as JewishDate;
+    return new jDate(interfaceDate.year, interfaceDate.month, interfaceDate.day);
 };
 
 /**

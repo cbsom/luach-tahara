@@ -57,7 +57,15 @@ export function EntryForm({
   useEffect(() => {
     if (isOpen) {
       if (existingEntry) {
-        setDate(existingEntry.date);
+        let validDate = existingEntry.date;
+        try {
+          const jd = toJDate(existingEntry.date);
+          if (!jd || !jd.Year || isNaN(jd.Year)) throw new Error('Invalid date');
+        } catch (e) {
+          console.warn('EntryForm received invalid date, falling back to today');
+          validDate = fromJDate(new jDate());
+        }
+        setDate(validDate);
         setOnah(existingEntry.onah);
         setComments(existingEntry.notes || '');
         setIgnoreForFlaggedDates(existingEntry.ignoreForFlaggedDates);
@@ -142,19 +150,44 @@ export function EntryForm({
 
   if (!isOpen) return null;
 
-  const jDateObj = toJDate(date);
-  const secularDate = jDateObj.getDate();
-  const { sunrise, sunset } = jDateObj.getSunriseSunset(location);
+  /* Safe Sunrise/Sunset Calculation */
+  let sunriseText = lang === 'he' ? '--:--' : '--:--';
+  let sunsetText = lang === 'he' ? '--:--' : '--:--';
 
-  const formatTime = (time: any) => {
-    if (!time) return lang === 'he' ? 'אף פעם' : 'Never';
-    const hour = Math.floor(time.hour);
-    const minute = Math.floor(time.minute);
-    return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+  try {
+    const jDateObj = toJDate(date);
+    const secularDate = jDateObj.getDate();
+    // Ensure location is valid if processed, or rely on jcal default
+    if (location) {
+      const { sunrise, sunset } = jDateObj.getSunriseSunset(location);
+
+      const formatTime = (time: any) => {
+        if (!time) return lang === 'he' ? 'אף פעם' : 'Never';
+        const hour = Math.floor(time.hour);
+        const minute = Math.floor(time.minute);
+        return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      };
+
+      sunriseText = formatTime(sunrise);
+      sunsetText = formatTime(sunset);
+    }
+  } catch (e) {
+    console.error('Error calculating times:', e);
+  }
+
+  // Date display helper
+  const formatDateDisplay = () => {
+    try {
+      const jd = toJDate(date);
+      return {
+        hebrew: jd.toString(),
+        secular: jd.getDate().toLocaleDateString(),
+      };
+    } catch {
+      return { hebrew: '-', secular: '-' };
+    }
   };
-
-  const sunriseText = formatTime(sunrise);
-  const sunsetText = formatTime(sunset);
+  const { hebrew: hebrewDate, secular: secularDateDisplay } = formatDateDisplay();
 
   const t = {
     title: existingEntry
@@ -263,8 +296,8 @@ export function EntryForm({
             </div>
 
             <div className="date-display">
-              <span className="hebrew-date">{jDateObj.toString()}</span>
-              <span className="secular-date">{secularDate.toLocaleDateString()}</span>
+              <span className="hebrew-date">{hebrewDate}</span>
+              <span className="secular-date">{secularDateDisplay}</span>
             </div>
 
             <div className="sunrise-sunset-info">

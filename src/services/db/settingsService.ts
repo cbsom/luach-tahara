@@ -49,6 +49,7 @@ export async function getSettings(): Promise<Settings> {
     }
 
     // Return settings without sync metadata
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { syncStatus, ...settings } = stored;
     return settings as Settings;
 }
@@ -58,7 +59,10 @@ export async function getSettings(): Promise<Settings> {
  */
 export async function saveSettings(settings: Partial<Settings>): Promise<Settings> {
     const db = await getDB();
-    const current = await getSettings();
+    const stored = await db.get('settings', SETTINGS_KEY);
+    // Use raw stored settings or empty object to avoid recursion loop with getSettings()
+    // during initialization
+    const current = (stored || {}) as Settings;
 
     const updated = {
         ...current,
