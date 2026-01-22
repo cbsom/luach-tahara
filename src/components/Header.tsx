@@ -1,4 +1,4 @@
-import { Menu, List, Repeat } from 'lucide-react';
+import { Menu, List, Repeat, AlertTriangle } from 'lucide-react';
 import { getThemeIcon, cycleTheme } from '../utils.tsx';
 import { Themes } from '../types-luach-web';
 import type { User } from 'firebase/auth';
@@ -11,6 +11,7 @@ interface HeaderProps {
   onSettingsClick: () => void;
   onEntriesClick: () => void;
   onKavuahsClick: () => void;
+  onFlaggedDatesClick: () => void;
   onLogin: () => void;
   onLogout: () => void;
   user: User | null;
@@ -23,6 +24,7 @@ export function Header({
   onSettingsClick,
   onEntriesClick,
   onKavuahsClick,
+  onFlaggedDatesClick,
   user,
 }: HeaderProps) {
   return (
@@ -72,6 +74,14 @@ export function Header({
         >
           <List size={18} />
           <span>{lang === 'he' ? 'ראיות' : 'Entries'}</span>
+        </button>
+        <button
+          onClick={onFlaggedDatesClick}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-glass-hover transition-colors text-sm font-medium opacity-80 hover:opacity-100"
+          title={lang === 'he' ? 'זמני פרישה' : 'Flagged Dates'}
+        >
+          <AlertTriangle size={18} />
+          <span>{lang === 'he' ? 'התראות' : 'Alerts'}</span>
         </button>
         <button
           onClick={onKavuahsClick}

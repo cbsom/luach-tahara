@@ -57,6 +57,7 @@ function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isEntryListOpen, setIsEntryListOpen] = useState(false);
   const [isKavuahListOpen, setIsKavuahListOpen] = useState(false);
+  const [isFlaggedDatesListOpen, setIsFlaggedDatesListOpen] = useState(false);
 
   // Apply theme
   useEffect(() => {
@@ -118,6 +119,7 @@ function App() {
         }}
         onEntriesClick={() => setIsEntryListOpen(true)}
         onKavuahsClick={() => setIsKavuahListOpen(true)}
+        onFlaggedDatesClick={() => setIsFlaggedDatesListOpen(true)}
         onLogin={() => {
           // TODO: Implement login
           console.log('Login clicked');
@@ -150,6 +152,8 @@ function App() {
             onCloseEntryList={() => setIsEntryListOpen(false)}
             isKavuahListOpen={isKavuahListOpen}
             onCloseKavuahList={() => setIsKavuahListOpen(false)}
+            isFlaggedDatesListOpen={isFlaggedDatesListOpen}
+            onCloseFlaggedDatesList={() => setIsFlaggedDatesListOpen(false)}
           />
         </div>
       </div>

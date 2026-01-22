@@ -29,6 +29,14 @@ import {
     isSyncNeeded,
     type SyncMetadata,
 } from './syncService';
+import {
+    getAllTaharaEvents,
+    createTaharaEvent,
+    updateTaharaEvent,
+    deleteTaharaEvent,
+    type TaharaEventRecord,
+    type TaharaEventData,
+} from './taharaEventService';
 import type { JewishDate, Settings } from '@/types';
 
 /**
@@ -116,6 +124,59 @@ export function useEntriesForDate(jewishDate: JewishDate) {
     }, [jewishDate.year, jewishDate.month, jewishDate.day]);
 
     return { entries, loading };
+}
+
+/**
+ * Hook to manage tahara events
+ */
+export function useTaharaEvents() {
+    const [taharaEvents, setTaharaEvents] = useState<TaharaEventRecord[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
+
+    const loadTaharaEvents = useCallback(async () => {
+        try {
+            setLoading(true);
+            const data = await getAllTaharaEvents();
+            setTaharaEvents(data);
+            setError(null);
+        } catch (err) {
+            setError(err as Error);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        loadTaharaEvents();
+    }, [loadTaharaEvents]);
+
+    const addTaharaEvent = useCallback(async (data: TaharaEventData) => {
+        const event = await createTaharaEvent(data);
+        setTaharaEvents(prev => [...prev, event]);
+        return event;
+    }, []);
+
+    const modifyTaharaEvent = useCallback(async (id: string, updates: Partial<TaharaEventData>) => {
+        const updated = await updateTaharaEvent(id, updates);
+        setTaharaEvents(prev => prev.map(e => e.id === id ? updated : e));
+        return updated;
+    }, []);
+
+    const removeTaharaEvent = useCallback(async (id: string) => {
+        await deleteTaharaEvent(id);
+        setTaharaEvents(prev => prev.filter(e => e.id !== id));
+    }, []);
+
+    return {
+        taharaEvents,
+        loading,
+        error,
+        addTaharaEvent,
+        modifyTaharaEvent,
+        removeTaharaEvent,
+        reload: loadTaharaEvents,
+    };
 }
 
 /**

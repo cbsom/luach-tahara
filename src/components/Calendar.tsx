@@ -26,6 +26,8 @@ interface CalendarProps {
   entries?: Entry[];
   flaggedOnahs?: ProblemOnah[];
   taharaEvents?: TaharaEvent[];
+  onAddTaharaEvent: (type: 'hefsek' | 'bedika' | 'shailah' | 'mikvah', date: jDate) => void;
+  onRemoveTaharaEvent: (event: TaharaEvent) => void;
 }
 
 export const Calendar: React.FC<CalendarProps> = ({
@@ -43,6 +45,8 @@ export const Calendar: React.FC<CalendarProps> = ({
   entries,
   flaggedOnahs,
   taharaEvents,
+  onAddTaharaEvent,
+  onRemoveTaharaEvent,
 }) => {
   return (
     <main className="calendar-container">
@@ -132,10 +136,10 @@ export const Calendar: React.FC<CalendarProps> = ({
                 onAddEvent={() =>
                   handleAddNewEventForDate({ stopPropagation: () => {} } as React.MouseEvent, date)
                 }
-                onAddHefsek={() => console.log('Add Hefsek')}
-                onAddShailah={() => console.log('Add Shailah')}
-                onAddMikvah={() => console.log('Add Mikvah')}
-                onRemoveTaharaEvent={() => {}}
+                onAddHefsek={() => onAddTaharaEvent('hefsek', date)}
+                onAddShailah={() => onAddTaharaEvent('shailah', date)}
+                onAddMikvah={() => onAddTaharaEvent('mikvah', date)}
+                onRemoveTaharaEvent={onRemoveTaharaEvent}
               />
             );
           })}

@@ -6,7 +6,7 @@ import { Calendar as LuachWebCalendar } from './Calendar';
 import { Themes, type UserEvent } from '../types-luach-web';
 import type { Location } from 'jcal-zmanim';
 import { EntryForm } from './EntryForm';
-import { useEntries, useKavuahs, useSettings } from '../services/db/hooks';
+import { useEntries, useKavuahs, useSettings, useTaharaEvents } from '../services/db/hooks';
 import type { Entry as EntryData } from '../types';
 import Entry from '../lib/chashavshavon/Entry';
 import FlaggedDatesGenerator from '../lib/chashavshavon/FlaggedDatesGenerator';
@@ -16,7 +16,9 @@ import { KavuahSuggestionDialog } from './KavuahSuggestionDialog';
 import { SettingsPanel } from './settings/SettingsPanel';
 import { EntryList } from './entries/EntryList';
 import { KavuahList } from './kavuah/KavuahList';
+import { FlaggedDatesSidebar } from './flagged-dates/FlaggedDatesSidebar';
 import TaharaEventGenerator from '../lib/chashavshavon/TaharaEventGenerator';
+import type { TaharaEvent, TaharaEventType } from '../types';
 
 import { toJDate } from '../lib/jcal';
 
@@ -39,6 +41,8 @@ interface CalendarWrapperProps {
   onCloseEntryList?: () => void;
   isKavuahListOpen?: boolean;
   onCloseKavuahList?: () => void;
+  isFlaggedDatesListOpen?: boolean;
+  onCloseFlaggedDatesList?: () => void;
 }
 
 export function Calendar({
@@ -55,6 +59,8 @@ export function Calendar({
   onCloseEntryList = () => {},
   isKavuahListOpen = false,
   onCloseKavuahList = () => {},
+  isFlaggedDatesListOpen = false,
+  onCloseFlaggedDatesList = () => {},
 }: CalendarWrapperProps) {
   const today = new jDate();
 
@@ -62,6 +68,7 @@ export function Calendar({
   const { entries: entryRecords, addEntry, modifyEntry, removeEntry } = useEntries();
   const { kavuahs: kavuahRecords, addKavuah } = useKavuahs(true);
   const { settings } = useSettings();
+  const { taharaEvents: taharaRecords, addTaharaEvent, removeTaharaEvent } = useTaharaEvents();
 
   // 1. Logic Objects: Transform EntryRecord to Entry Class Instances
   const entryInstances = useMemo(
@@ -161,26 +168,58 @@ export function Calendar({
 
   // Calculate Tahara Events
   const taharaEvents = useMemo(() => {
-    if (!settings || entryInstances.length === 0) return [];
-    try {
-      // Use robust entryInstances directly (they are already Entry Class Instances)
-      const entryClasses = entryInstances;
-
-      const rawEvents = TaharaEventGenerator.generate(entryClasses, settings as any);
-
-      // Map class instances to Interface expected by Calendar
-      return rawEvents.map(e => ({
-        id: e.taharaEventId || `generated-${e.jdate.Abs}-${e.taharaEventType}`,
-        date: fromJDate(e.jdate), // Interface expects 'date' as JewishDate
-        type: e.toTypeString() as 'hefsek' | 'bedika' | 'shailah' | 'mikvah',
-        createdAt: 0, // Using 0 for calculated events
-        updatedAt: 0,
-      }));
-    } catch (e) {
-      console.error('Error generating tahara events:', e);
-      return [];
+    // 1. Get Generated Events
+    let generatedEvents: TaharaEvent[] = [];
+    if (settings && entryInstances.length > 0) {
+      try {
+        const entryClasses = entryInstances;
+        const rawEvents = TaharaEventGenerator.generate(entryClasses, settings as any);
+        generatedEvents = rawEvents.map(e => ({
+          id: e.taharaEventId || `generated-${e.jdate.Abs}-${e.taharaEventType}`,
+          date: fromJDate(e.jdate),
+          type: e.toTypeString() as TaharaEventType,
+          createdAt: 0,
+          updatedAt: 0,
+        }));
+      } catch (e) {
+        console.error('Error generating tahara events:', e);
+      }
     }
-  }, [entryInstances, settings]);
+
+    // 2. Map DB events to TaharaEvent interface
+    const dbEvents: TaharaEvent[] = taharaRecords.map(r => ({
+      id: r.id,
+      date: r.jewishDate,
+      type: r.type,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+    }));
+
+    // 3. Combine - Prefer DB events if duplicates?
+    // For now, simple concatenation. We might want to filter out generated suggestions if a real event exists on that day of same type.
+    // e.g. if generated Mikvah on day X, and DB has Mikvah on day X, hide generated?
+    // For now, let's just show both (or maybe generated ones are helpful reminders even if you marked one?)
+    // Actually, usually you mark the actual event and ignore the suggestion.
+    // Let's just concat for MVP.
+    return [...dbEvents, ...generatedEvents];
+  }, [entryInstances, settings, taharaRecords]);
+
+  // Handlers for Tahara Events
+  const handleAddTaharaEvent = async (type: TaharaEventType, date: jDate) => {
+    const eventData = {
+      jewishDate: fromJDate(date),
+      type: type,
+    };
+    await addTaharaEvent(eventData);
+  };
+
+  const handleDeleteTaharaEvent = async (event: TaharaEvent) => {
+    if (confirm(lang === 'he' ? 'למחוק אירוע זה?' : 'Delete this event?')) {
+      if (event.id && !event.id.startsWith('generated-')) {
+        await removeTaharaEvent(event.id);
+      }
+    }
+  };
 
   const handleCreateKavuah = async (suggestion: KavuahSuggestion, isIgnored: boolean) => {
     const kData = {
@@ -340,16 +379,17 @@ export function Calendar({
       const newNextHaflaga = currentDate.diffDays(nextDate) + 1;
       if ((nextEntry as any).haflaga !== newNextHaflaga) {
         // Prepare update for next entry
+        const plainNextEntry = nextEntry.toJewishDateAndOnah();
         const nextEntryData = {
-          ...nextEntry,
+          ...plainNextEntry,
+          id: nextEntry.id,
+          // Ensure we keep existing creation/update times if they exist (though toJewishDateAndOnah doesn't return them)
+          // We rely on modifyEntry to handle timestamps usually, but let's be safe if we need full object
           haflaga: newNextHaflaga,
         };
-        // Ensure structure validity for update
-        if ((nextEntryData as any).date) {
-          const jd = toJDate((nextEntryData as any).date);
-          (nextEntryData as any).jewishDate = { year: jd.Year, month: jd.Month, day: jd.Day };
-        }
-        await modifyEntry(nextEntry.id, nextEntryData);
+
+        // We cast because toJewishDateAndOnah returns id? but we know it has one here
+        await modifyEntry(nextEntry.id, nextEntryData as any);
       }
     }
 
@@ -393,6 +433,8 @@ export function Calendar({
         entries={entriesForView}
         flaggedOnahs={flaggedOnahs}
         taharaEvents={taharaEvents}
+        onAddTaharaEvent={handleAddTaharaEvent}
+        onRemoveTaharaEvent={handleDeleteTaharaEvent}
       />
 
       <EntryForm
@@ -433,6 +475,13 @@ export function Calendar({
         isOpen={isKavuahListOpen}
         onClose={onCloseKavuahList}
         lang={lang as 'en' | 'he'}
+      />
+
+      <FlaggedDatesSidebar
+        isOpen={isFlaggedDatesListOpen}
+        onClose={onCloseFlaggedDatesList}
+        lang={lang as 'en' | 'he'}
+        flaggedOnahs={flaggedOnahs}
       />
     </>
   );
