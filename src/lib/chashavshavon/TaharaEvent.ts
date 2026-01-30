@@ -78,7 +78,14 @@ export class TaharaEvent {
     }
 
     /**
-     * Gets the string representation of this TaharaEvent's type
+     * Gets the simple string representation of this TaharaEvent's type
+     */
+    getType(): 'hefsek' | 'bedika' | 'shailah' | 'mikvah' {
+        return TaharaEvent.eventTypeToString(this.taharaEventType);
+    }
+
+    /**
+     * Gets the English label representation of this TaharaEvent's type
      */
     toTypeString(): string {
         return TaharaEvent.toTaharaEventTypeString(this.taharaEventType);

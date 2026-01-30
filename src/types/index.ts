@@ -45,7 +45,7 @@ export interface Kavuah {
     settingEntryId: string;
     pattern: any; // Specific to type
     active: boolean;
-    cancelOnahBeinonis: boolean;
+    cancelsOnahBeinunis: boolean;
     specialCircumstances?: string;
     createdAt: number;
     updatedAt: number;
@@ -126,6 +126,8 @@ export interface Settings {
     keepLongerHaflagah: boolean;
     /** Don't show problems in the week after an entry */
     noProbsAfterEntry: boolean;
+    /** Use 4 days for Hefsek Tahara instead of 5 (Common Sephardic custom) */
+    fourDaysHefsek?: boolean;
     createdAt: number;
     updatedAt: number;
     syncedAt?: number;

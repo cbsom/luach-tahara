@@ -1,16 +1,19 @@
 import { useState, useMemo, useEffect } from 'react';
-import { jDate, Utils, Locations } from 'jcal-zmanim';
+import { jDate, Utils, Locations, type Location } from 'jcal-zmanim';
 import { Header } from './components/Header';
 import { Calendar } from './components/CalendarWrapper';
 import { MobileFooter } from './components/MobileFooter';
 import { useTranslation, useCurrentLanguage, useIsRTL } from './i18n/hooks';
 import { useSettings } from './services/db/hooks';
 import { Themes } from './types-luach-web';
+import { useAuth } from './services/firebase/hooks';
+import { AuthModal } from './components/auth/AuthModal';
 
 function App() {
   const { i18n } = useTranslation();
   const currentLang = useCurrentLanguage();
   const isRTL = useIsRTL();
+  const { user, signOut } = useAuth();
 
   // Theme state
   const [theme, setTheme] = useState<Themes>(() => {
@@ -35,10 +38,21 @@ function App() {
   // Location
   const locationName = settings?.location.name || 'Jerusalem';
   const location = useMemo(() => {
+    if (settings?.location) {
+      // Map user settings location to jcal-zmanim Location object
+      return {
+        Name: settings.location.name,
+        Latitude: settings.location.latitude,
+        Longitude: settings.location.longitude,
+        UTCOffset: settings.location.utcOffset,
+        Elevation: settings.location.elevation || 0,
+        Israel: settings.location.israel || false,
+      } as Location;
+    }
     return (
       Locations.find(l => l.Name === locationName) || Locations.find(l => l.Name === 'Jerusalem')!
     );
-  }, [locationName]);
+  }, [locationName, settings]);
 
   // Today start mode
   const todayStartMode = 'sunset'; // Can be made configurable later
@@ -58,6 +72,7 @@ function App() {
   const [isEntryListOpen, setIsEntryListOpen] = useState(false);
   const [isKavuahListOpen, setIsKavuahListOpen] = useState(false);
   const [isFlaggedDatesListOpen, setIsFlaggedDatesListOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   // Apply theme
   useEffect(() => {
@@ -120,15 +135,15 @@ function App() {
         onEntriesClick={() => setIsEntryListOpen(true)}
         onKavuahsClick={() => setIsKavuahListOpen(true)}
         onFlaggedDatesClick={() => setIsFlaggedDatesListOpen(true)}
-        onLogin={() => {
-          // TODO: Implement login
-          console.log('Login clicked');
+        onLogin={() => setIsAuthModalOpen(true)}
+        onLogout={async () => {
+          try {
+            await signOut();
+          } catch (error) {
+            console.error('Logout failed', error);
+          }
         }}
-        onLogout={() => {
-          // TODO: Implement logout
-          console.log('Logout clicked');
-        }}
-        user={null} // TODO: Get from auth
+        user={user}
       />
 
       <div className="main-layout">
@@ -144,8 +159,6 @@ function App() {
             onDayClick={handleDayClick}
             location={location}
             lang={currentLang}
-            events={[]} // TODO: Get from IndexedDB
-            getEventsForDate={() => []} // TODO: Implement
             isSettingsOpen={isSettingsOpen}
             onCloseSettings={() => setIsSettingsOpen(false)}
             isEntryListOpen={isEntryListOpen}
@@ -172,6 +185,8 @@ function App() {
         }}
         lang={currentLang as 'en' | 'he'}
       />
+
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </div>
   );
 }

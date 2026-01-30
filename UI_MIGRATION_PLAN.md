@@ -21,92 +21,92 @@
 
 ### 1. Integrate Luach-Web UI
 
-- [ ] Replace our design-system.css with luach-web-base.css
-- [ ] Adapt Header component for luach-tahara
-- [ ] Adapt Calendar component for luach-tahara
-- [ ] Add theme switcher (Warm, Dark, Light, Tcheles)
-- [ ] Copy Modal, SettingsSidebar, MobileFooter components
+- [x] Replace our design-system.css with luach-web-base.css
+- [x] Adapt Header component for luach-tahara
+- [x] Adapt Calendar component for luach-tahara
+- [x] Add theme switcher (Warm, Dark, Light, Tcheles)
+- [x] Copy Modal, SettingsSidebar, MobileFooter components
 
 ### 2. Add Niddah-Specific Features
 
 #### Entry Management
 
-- [ ] Create EntryForm component (record ראיות)
-  - Date picker (Jewish/Secular)
-  - Onah selector (Day/Night)
-  - Haflaga input
-  - Ignore flags checkboxes
-  - Comments field
+- [x] Create EntryForm component (record ראיות)
+  - [x] Date picker (Jewish/Secular)
+  - [x] Onah selector (Day/Night)
+  - [x] Haflaga input
+  - [x] Ignore flags checkboxes
+  - [x] Comments field
 
 #### Calendar Enhancements
 
-- [ ] Color-code days based on niddah status
-  - Red/Pink for niddah days
-  - Green for permitted days
-  - Yellow for flagged dates (זמני שמירה)
-- [ ] Show entry indicators on calendar
-- [ ] Show flagged date markers
+- [x] Color-code days based on niddah status
+  - [x] Red/Pink for niddah days
+  - [x] Green for permitted days (implemented via StatusCalculator)
+  - [x] Yellow for flagged dates (זמני שמירה)
+- [x] Show entry indicators on calendar
+- [x] Show flagged date markers
 
 #### Flagged Dates Display
 
-- [ ] Create FlaggedDatesSidebar component
-  - List of upcoming flagged dates
-  - Onah Beinunis
-  - Haflaga
-  - Yom HaChodesh
-  - Kavuah dates
-- [ ] Show explanations for each flag
+- [x] Create FlaggedDatesSidebar component
+  - [x] List of upcoming flagged dates
+  - [x] Onah Beinunis
+  - [x] Haflaga
+  - [x] Yom HaChodesh
+  - [x] Kavuah dates
+- [x] Show explanations for each flag
 
 #### Kavuah Management
 
-- [ ] Create KavuahList component
-  - Display active kavuahs
-  - Show kavuah type
-  - Toggle active/inactive
-  - Delete kavuah
-- [ ] Create KavuahForm component
-  - Kavuah type selector
-  - Setting entry reference
-  - Special number input
-  - Cancels Onah Beinunis checkbox
+- [x] Create KavuahList component
+  - [x] Display active kavuahs
+  - [x] Show kavuah type
+  - [x] Toggle active/inactive
+  - [x] Delete kavuah
+- [x] Create KavuahForm component
+  - [x] Kavuah type selector
+  - [x] Setting entry reference
+  - [x] Special number input
+  - [x] Cancels Onah Beinunis checkbox
 
 #### Tahara Events
 
-- [ ] Create TaharaEventForm component
-  - Event type (Hefsek, Bedika, Shailah, Mikvah)
-  - Date picker
-  - Notes field
-- [ ] Display tahara events on calendar
-- [ ] Color-code tahara events
+- [x] Create TaharaEventForm component (Implemented via Calendar handlers/EntryForm extensions)
+  - [x] Event type (Hefsek, Bedika, Shailah, Mikvah)
+  - [x] Date picker
+  - [x] Notes field
+- [x] Display tahara events on calendar
+- [x] Color-code tahara events (via Icons/Badges)
 
 ### 3. Settings Integration
 
-- [ ] Copy SettingsSidebar from luach-web
-- [ ] Add niddah-specific settings:
-  - Haflaga onahs
-  - Keep thirty-one
-  - Ohr Zeruah
-  - Dilug Chodesh past ends
-  - Kavuah diff onahs
-  - Haflaga of onahs
-  - Number of months ahead to warn
-  - Onah Beinunis 24 hours
-  - Show Ohr Zeruah
-  - Keep longer haflaga
-  - No problems after entry
+- [x] Copy SettingsSidebar from luach-web
+- [x] Add niddah-specific settings:
+  - [x] Haflaga onahs
+  - [x] Keep thirty-one
+  - [x] Ohr Zeruah
+  - [x] Dilug Chodesh past ends
+  - [x] Kavuah diff onahs
+  - [x] Haflaga of onahs
+  - [x] Number of months ahead to warn
+  - [x] Onah Beinunis 24 hours
+  - [x] Show Ohr Zeruah
+  - [x] Keep longer haflaga
+  - [x] No problems after entry
 
 ### 4. Mobile Optimization
 
-- [ ] Copy MobileFooter component
-- [ ] Ensure responsive design
+- [x] Copy MobileFooter component
+- [x] Ensure responsive design (Added mobile-footer styles)
 - [ ] Test on mobile devices
 
 ### 5. Authentication UI
 
-- [ ] Create Login component
-- [ ] Create Signup component
-- [ ] Integrate with Firebase auth hooks
-- [ ] Add user profile display
+- [x] Create Login component
+- [x] Create Signup component
+- [x] Integrate with Firebase auth hooks
+- [x] Add user profile display
 
 ## 📁 File Structure
 

@@ -1,9 +1,11 @@
 // Calendar Day Component with Niddah-specific coloring and labels
 import { jDate } from 'jcal-zmanim';
 import { Plus, Droplet, HelpCircle, Calendar as CalendarIcon, Waves } from 'lucide-react';
-import type { Entry, TaharaEvent } from '@/types';
+import type { Entry, TaharaEvent, TaharaEventType } from '@/types';
+import { UserEvent } from '@/types-luach-web';
 import { NightDay } from '@/types';
 import { ProblemOnah } from '@/lib/chashavshavon/ProblemOnah';
+import { NiddahStatus } from '@/lib/chashavshavon/StatusCalculator';
 import './CalendarDay.css';
 
 interface CalendarDayProps {
@@ -15,7 +17,7 @@ interface CalendarDayProps {
   daysSinceEntry?: number; // Days since previous entry
   flaggedOnahs?: ProblemOnah[]; // Flagged onahs for this day
   taharaEvents?: TaharaEvent[]; // Tahara events on this day
-  userEvents?: any[]; // Regular events (from luach-web)
+  userEvents?: UserEvent[]; // Regular events (from luach-web)
   isHoliday?: boolean;
   isShabbos?: boolean;
   holidayName?: string;
@@ -24,11 +26,15 @@ interface CalendarDayProps {
   onDayClick: () => void;
   onAddEntry: () => void;
   onAddHefsek: () => void;
+  onAddBedika: () => void;
   onAddShailah: () => void;
-  onAddEvent: () => void;
   onAddMikvah: () => void;
+  onAddUserEvent?: () => void;
+  onAddTaharaEvent: (type: TaharaEventType) => void;
   onRemoveTaharaEvent: (event: TaharaEvent) => void;
   onEditEntry?: (entry: Entry) => void;
+  onEditUserEvent?: (event: UserEvent) => void;
+  status?: NiddahStatus;
 }
 
 export function CalendarDay({
@@ -49,11 +55,15 @@ export function CalendarDay({
   onDayClick,
   onAddEntry,
   onAddHefsek,
+  onAddBedika,
   onAddShailah,
-  onAddEvent,
   onAddMikvah,
+  onAddTaharaEvent,
   onRemoveTaharaEvent,
   onEditEntry,
+  onEditUserEvent,
+  onAddUserEvent,
+  status,
 }: CalendarDayProps) {
   const hasNightEntry = entry && entry.onah === NightDay.Night;
   const hasDayEntry = entry && entry.onah === NightDay.Day;
@@ -67,15 +77,23 @@ export function CalendarDay({
 
     if (entry || hasNightFlag || hasDayFlag) {
       // Split background for entry or flagged dates
+      // We overlay this on top of the status background if needed, but CSS background is one property.
+      // So we use the gradient.
       return {
         background: `linear-gradient(to right, 
-          ${hasNightEntry ? 'rgba(255, 200, 200, 0.3)' : hasNightFlag ? 'rgba(255, 235, 205, 0.3)' : 'transparent'} 0%, 
-          ${hasNightEntry ? 'rgba(255, 200, 200, 0.3)' : hasNightFlag ? 'rgba(255, 235, 205, 0.3)' : 'transparent'} 50%, 
-          ${hasDayEntry ? 'rgba(255, 200, 200, 0.3)' : hasDayFlag ? 'rgba(255, 235, 205, 0.3)' : 'transparent'} 50%, 
-          ${hasDayEntry ? 'rgba(255, 200, 200, 0.3)' : hasDayFlag ? 'rgba(255, 235, 205, 0.3)' : 'transparent'} 100%
+          ${hasNightEntry ? 'rgba(255, 200, 200, 0.5)' : hasNightFlag ? 'rgba(255, 235, 205, 0.5)' : status === NiddahStatus.Niddah ? 'rgba(255, 220, 220, 0.3)' : 'transparent'} 0%, 
+          ${hasNightEntry ? 'rgba(255, 200, 200, 0.5)' : hasNightFlag ? 'rgba(255, 235, 205, 0.5)' : status === NiddahStatus.Niddah ? 'rgba(255, 220, 220, 0.3)' : 'transparent'} 50%, 
+          ${hasDayEntry ? 'rgba(255, 200, 200, 0.5)' : hasDayFlag ? 'rgba(255, 235, 205, 0.5)' : status === NiddahStatus.Niddah ? 'rgba(255, 220, 220, 0.3)' : 'transparent'} 50%, 
+          ${hasDayEntry ? 'rgba(255, 200, 200, 0.5)' : hasDayFlag ? 'rgba(255, 235, 205, 0.5)' : status === NiddahStatus.Niddah ? 'rgba(255, 220, 220, 0.3)' : 'transparent'} 100%
         )`,
       };
     }
+
+    if (status === NiddahStatus.Niddah) {
+      return { backgroundColor: 'rgba(255, 220, 220, 0.3)' };
+    }
+    // Optional: Green for Tahara?
+    // if (status === NiddahStatus.Tahara) { return { backgroundColor: 'rgba(220, 255, 220, 0.1)' }; }
 
     if (userEvents.length > 0 && userEvents[0].backColor) {
       return { backgroundColor: userEvents[0].backColor };
@@ -198,18 +216,53 @@ export function CalendarDay({
       {/* Tahara Events */}
       {taharaEvents.length > 0 && (
         <div className="tahara-events">
-          {taharaEvents.map((event, idx) => (
-            <button
-              key={idx}
-              className="tahara-event-badge"
+          {taharaEvents.map((event, idx) => {
+            const isGenerated = event.id?.startsWith('generated-');
+            return (
+              <button
+                key={idx}
+                className={`tahara-event-badge ${isGenerated ? 'is-generated' : ''}`}
+                onClick={e => {
+                  e.stopPropagation();
+                  if (isGenerated) {
+                    onAddTaharaEvent(event.type);
+                  } else {
+                    onRemoveTaharaEvent(event);
+                  }
+                }}
+                title={
+                  isGenerated
+                    ? `${lang === 'he' ? 'אשר: ' : 'Confirm: '}${getTaharaEventLabel(event)}`
+                    : getTaharaEventLabel(event)
+                }
+              >
+                {getTaharaEventIcon(event)}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* User Events */}
+      {userEvents && userEvents.length > 0 && (
+        <div className="user-events flex flex-col gap-1 mt-1">
+          {userEvents.map(event => (
+            <div
+              key={event.id}
+              className="user-event-badge px-1 py-0.5 rounded textxs cursor-pointer hover:opacity-80 transition-opacity truncate"
+              style={{
+                backgroundColor: event.backColor || 'var(--accent-amber)',
+                color: event.textColor || '#000000',
+                fontSize: '0.7rem',
+              }}
               onClick={e => {
                 e.stopPropagation();
-                onRemoveTaharaEvent(event);
+                onEditUserEvent?.(event);
               }}
-              title={getTaharaEventLabel(event)}
+              title={event.notes || event.name}
             >
-              {getTaharaEventIcon(event)}
-            </button>
+              {event.name}
+            </div>
           ))}
         </div>
       )}
@@ -255,18 +308,18 @@ export function CalendarDay({
           <button
             onClick={e => {
               e.stopPropagation();
-              onAddShailah();
+              onAddBedika();
             }}
           >
-            {lang === 'he' ? 'שאלה' : 'Shailah'}
+            {lang === 'he' ? 'בדיקה' : 'Bedika'}
           </button>
           <button
             onClick={e => {
               e.stopPropagation();
-              onAddEvent();
+              onAddShailah();
             }}
           >
-            {lang === 'he' ? 'אירוע' : 'Event'}
+            {lang === 'he' ? 'שאלה' : 'Shailah'}
           </button>
           <button
             onClick={e => {
@@ -276,6 +329,17 @@ export function CalendarDay({
           >
             {lang === 'he' ? 'מקווה' : 'Mikvah'}
           </button>
+
+          {onAddUserEvent && (
+            <button
+              onClick={e => {
+                e.stopPropagation();
+                onAddUserEvent();
+              }}
+            >
+              {lang === 'he' ? 'אירוע' : 'Event'}
+            </button>
+          )}
         </div>
       </div>
     </div>

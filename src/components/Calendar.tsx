@@ -1,24 +1,25 @@
 import React from 'react';
-import { jDate } from 'jcal-zmanim';
+import { jDate, type Location } from 'jcal-zmanim';
 import { UserEvent, Themes } from '../types-luach-web';
 import { CalendarDay } from './CalendarDay';
 import { Entry } from '../types';
 import { fromJDate } from '../lib/jcal';
 import { ProblemOnah } from '../lib/chashavshavon/ProblemOnah';
+import { NiddahStatus } from '../lib/chashavshavon/StatusCalculator';
 import type { TaharaEvent } from '../types';
 import './calendar/Calendar.css';
 
 interface CalendarProps {
   lang: 'en' | 'he';
-  textInLanguage: any;
+  textInLanguage: Record<string, string>;
   currentJDate: jDate;
   monthInfo: { days: jDate[]; year: number; month: number; weeksNeeded: number };
   selectedJDate: jDate;
-  location: any;
+  location: Location;
   setSelectedJDate: (date: jDate) => void;
   handleAddNewEventForDate: (e: React.MouseEvent, date: jDate) => void;
   handleEditEvent: (event: UserEvent | Entry, date: jDate) => void;
-  getEventsForDate: (date: jDate) => any[];
+  getEventsForDate: (date: jDate) => UserEvent[];
   navigateMonth: (direction: number) => void;
   today: jDate;
   calendarView: 'jewish' | 'secular';
@@ -26,8 +27,10 @@ interface CalendarProps {
   entries?: Entry[];
   flaggedOnahs?: ProblemOnah[];
   taharaEvents?: TaharaEvent[];
+  dayStatus?: Map<number, NiddahStatus>;
   onAddTaharaEvent: (type: 'hefsek' | 'bedika' | 'shailah' | 'mikvah', date: jDate) => void;
   onRemoveTaharaEvent: (event: TaharaEvent) => void;
+  onAddUserEvent: (date: jDate) => void;
 }
 
 export const Calendar: React.FC<CalendarProps> = ({
@@ -45,8 +48,10 @@ export const Calendar: React.FC<CalendarProps> = ({
   entries,
   flaggedOnahs,
   taharaEvents,
+  dayStatus,
   onAddTaharaEvent,
   onRemoveTaharaEvent,
+  onAddUserEvent,
 }) => {
   return (
     <main className="calendar-container">
@@ -112,6 +117,8 @@ export const Calendar: React.FC<CalendarProps> = ({
                   e.date.day === date.Day
               ) || [];
 
+            const status = dayStatus?.get(date.Abs);
+
             return (
               <CalendarDay
                 key={i}
@@ -120,6 +127,11 @@ export const Calendar: React.FC<CalendarProps> = ({
                 isSelected={isSelected}
                 isOtherMonth={isOtherMonth}
                 entry={entry}
+                daysSinceEntry={entry ? 1 : undefined} // Logic for daysSinceEntry needed? CalendarDay uses it.
+                // Note: CalendarDay logic for daysSinceEntry was not fully implemented in wrapper yet, but prop exists.
+                // We'll leave it undefined for MVP or implement simple logic if entry exists.
+                // Actually, daysSinceEntry implies calculation from PREVIOUS entry. Here current entry makes it Day 1.
+
                 calendarView={calendarView}
                 lang={lang as 'en' | 'he'}
                 taharaEvents={dayTaharaEvents}
@@ -128,18 +140,19 @@ export const Calendar: React.FC<CalendarProps> = ({
                 isHoliday={isYomTov}
                 isShabbos={isShabbos}
                 holidayName={holidayName}
+                status={status}
                 onDayClick={() => setSelectedJDate(date)}
                 onAddEntry={() =>
                   handleAddNewEventForDate({ stopPropagation: () => {} } as React.MouseEvent, date)
                 }
                 onEditEntry={entry => handleEditEvent(entry, date)}
-                onAddEvent={() =>
-                  handleAddNewEventForDate({ stopPropagation: () => {} } as React.MouseEvent, date)
-                }
                 onAddHefsek={() => onAddTaharaEvent('hefsek', date)}
+                onAddBedika={() => onAddTaharaEvent('bedika', date)}
                 onAddShailah={() => onAddTaharaEvent('shailah', date)}
                 onAddMikvah={() => onAddTaharaEvent('mikvah', date)}
+                onAddTaharaEvent={type => onAddTaharaEvent(type, date)}
                 onRemoveTaharaEvent={onRemoveTaharaEvent}
+                onAddUserEvent={() => onAddUserEvent(date)}
               />
             );
           })}

@@ -25,6 +25,8 @@ export function Header({
   onEntriesClick,
   onKavuahsClick,
   onFlaggedDatesClick,
+  onLogin,
+  onLogout,
   user,
 }: HeaderProps) {
   return (
@@ -105,13 +107,28 @@ export function Header({
           {getThemeIcon(theme)}
         </button>
 
-        {user && (
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-text-secondary hidden sm:inline">
-              {user.displayName || user.email}
-            </span>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {user ? (
+            <>
+              <span className="text-sm text-text-secondary hidden sm:inline">
+                {user.displayName || user.email}
+              </span>
+              <button
+                onClick={onLogout}
+                className="text-xs font-semibold px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors"
+              >
+                {lang === 'he' ? 'התנתק' : 'Logout'}
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={onLogin}
+              className="text-xs font-bold px-3 py-1.5 rounded-lg bg-accent-amber text-white hover:bg-amber-600 transition-colors shadow-sm"
+            >
+              {lang === 'he' ? 'התחבר' : 'Login'}
+            </button>
+          )}
+        </div>
       </div>
     </header>
   );

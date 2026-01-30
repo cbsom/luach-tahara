@@ -37,6 +37,13 @@ import {
     type TaharaEventRecord,
     type TaharaEventData,
 } from './taharaEventService';
+import {
+    getAllUserEvents,
+    createUserEvent,
+    updateUserEvent,
+    deleteUserEvent,
+} from './userEventService';
+import { UserEvent } from '../../types-luach-web';
 import type { JewishDate, Settings } from '@/types';
 
 /**
@@ -176,6 +183,59 @@ export function useTaharaEvents() {
         modifyTaharaEvent,
         removeTaharaEvent,
         reload: loadTaharaEvents,
+    };
+}
+
+/**
+ * Hook to manage user events
+ */
+export function useUserEvents() {
+    const [userEvents, setUserEvents] = useState<UserEvent[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
+
+    const loadUserEvents = useCallback(async () => {
+        try {
+            setLoading(true);
+            const data = await getAllUserEvents();
+            setUserEvents(data);
+            setError(null);
+        } catch (err) {
+            setError(err as Error);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        loadUserEvents();
+    }, [loadUserEvents]);
+
+    const addUserEvent = useCallback(async (data: UserEvent) => {
+        const event = await createUserEvent(data);
+        setUserEvents(prev => [...prev, event]);
+        return event;
+    }, []);
+
+    const modifyUserEvent = useCallback(async (id: string, updates: Partial<UserEvent>) => {
+        const updated = await updateUserEvent(id, updates);
+        setUserEvents(prev => prev.map(e => e.id === id ? updated : e));
+        return updated;
+    }, []);
+
+    const removeUserEvent = useCallback(async (id: string) => {
+        await deleteUserEvent(id);
+        setUserEvents(prev => prev.filter(e => e.id !== id));
+    }, []);
+
+    return {
+        userEvents,
+        loading,
+        error,
+        addUserEvent,
+        modifyUserEvent,
+        removeUserEvent,
+        reload: loadUserEvents,
     };
 }
 

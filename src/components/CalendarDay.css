@@ -135,6 +135,15 @@
     transform: scale(1.1);
 }
 
+.tahara-event-badge.is-generated {
+    background: rgba(59, 130, 246, 0.4);
+    border: 1px dashed rgba(255, 255, 255, 0.4);
+}
+
+.tahara-event-badge.is-generated:hover {
+    background: rgba(59, 130, 246, 0.8);
+}
+
 /* Holiday Name */
 .holiday-name {
     font-size: 0.7rem;

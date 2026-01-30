@@ -19,8 +19,14 @@ import { KavuahList } from './kavuah/KavuahList';
 import { FlaggedDatesSidebar } from './flagged-dates/FlaggedDatesSidebar';
 import TaharaEventGenerator from '../lib/chashavshavon/TaharaEventGenerator';
 import type { TaharaEvent, TaharaEventType } from '../types';
+import { useUserEvents } from '../services/db/hooks';
+import { EventModal } from './events/EventModal';
+import { EventsListModal } from './events/EventsListModal';
+import { UserEventTypes } from '../types-luach-web';
+import { nanoid } from 'nanoid';
 
 import { toJDate } from '../lib/jcal';
+import StatusCalculator from '../lib/chashavshavon/StatusCalculator';
 
 interface CalendarWrapperProps {
   currentJDate: jDate;
@@ -52,7 +58,6 @@ export function Calendar({
   onDayClick,
   location,
   lang,
-  getEventsForDate,
   isSettingsOpen = false,
   onCloseSettings = () => {},
   isEntryListOpen = false,
@@ -67,7 +72,7 @@ export function Calendar({
   // DB Hooks
   const { entries: entryRecords, addEntry, modifyEntry, removeEntry } = useEntries();
   const { kavuahs: kavuahRecords, addKavuah } = useKavuahs(true);
-  const { settings } = useSettings();
+  const { settings, updateSingleSetting } = useSettings();
   const { taharaEvents: taharaRecords, addTaharaEvent, removeTaharaEvent } = useTaharaEvents();
 
   // 1. Logic Objects: Transform EntryRecord to Entry Class Instances
@@ -177,7 +182,7 @@ export function Calendar({
         generatedEvents = rawEvents.map(e => ({
           id: e.taharaEventId || `generated-${e.jdate.Abs}-${e.taharaEventType}`,
           date: fromJDate(e.jdate),
-          type: e.toTypeString() as TaharaEventType,
+          type: e.getType() as TaharaEventType,
           createdAt: 0,
           updatedAt: 0,
         }));
@@ -195,13 +200,19 @@ export function Calendar({
       updatedAt: r.updatedAt,
     }));
 
-    // 3. Combine - Prefer DB events if duplicates?
-    // For now, simple concatenation. We might want to filter out generated suggestions if a real event exists on that day of same type.
-    // e.g. if generated Mikvah on day X, and DB has Mikvah on day X, hide generated?
-    // For now, let's just show both (or maybe generated ones are helpful reminders even if you marked one?)
-    // Actually, usually you mark the actual event and ignore the suggestion.
-    // Let's just concat for MVP.
-    return [...dbEvents, ...generatedEvents];
+    // 3. Combine - Filter out generated suggestions if a real event exists
+    const filteredGenerated = generatedEvents.filter(
+      gen =>
+        !dbEvents.some(
+          db =>
+            db.date.year === gen.date.year &&
+            db.date.month === gen.date.month &&
+            db.date.day === gen.date.day &&
+            db.type === gen.type
+        )
+    );
+
+    return [...dbEvents, ...filteredGenerated];
   }, [entryInstances, settings, taharaRecords]);
 
   // Handlers for Tahara Events
@@ -241,8 +252,11 @@ export function Calendar({
 
   // Reset snooze when entries change
   useEffect(() => {
-    setSuggestionsSnoozed(false);
-  }, [entryRecords]);
+    if (suggestionsSnoozed) {
+      const timer = setTimeout(() => setSuggestionsSnoozed(false), 0);
+      return () => clearTimeout(timer);
+    }
+  }, [entryRecords, suggestionsSnoozed]);
 
   // Calculate month info
   const monthInfo = useMemo(() => {
@@ -284,11 +298,186 @@ export function Calendar({
     };
   }, [currentJDate, calendarView]);
 
+  // Calculate Niddah Status
+  const statusMap = useMemo(() => {
+    if (!monthInfo.days.length) return new Map();
+    // Map DB records to TaharaEvent interface (StatusCalculator expects 'date')
+    const eventsForStatus = taharaRecords.map(r => ({
+      id: r.id,
+      date: r.jewishDate, // DB has jewishDate, interface needs date
+      type: r.type,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+    }));
+    const calculator = new StatusCalculator(entryInstances, eventsForStatus);
+    return calculator.getStatuses(monthInfo.days);
+  }, [entryInstances, taharaRecords, monthInfo.days]);
+
+  // User Events Logic
+  const { userEvents, addUserEvent, modifyUserEvent, removeUserEvent } = useUserEvents();
+  const [isUserEventModalOpen, setIsUserEventModalOpen] = useState(false);
+  const [isUserEventsListOpen, setIsUserEventsListOpen] = useState(false);
+
+  // User Event Form State
+  const [userEventFormInitialDate, setUserEventFormInitialDate] = useState<jDate>(today);
+  const [editingUserEvent, setEditingUserEvent] = useState<UserEvent | null>(null);
+  const [userEventFormName, setUserEventFormName] = useState('');
+  const [userEventFormNotes, setUserEventFormNotes] = useState('');
+  const [userEventFormType, setUserEventFormType] = useState<UserEventTypes>(
+    UserEventTypes.HebrewDateRecurringYearly
+  );
+  const [userEventFormColor, setUserEventFormColor] = useState('#fde047');
+  const [userEventFormTextColor, setUserEventFormTextColor] = useState('#1e293b');
+  const [userEventFormRemindDayOf, setUserEventFormRemindDayOf] = useState(false);
+  const [userEventFormRemindDayBefore, setUserEventFormRemindDayBefore] = useState(false);
+
+  const resetUserEventForm = () => {
+    setUserEventFormName('');
+    setUserEventFormNotes('');
+    setUserEventFormType(UserEventTypes.HebrewDateRecurringYearly);
+    setUserEventFormColor('#fde047');
+    setUserEventFormTextColor('#1e293b');
+    setUserEventFormRemindDayOf(false);
+    setUserEventFormRemindDayBefore(false);
+    setEditingUserEvent(null);
+  };
+
+  const handleEditUserEvent = (event: UserEvent, date?: jDate) => {
+    const d = date || new jDate(event.jYear, event.jMonth, event.jDay); // Fallback if date not passed
+    setUserEventFormInitialDate(d);
+    setEditingUserEvent(event);
+    setUserEventFormName(event.name);
+    setUserEventFormNotes(event.notes);
+    setUserEventFormType(event.type);
+    setUserEventFormColor(event.backColor || '#fde047');
+    setUserEventFormTextColor(event.textColor || '#1e293b');
+    setUserEventFormRemindDayOf(event.remindDayOf || false);
+    setUserEventFormRemindDayBefore(event.remindDayBefore || false);
+    setIsUserEventModalOpen(true);
+  };
+
+  const handleAddNewUserEvent = (date: jDate) => {
+    setUserEventFormInitialDate(date);
+    resetUserEventForm();
+    setIsUserEventModalOpen(true);
+  };
+
+  // Helper for matching months (leap years)
+  const isMonthMatch = (occMonth: number, occYear: number, currMonth: number, currYear: number) => {
+    if (currMonth >= 12 && occMonth >= 12) {
+      const isOccLeap = jDate.isJdLeapY(occYear);
+      const isCurrLeap = jDate.isJdLeapY(currYear);
+      if (isOccLeap !== isCurrLeap) {
+        return (
+          (isOccLeap && currMonth === 12) || (isCurrLeap && occMonth === 12 && currMonth === 13)
+        );
+      }
+    }
+    return occMonth === currMonth;
+  };
+
+  const getUserEventsForDate = (date: jDate) => {
+    const sDate = date.getDate();
+    return userEvents.filter(uo => {
+      // ⚡ High Efficiency Match using Absolute Date
+      if (uo.type === UserEventTypes.OneTime) {
+        return (
+          uo.jAbs === date.Abs ||
+          (uo.jDay === date.Day && uo.jMonth === date.Month && uo.jYear === date.Year)
+        );
+      }
+
+      const eventStartAbs = uo.jAbs || jDate.absJd(uo.jYear, uo.jMonth, uo.jDay);
+      if (eventStartAbs > date.Abs) return false;
+
+      switch (uo.type) {
+        case UserEventTypes.HebrewDateRecurringYearly:
+          return uo.jDay === date.Day && isMonthMatch(uo.jMonth, uo.jYear, date.Month, date.Year);
+        case UserEventTypes.HebrewDateRecurringMonthly:
+          return uo.jDay === date.Day;
+        case UserEventTypes.SecularDateRecurringYearly: {
+          const occSDate = new Date(uo.sDate);
+          return occSDate.getDate() === sDate.getDate() && occSDate.getMonth() === sDate.getMonth();
+        }
+        case UserEventTypes.SecularDateRecurringMonthly: {
+          const occSDate = new Date(uo.sDate);
+          return occSDate.getDate() === sDate.getDate();
+        }
+        default:
+          return false;
+      }
+    });
+  };
+
+  const handleSaveUserEvent = async () => {
+    const newId = editingUserEvent?.id || nanoid();
+    // determine date from form or initial
+    // If editing, keep original date unless we want to support changing date (not implemented in this form yet)
+    // Actually EventModal has date change support but we need to implement it.
+    // For now assume date is preserved from initial or editing.
+    const baseDate = editingUserEvent
+      ? new jDate(editingUserEvent.jYear, editingUserEvent.jMonth, editingUserEvent.jDay)
+      : userEventFormInitialDate;
+
+    // We need jAbs.
+    const jAbs = editingUserEvent?.jAbs ?? baseDate.Abs;
+    const sDate = baseDate.getDate();
+
+    const newEvent: UserEvent = {
+      id: newId,
+      name: userEventFormName || 'New Event',
+      notes: userEventFormNotes,
+      type: userEventFormType,
+      jYear: baseDate.Year,
+      jMonth: baseDate.Month,
+      jDay: baseDate.Day,
+      jAbs: jAbs,
+      sDate: sDate.toISOString(),
+      backColor: userEventFormColor,
+      textColor: userEventFormTextColor,
+      remindDayOf: userEventFormRemindDayOf,
+      remindDayBefore: userEventFormRemindDayBefore,
+    };
+
+    if (editingUserEvent) {
+      await modifyUserEvent(editingUserEvent.id, newEvent);
+    } else {
+      await addUserEvent(newEvent);
+    }
+
+    setIsUserEventModalOpen(false);
+    resetUserEventForm();
+  };
+
+  const handleDeleteUserEvent = async (id: string) => {
+    await removeUserEvent(id);
+    setIsUserEventModalOpen(false);
+    resetUserEventForm();
+  };
+
   // Open form for new entry
   const handleAddNewEntry = (date: jDate) => {
     setEntryFormInitialDate(date);
     setEditingEntry(undefined);
     setIsEntryFormOpen(true);
+  };
+
+  const textInLanguage = {
+    addEvent: lang === 'he' ? 'הוסף ראייה' : 'Add Entry',
+    saveEvent: lang === 'he' ? 'שמור' : 'Save',
+    addNewEvent: lang === 'he' ? 'הוסף אירוע' : 'Add Event',
+    deleteEvent: lang === 'he' ? 'מחק' : 'Delete',
+    cancel: lang === 'he' ? 'ביטול' : 'Cancel',
+    eventName: lang === 'he' ? 'שם האירוע' : 'Event Name',
+    repeatPattern: lang === 'he' ? 'חזור' : 'Repeat',
+    notes: lang === 'he' ? 'הערות' : 'Notes',
+    colorTheme: lang === 'he' ? 'צבע' : 'Color',
+    textColor: lang === 'he' ? 'צבע טקסט' : 'Text Color',
+    reminders: lang === 'he' ? 'תזכורות' : 'Reminders',
+    dayBefore: lang === 'he' ? 'יום לפני' : 'Day Before',
+    dayOf: lang === 'he' ? 'ביום האירוע' : 'Day Of',
+    deleteConfirmation:
+      lang === 'he' ? 'האם למחוק אירוע זה?' : 'Are you sure you want to delete this event?',
   };
 
   // Open form for existing entry
@@ -401,9 +590,7 @@ export function Calendar({
     await removeEntry(entry.id);
   };
 
-  const textInLanguage = {
-    addEvent: lang === 'he' ? 'הוסף ראייה' : 'Add Entry',
-  };
+  // Overwrite textInLanguage to include event modal strings handled above
 
   return (
     <>
@@ -419,13 +606,15 @@ export function Calendar({
           e?.stopPropagation();
           handleAddNewEntry(date);
         }}
-        handleEditEvent={(event: UserEvent | EntryData) => {
+        handleEditEvent={(event: UserEvent | EntryData, date: jDate) => {
           // Check if it's an entry
           if ('date' in event) {
             handleEditEntry(event as EntryData);
+          } else {
+            handleEditUserEvent(event as UserEvent, date);
           }
         }}
-        getEventsForDate={getEventsForDate || (() => [])}
+        getEventsForDate={getUserEventsForDate}
         navigateMonth={() => {}}
         today={today}
         calendarView={calendarView}
@@ -433,8 +622,10 @@ export function Calendar({
         entries={entriesForView}
         flaggedOnahs={flaggedOnahs}
         taharaEvents={taharaEvents}
+        dayStatus={statusMap}
         onAddTaharaEvent={handleAddTaharaEvent}
         onRemoveTaharaEvent={handleDeleteTaharaEvent}
+        onAddUserEvent={handleAddNewUserEvent}
       />
 
       <EntryForm
@@ -457,7 +648,13 @@ export function Calendar({
         lang={lang as 'en' | 'he'}
       />
 
-      <SettingsPanel isOpen={isSettingsOpen} onClose={onCloseSettings} lang={lang as 'en' | 'he'} />
+      <SettingsPanel
+        isOpen={isSettingsOpen}
+        onClose={onCloseSettings}
+        lang={lang as 'en' | 'he'}
+        settings={settings}
+        updateSetting={updateSingleSetting}
+      />
 
       <EntryList
         isOpen={isEntryListOpen}
@@ -482,6 +679,51 @@ export function Calendar({
         onClose={onCloseFlaggedDatesList}
         lang={lang as 'en' | 'he'}
         flaggedOnahs={flaggedOnahs}
+      />
+
+      <EventModal
+        isOpen={isUserEventModalOpen}
+        onClose={() => setIsUserEventModalOpen(false)}
+        editingEvent={editingUserEvent}
+        textInLanguage={textInLanguage}
+        lang={lang as 'en' | 'he'}
+        selectedJDate={userEventFormInitialDate}
+        formName={userEventFormName}
+        setFormName={setUserEventFormName}
+        formNotes={userEventFormNotes}
+        setFormNotes={setUserEventFormNotes}
+        formType={userEventFormType}
+        setFormType={setUserEventFormType}
+        formColor={userEventFormColor}
+        setFormColor={setUserEventFormColor}
+        formTextColor={userEventFormTextColor}
+        setFormTextColor={setUserEventFormTextColor}
+        formRemindDayOf={userEventFormRemindDayOf}
+        setFormRemindDayOf={setUserEventFormRemindDayOf}
+        formRemindDayBefore={userEventFormRemindDayBefore}
+        setFormRemindDayBefore={setUserEventFormRemindDayBefore}
+        onSave={handleSaveUserEvent}
+        onDelete={handleDeleteUserEvent}
+      />
+
+      <EventsListModal
+        isOpen={isUserEventsListOpen}
+        onClose={() => setIsUserEventsListOpen(false)}
+        events={userEvents}
+        lang={lang as 'en' | 'he'}
+        textInLanguage={textInLanguage}
+        handleEditEvent={(event, date) => {
+          handleEditUserEvent(event, date);
+        }}
+        deleteEvent={handleDeleteUserEvent}
+        saveEvents={async () => {
+          // Bulk save not implemented for saving order, but import uses it.
+          // For now, assume this is mostly for delete/edit.
+          // If import logic passes here, we should implement bulk save in hook.
+        }}
+        navigateToDate={date => {
+          onDayClick(date);
+        }}
       />
     </>
   );

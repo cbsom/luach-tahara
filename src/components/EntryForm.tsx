@@ -156,7 +156,6 @@ export function EntryForm({
 
   try {
     const jDateObj = toJDate(date);
-    const secularDate = jDateObj.getDate();
     // Ensure location is valid if processed, or rely on jcal default
     if (location) {
       const { sunrise, sunset } = jDateObj.getSunriseSunset(location);

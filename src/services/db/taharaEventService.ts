@@ -2,7 +2,6 @@
 import { getDB } from './schema';
 import { nanoid } from 'nanoid';
 import type { JewishDate } from '@/types';
-import type { TaharaEvent } from '@/types'; // Assuming this type is exported from types/index.ts. If not, I'll need to check. It IS in schema.ts as property value but imported from types.
 
 export type TaharaEventRecord = {
     id: string;

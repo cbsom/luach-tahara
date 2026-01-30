@@ -23,4 +23,8 @@ export interface UserEvent {
     textColor?: string;
     remindDayOf?: boolean;
     remindDayBefore?: boolean;
+    createdAt?: number;
+    updatedAt?: number;
+    syncStatus?: 'synced' | 'pending' | 'conflict';
+    deleted?: boolean;
 }

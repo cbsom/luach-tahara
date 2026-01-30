@@ -1,7 +1,6 @@
 import Entry from './Entry';
 import { TaharaEvent, TaharaEventType } from './TaharaEvent';
 import { Settings } from '../../types';
-import { jDate } from 'jcal-zmanim';
 
 export default class TaharaEventGenerator {
     /**

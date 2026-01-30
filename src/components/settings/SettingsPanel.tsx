@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Modal } from '../Modal';
-import { useSettings } from '../../services/db/hooks';
+import { Settings } from '@/types';
 
 import { Globe, BookOpen, Layout } from 'lucide-react';
 
@@ -8,12 +8,19 @@ interface SettingsPanelProps {
   isOpen: boolean;
   onClose: () => void;
   lang: 'en' | 'he';
+  settings: Settings | null;
+  updateSetting: <K extends keyof Settings>(key: K, value: Settings[K]) => Promise<Settings>;
 }
 
 type TabType = 'general' | 'halacha' | 'location';
 
-export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, lang }) => {
-  const { settings, updateSingleSetting: updateSetting, loading, error } = useSettings();
+export const SettingsPanel: React.FC<SettingsPanelProps> = ({
+  isOpen,
+  onClose,
+  lang,
+  settings,
+  updateSetting,
+}) => {
   const [activeTab, setActiveTab] = useState<TabType>('general');
 
   // Temporary state for Location editing (to allow text input before parsing)
@@ -21,7 +28,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, l
   // For now, simple binding.
 
   if (!isOpen) return null;
-  // if (loading || !settings) return null; // Removed to allow opening modal
 
   const t = (en: string, he: string) => (lang === 'he' ? he : en);
 
@@ -33,20 +39,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, l
       className="settings-modal"
       maxWidth="600px"
     >
-      {error ? (
-        <div className="flex flex-col items-center justify-center p-8 h-64 text-red-500">
-          <div className="text-lg font-bold mb-2">
-            {t('Error loading settings', 'שגיאה בטעינת הגדרות')}
-          </div>
-          <div className="text-sm opacity-80">{error.message}</div>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-glass-surface hover:bg-glass-hover rounded-lg text-text-primary"
-          >
-            {t('Reload Page', 'טען מחדש')}
-          </button>
-        </div>
-      ) : loading || !settings ? (
+      {!settings ? (
         <div className="flex items-center justify-center p-8 h-64">
           <div className="text-lg opacity-70 animate-pulse">
             {t('Loading settings...', 'טוען הגדרות...')}
@@ -119,6 +112,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, l
                   checked={settings.discreetReminders}
                   onChange={v => updateSetting('discreetReminders', v)}
                 />
+                <InputRow
+                  label={t('Months Ahead to Warn', 'מספר חודשים לחישוב התראות')}
+                  type="number"
+                  value={settings.numberMonthsAheadToWarn}
+                  onChange={v => updateSetting('numberMonthsAheadToWarn', parseInt(v) || 12)}
+                />
               </div>
             )}
 
@@ -149,6 +148,15 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, l
                   checked={settings.haflagaOfOnahs}
                   onChange={v => updateSetting('haflagaOfOnahs', v)}
                 />
+                <Toggle
+                  label={t('Dilug Chodesh Past Ends', 'דילוג חודש מעבר לסוף החודש')}
+                  description={t(
+                    'Continue calculating Dilug Chodesh even if it skips over the end of a month',
+                    'המשך חישוב דילוג חודש גם אם הוא מדלג על סוף חודש'
+                  )}
+                  checked={settings.dilugChodeshPastEnds}
+                  onChange={v => updateSetting('dilugChodeshPastEnds', v)}
+                />
 
                 <SectionTitle>{t('General Stringencies', 'חומרות כלליות')}</SectionTitle>
                 <Toggle
@@ -175,6 +183,15 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, l
                   label={t('Keep Longer Haflaga (Taz)', 'חושש להפלגה ארוכה (ט"ז)')}
                   checked={settings.keepLongerHaflagah}
                   onChange={v => updateSetting('keepLongerHaflagah', v)}
+                />
+                <Toggle
+                  label={t('No Problems After Entry', 'הסתר חששות שבוע אחרי ראייה')}
+                  description={t(
+                    'Do not flag dates in the 7 days following a new entry',
+                    'אל תציג התראות ב-7 הימים שלאחר ראייה חדשה'
+                  )}
+                  checked={settings.noProbsAfterEntry}
+                  onChange={v => updateSetting('noProbsAfterEntry', v)}
                 />
               </div>
             )}

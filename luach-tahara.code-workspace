@@ -8,6 +8,9 @@
 	},
 	{
 		"path": "../jcal-zmanim"
+	},
+	{
+		"path": "../luach-web"
 	}
 ],
   "settings": {}
