@@ -1,11 +1,11 @@
 // Entry Form Component - For creating and editing entries (ראיות)
 import { useState, useEffect } from 'react';
 import { jDate } from 'jcal-zmanim';
-import { X } from 'lucide-react';
 import { NightDay } from '@/types';
 import type { Entry, JewishDate } from '@/types';
 import { toJDate, fromJDate } from '@/lib/jcal';
 import { nanoid } from 'nanoid';
+import { Modal } from './Modal';
 import './EntryForm.css';
 
 interface EntryFormProps {
@@ -236,215 +236,221 @@ export function EntryForm({
       lang === 'he'
         ? 'אל תשכח שאחרי השקיעה, התאריך העברי משתנה.'
         : 'Do not forget that after sunset, the Jewish Date changes.',
+    deleteConfirmation: lang === 'he' ? 'האם למחוק ראייה זו?' : 'Delete this entry?',
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content entry-form-modal" onClick={e => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2 className="modal-title">{t.title}</h2>
-          <button className="modal-close-btn" onClick={onClose} title={t.close}>
-            <X size={20} />
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={
+        existingEntry
+          ? lang === 'he'
+            ? 'ערוך ראייה'
+            : 'Edit Entry'
+          : lang === 'he'
+            ? 'ראייה חדשה'
+            : 'New Entry'
+      }
+      className="entry-form-modal"
+      footer={
+        <div className="flex gap-3 justify-end w-full">
+          {existingEntry && onDelete && (
+            <button type="button" className="btn-danger mr-auto" onClick={handleDelete}>
+              {lang === 'he' ? 'מחק' : 'Delete'}
+            </button>
+          )}
+          <button type="button" className="btn-secondary" onClick={onClose}>
+            {lang === 'he' ? 'ביטול' : 'Cancel'}
+          </button>
+          <button type="submit" className="btn-primary" form="entry-form">
+            {existingEntry ? (lang === 'he' ? 'עדכן' : 'Update') : lang === 'he' ? 'שמור' : 'Save'}
           </button>
         </div>
+      }
+    >
+      <form onSubmit={handleSubmit} id="entry-form" className="entry-form pb-0">
+        {/* Date Section */}
+        <div className="form-section">
+          <h3 className="section-title">{t.date}</h3>
 
-        <form onSubmit={handleSubmit} className="entry-form">
-          {/* Date Section */}
-          <div className="form-section">
-            <h3 className="section-title">{t.date}</h3>
-
-            <div className="date-inputs">
-              <div className="form-group">
-                <label className="form-label">{t.year}</label>
-                <input
-                  type="number"
-                  className="form-input"
-                  value={date.year}
-                  onChange={e => handleDateChange('year', e.target.value)}
-                  required
-                  min={5000}
-                  max={6000}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">{t.month}</label>
-                <input
-                  type="number"
-                  className="form-input"
-                  value={date.month}
-                  onChange={e => handleDateChange('month', e.target.value)}
-                  required
-                  min={1}
-                  max={13}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">{t.day}</label>
-                <input
-                  type="number"
-                  className="form-input"
-                  value={date.day}
-                  onChange={e => handleDateChange('day', e.target.value)}
-                  required
-                  min={1}
-                  max={30}
-                />
-              </div>
+          <div className="date-inputs">
+            <div className="form-group">
+              <label className="form-label">{t.year}</label>
+              <input
+                type="number"
+                className="form-input"
+                value={date.year}
+                onChange={e => handleDateChange('year', e.target.value)}
+                required
+                min={5000}
+                max={6000}
+              />
             </div>
 
-            <div className="date-display">
-              <span className="hebrew-date">{hebrewDate}</span>
-              <span className="secular-date">{secularDateDisplay}</span>
+            <div className="form-group">
+              <label className="form-label">{t.month}</label>
+              <input
+                type="number"
+                className="form-input"
+                value={date.month}
+                onChange={e => handleDateChange('month', e.target.value)}
+                required
+                min={1}
+                max={13}
+              />
             </div>
 
-            <div className="sunrise-sunset-info">
-              <p>
-                {t.sunrise}: <strong>{sunriseText}</strong>
-                {'    '}
-                {t.sunset}: <strong>{sunsetText}</strong>
-              </p>
-              <p className="date-note">{t.dateChangesNote}</p>
+            <div className="form-group">
+              <label className="form-label">{t.day}</label>
+              <input
+                type="number"
+                className="form-input"
+                value={date.day}
+                onChange={e => handleDateChange('day', e.target.value)}
+                required
+                min={1}
+                max={30}
+              />
             </div>
           </div>
 
-          {/* Onah Section */}
-          <div className="form-section">
-            <h3 className="section-title">{t.onah}</h3>
-            <div className="onah-selector">
-              <button
-                type="button"
-                className={`onah-button ${onah === NightDay.Night ? 'active' : ''}`}
-                onClick={() => setOnah(NightDay.Night)}
-              >
-                {t.night}
-              </button>
-              <button
-                type="button"
-                className={`onah-button ${onah === NightDay.Day ? 'active' : ''}`}
-                onClick={() => setOnah(NightDay.Day)}
-              >
-                {t.dayOnah}
-              </button>
-            </div>
-
-            {onah === NightDay.Night && (
-              <div className="night-warning">
-                <p>
-                  <strong>{t.pleaseMakeSure}</strong> {t.nightWarning}
-                </p>
-              </div>
-            )}
+          {/* Other form fields - using existing layout but in Modal */}
+          <div className="date-display">
+            <span className="hebrew-date">{hebrewDate}</span>
+            <span className="secular-date">{secularDateDisplay}</span>
           </div>
 
-          {/* Comments Section */}
-          <div className="form-section">
-            <h3 className="section-title">{t.comments}</h3>
-            <textarea
-              className="form-textarea"
-              value={comments}
-              onChange={e => setComments(e.target.value)}
-              placeholder={t.commentsPlaceholder}
-              rows={3}
-              maxLength={500}
-            />
+          <div className="sunrise-sunset-info">
+            <p>
+              {t.sunrise}: <strong>{sunriseText}</strong>
+              {'    '}
+              {t.sunset}: <strong>{sunsetText}</strong>
+            </p>
+            <p className="date-note">{t.dateChangesNote}</p>
           </div>
+        </div>
 
-          {/* Advanced Options */}
-          <div className="form-section">
+        {/* Onah Section */}
+        <div className="form-section">
+          <h3 className="section-title">{t.onah}</h3>
+          <div className="onah-selector">
             <button
               type="button"
-              className="toggle-advanced-btn"
-              onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+              className={`onah-button ${onah === NightDay.Night ? 'active' : ''}`}
+              onClick={() => setOnah(NightDay.Night)}
             >
-              {showAdvancedOptions ? t.hideAdvanced : t.showAdvanced}
+              {t.night}
             </button>
+            <button
+              type="button"
+              className={`onah-button ${onah === NightDay.Day ? 'active' : ''}`}
+              onClick={() => setOnah(NightDay.Day)}
+            >
+              {t.dayOnah}
+            </button>
+          </div>
 
-            {showAdvancedOptions && (
-              <div className="advanced-options">
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={ignoreForFlaggedDates}
-                    onChange={e => setIgnoreForFlaggedDates(e.target.checked)}
-                  />
-                  <span>{t.ignoreFlagged}</span>
-                </label>
+          {onah === NightDay.Night && (
+            <div className="night-warning">
+              <p>
+                <strong>{t.pleaseMakeSure}</strong> {t.nightWarning}
+              </p>
+            </div>
+          )}
+        </div>
 
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={ignoreForKavuah}
-                    onChange={e => setIgnoreForKavuah(e.target.checked)}
-                  />
-                  <span>{t.ignoreKavuah}</span>
-                </label>
+        {/* Comments Section */}
+        <div className="form-section">
+          <h3 className="section-title">{t.comments}</h3>
+          <textarea
+            className="form-textarea"
+            value={comments}
+            onChange={e => setComments(e.target.value)}
+            placeholder={t.commentsPlaceholder}
+            rows={3}
+            maxLength={500}
+          />
+        </div>
+
+        {/* Advanced Options */}
+        <div className="form-section">
+          <button
+            type="button"
+            className="toggle-advanced-btn"
+            onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+          >
+            {showAdvancedOptions ? t.hideAdvanced : t.showAdvanced}
+          </button>
+
+          {showAdvancedOptions && (
+            <div className="advanced-options">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={ignoreForFlaggedDates}
+                  onChange={e => setIgnoreForFlaggedDates(e.target.checked)}
+                />
+                <span>{t.ignoreFlagged}</span>
+              </label>
+
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={ignoreForKavuah}
+                  onChange={e => setIgnoreForKavuah(e.target.checked)}
+                />
+                <span>{t.ignoreKavuah}</span>
+              </label>
+            </div>
+          )}
+        </div>
+
+        {/* Hefsek Tahara Reminder */}
+        <div className="form-section">
+          <h3 className="section-title">{t.hefsekReminder}</h3>
+
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={enableHefsekReminder}
+              onChange={e => setEnableHefsekReminder(e.target.checked)}
+            />
+            <span>{t.enableReminder}</span>
+          </label>
+
+          {enableHefsekReminder && (
+            <div className="reminder-settings">
+              <div className="form-group">
+                <label className="form-label">{t.daysAfter}</label>
+                <input
+                  type="number"
+                  className="form-input"
+                  value={hefsekDaysAfter}
+                  onChange={e => setHefsekDaysAfter(parseInt(e.target.value, 10))}
+                  min={1}
+                  max={15}
+                />
               </div>
-            )}
-          </div>
 
-          {/* Hefsek Tahara Reminder */}
-          <div className="form-section">
-            <h3 className="section-title">{t.hefsekReminder}</h3>
-
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={enableHefsekReminder}
-                onChange={e => setEnableHefsekReminder(e.target.checked)}
-              />
-              <span>{t.enableReminder}</span>
-            </label>
-
-            {enableHefsekReminder && (
-              <div className="reminder-settings">
-                <div className="form-group">
-                  <label className="form-label">{t.daysAfter}</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    value={hefsekDaysAfter}
-                    onChange={e => setHefsekDaysAfter(parseInt(e.target.value, 10))}
-                    min={1}
-                    max={15}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">{t.time}</label>
-                  <input
-                    type="time"
-                    className="form-input"
-                    value={hefsekTimeOfDay}
-                    onChange={e => setHefsekTimeOfDay(e.target.value)}
-                  />
-                </div>
+              <div className="form-group">
+                <label className="form-label">{t.time}</label>
+                <input
+                  type="time"
+                  className="form-input"
+                  value={hefsekTimeOfDay}
+                  onChange={e => setHefsekTimeOfDay(e.target.value)}
+                />
               </div>
-            )}
-          </div>
+            </div>
+          )}
+        </div>
 
-          {/* Review Note */}
-          <div className="review-note">
-            <p>{t.reviewBeforeSave}</p>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="form-actions">
-            {existingEntry && onDelete && (
-              <button type="button" className="btn-danger" onClick={handleDelete}>
-                {t.delete}
-              </button>
-            )}
-            <button type="button" className="btn-secondary" onClick={onClose}>
-              {t.cancel}
-            </button>
-            <button type="submit" className="btn-primary">
-              {t.save}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        {/* Review Note */}
+        <div className="review-note">
+          <p>{t.reviewBeforeSave}</p>
+        </div>
+      </form>
+    </Modal>
   );
 }

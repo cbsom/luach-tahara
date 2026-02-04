@@ -10,7 +10,6 @@ interface EventsListModalProps {
   onClose: () => void;
   events: UserEvent[];
   lang: 'en' | 'he';
-  textInLanguage: any;
   handleEditEvent: (event: UserEvent, date: jDate) => void;
   deleteEvent: (id: string) => void;
   saveEvents: (events: UserEvent[]) => void;
@@ -47,7 +46,6 @@ export const EventsListModal: React.FC<EventsListModalProps> = ({
   onClose,
   events,
   lang,
-  textInLanguage,
   handleEditEvent,
   deleteEvent,
   saveEvents,

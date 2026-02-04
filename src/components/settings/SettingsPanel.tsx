@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal } from '../Modal';
 import { Settings } from '@/types';
+import { Locations } from 'jcal-zmanim';
 
 import { Globe, BookOpen, Layout } from 'lucide-react';
 
@@ -22,6 +23,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   updateSetting,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('general');
+  const [locationSearch, setLocationSearch] = useState('');
 
   // Temporary state for Location editing (to allow text input before parsing)
   // Or just bind directly? Binding directly might be jumpy for numbers.
@@ -198,45 +200,72 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
             {activeTab === 'location' && (
               <div className="space-y-4">
-                <SectionTitle>
-                  {t('Manual Location Configuration', 'הגדרת מיקום ידנית')}
-                </SectionTitle>
-                <InputRow
-                  label={t('Name', 'שם')}
-                  value={settings.location.name}
-                  onChange={v => updateSetting('location', { ...settings.location, name: v })}
-                />
-                <div className="grid grid-cols-2 gap-4">
-                  <InputRow
-                    label={t('Latitude', 'קו רוחב')}
-                    type="number"
-                    value={settings.location.latitude}
-                    onChange={v =>
-                      updateSetting('location', { ...settings.location, latitude: parseFloat(v) })
-                    }
+                <SectionTitle>{t('Select Location', 'בחר מיקום')}</SectionTitle>
+                <div className="flex flex-col gap-2 relative">
+                  <input
+                    type="text"
+                    placeholder={t('Search location...', 'חפש מיקום...')}
+                    className="bg-glass-surface rounded-lg p-2 border border-glass-border focus:border-accent-amber focus:outline-none"
+                    value={locationSearch}
+                    onChange={e => setLocationSearch(e.target.value)}
                   />
-                  <InputRow
-                    label={t('Longitude', 'קו אורך')}
-                    type="number"
-                    value={settings.location.longitude}
-                    onChange={v =>
-                      updateSetting('location', { ...settings.location, longitude: parseFloat(v) })
-                    }
-                  />
+                  {locationSearch && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-glass-border rounded-lg shadow-xl z-50 max-h-48 overflow-y-auto">
+                      {Locations.filter(loc =>
+                        loc.Name.toLowerCase().includes(locationSearch.toLowerCase())
+                      )
+                        .slice(0, 10)
+                        .map(loc => (
+                          <button
+                            key={loc.Name}
+                            onClick={() => {
+                              updateSetting('location', {
+                                name: loc.Name,
+                                latitude: loc.Latitude,
+                                longitude: loc.Longitude,
+                                utcOffset: loc.UTCOffset,
+                                israel: loc.Israel,
+                                elevation: loc.Elevation,
+                              });
+                              setLocationSearch('');
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-glass-overlay flex justify-between items-center"
+                          >
+                            <span>{loc.Name}</span>
+                            {loc.Israel && <span className="text-xs text-accent-teal">Israel</span>}
+                          </button>
+                        ))}
+                    </div>
+                  )}
                 </div>
-                <InputRow
-                  label={t('UTC Offset', 'הפרש שעות (UTC)')}
-                  type="number"
-                  value={settings.location.utcOffset}
-                  onChange={v =>
-                    updateSetting('location', { ...settings.location, utcOffset: parseFloat(v) })
-                  }
-                />
-                <Toggle
-                  label={t('In Israel', 'בארץ ישראל')}
-                  checked={!!settings.location.israel}
-                  onChange={v => updateSetting('location', { ...settings.location, israel: v })}
-                />
+
+                <div className="bg-glass-surface rounded-xl p-4 mt-6 space-y-3 opacity-80 pointer-events-none">
+                  <div className="flex justify-between border-b border-glass-border pb-2">
+                    <span className="font-bold">{t('Current Location', 'מיקום נוכחי')}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="opacity-60">{t('Name', 'שם')}:</span>
+                      <span>{settings.location.name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="opacity-60">{t('Latitude', 'קו רוחב')}:</span>
+                      <span>{settings.location.latitude?.toFixed(4)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="opacity-60">{t('Longitude', 'קו אורך')}:</span>
+                      <span>{settings.location.longitude?.toFixed(4)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="opacity-60">{t('UTC Offset', 'UTC')}:</span>
+                      <span>{settings.location.utcOffset}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="opacity-60">{t('Israel', 'ישראל')}:</span>
+                      <span>{settings.location.israel ? t('Yes', 'כן') : t('No', 'לא')}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>

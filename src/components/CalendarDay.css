@@ -17,7 +17,7 @@
 .calendar-day-niddah:hover {
     background: rgba(255, 255, 255, 0.08);
     border-color: rgba(255, 255, 255, 0.2);
-    transform: translateY(-4px) scale(1.02);
+    /* transform: translateY(-4px) scale(1.02); -- REMOVED to prevent z-index/clipping issues with popups */
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
     z-index: 10;
 }
@@ -27,7 +27,7 @@
         0 0 0 2px var(--text-primary),
         0 10px 20px rgba(0, 0, 0, 0.5);
     z-index: 20;
-    transform: scale(1.02);
+    /* transform: scale(1.02); */
 }
 
 .calendar-day-niddah.is-selected {
@@ -144,6 +144,35 @@
     background: rgba(59, 130, 246, 0.8);
 }
 
+/* User Events */
+.user-events {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 4px;
+    width: 100%;
+}
+
+.user-event-badge {
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    transition: opacity 0.2s;
+    display: block;
+    width: 100%;
+    text-align: start;
+    font-weight: 500;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.user-event-badge:hover {
+    opacity: 0.9;
+}
+
 /* Holiday Name */
 .holiday-name {
     font-size: 0.7rem;
@@ -159,7 +188,7 @@
     position: absolute;
     bottom: 8px;
     right: 8px;
-    z-index: 15;
+    z-index: 100; /* Increased Z-Index */
 }
 
 [dir="rtl"] .add-menu-container {
@@ -180,6 +209,11 @@
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
     transition: all 0.2s;
+    opacity: 0; /* Hidden by default */
+}
+
+.calendar-day-niddah:hover .add-button {
+    opacity: 1; /* Show on hover */
 }
 
 .add-button:hover {
@@ -189,19 +223,20 @@
 
 .add-menu {
     position: absolute;
-    bottom: 100%;
+    /* Determine direction via JS style or default to bottom */
+    bottom: 100%; /* Open UPWARDS */
     right: 0;
-    margin-bottom: 8px;
+    min-width: 140px;
     background: var(--bg-primary);
     border: 1px solid var(--border-medium);
     border-radius: 8px;
-    box-shadow: var(--shadow-lg);
-    padding: 4px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    padding: 6px;
     display: none;
     flex-direction: column;
-    gap: 2px;
-    min-width: 120px;
-    z-index: 20;
+    gap: 4px;
+    z-index: 1000; /* Very high z-index */
+    pointer-events: auto;
 }
 
 [dir="rtl"] .add-menu {
@@ -211,18 +246,33 @@
 
 .add-menu.show {
     display: flex;
+    animation: menuFadeIn 0.15s ease-out;
+}
+
+@keyframes menuFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 .add-menu button {
     background: transparent;
     border: none;
-    padding: 6px 12px;
+    padding: 8px 12px;
     text-align: left;
     cursor: pointer;
-    border-radius: 4px;
-    font-size: 0.85rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
     color: var(--text-primary);
     transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 [dir="rtl"] .add-menu button {
@@ -231,6 +281,7 @@
 
 .add-menu button:hover {
     background: var(--bg-secondary);
+    color: var(--accent-amber);
 }
 
 /* Responsive */
@@ -255,11 +306,11 @@
     }
 
     .add-menu {
-        min-width: 100px;
+        min-width: 120px;
     }
 
     .add-menu button {
-        font-size: 0.75rem;
-        padding: 4px 8px;
+        font-size: 0.8rem;
+        padding: 6px 10px;
     }
 }

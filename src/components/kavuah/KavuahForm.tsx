@@ -38,7 +38,10 @@ export const KavuahForm: React.FC<KavuahFormProps> = ({ initialData, onSave, onC
   // Helper to format entry for dropdown
   const formatEntryOption = (entry: any) => {
     // Reconstruct jDate from the stored object
-    const jd = new jDate(entry.date.year, entry.date.month, entry.date.day);
+    const dateObj = entry.jewishDate || entry.date;
+    if (!dateObj) return 'Invalid Date';
+
+    const jd = new jDate(dateObj.year, dateObj.month, dateObj.day);
     const dateStr = lang === 'he' ? jd.toStringHeb() : jd.toString();
 
     const onahStr =

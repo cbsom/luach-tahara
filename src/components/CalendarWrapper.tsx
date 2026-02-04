@@ -17,7 +17,6 @@ import { SettingsPanel } from './settings/SettingsPanel';
 import { EntryList } from './entries/EntryList';
 import { KavuahList } from './kavuah/KavuahList';
 import { FlaggedDatesSidebar } from './flagged-dates/FlaggedDatesSidebar';
-import TaharaEventGenerator from '../lib/chashavshavon/TaharaEventGenerator';
 import type { TaharaEvent, TaharaEventType } from '../types';
 import { useUserEvents } from '../services/db/hooks';
 import { EventModal } from './events/EventModal';
@@ -49,6 +48,8 @@ interface CalendarWrapperProps {
   onCloseKavuahList?: () => void;
   isFlaggedDatesListOpen?: boolean;
   onCloseFlaggedDatesList?: () => void;
+  isUserEventsListOpen?: boolean;
+  onCloseUserEventsList?: () => void;
 }
 
 export function Calendar({
@@ -66,6 +67,8 @@ export function Calendar({
   onCloseKavuahList = () => {},
   isFlaggedDatesListOpen = false,
   onCloseFlaggedDatesList = () => {},
+  isUserEventsListOpen = false,
+  onCloseUserEventsList = () => {},
 }: CalendarWrapperProps) {
   const today = new jDate();
 
@@ -173,25 +176,7 @@ export function Calendar({
 
   // Calculate Tahara Events
   const taharaEvents = useMemo(() => {
-    // 1. Get Generated Events
-    let generatedEvents: TaharaEvent[] = [];
-    if (settings && entryInstances.length > 0) {
-      try {
-        const entryClasses = entryInstances;
-        const rawEvents = TaharaEventGenerator.generate(entryClasses, settings as any);
-        generatedEvents = rawEvents.map(e => ({
-          id: e.taharaEventId || `generated-${e.jdate.Abs}-${e.taharaEventType}`,
-          date: fromJDate(e.jdate),
-          type: e.getType() as TaharaEventType,
-          createdAt: 0,
-          updatedAt: 0,
-        }));
-      } catch (e) {
-        console.error('Error generating tahara events:', e);
-      }
-    }
-
-    // 2. Map DB events to TaharaEvent interface
+    // 1. Map DB events to TaharaEvent interface
     const dbEvents: TaharaEvent[] = taharaRecords.map(r => ({
       id: r.id,
       date: r.jewishDate,
@@ -200,20 +185,8 @@ export function Calendar({
       updatedAt: r.updatedAt,
     }));
 
-    // 3. Combine - Filter out generated suggestions if a real event exists
-    const filteredGenerated = generatedEvents.filter(
-      gen =>
-        !dbEvents.some(
-          db =>
-            db.date.year === gen.date.year &&
-            db.date.month === gen.date.month &&
-            db.date.day === gen.date.day &&
-            db.type === gen.type
-        )
-    );
-
-    return [...dbEvents, ...filteredGenerated];
-  }, [entryInstances, settings, taharaRecords]);
+    return [...dbEvents];
+  }, [taharaRecords]);
 
   // Handlers for Tahara Events
   const handleAddTaharaEvent = async (type: TaharaEventType, date: jDate) => {
@@ -316,7 +289,6 @@ export function Calendar({
   // User Events Logic
   const { userEvents, addUserEvent, modifyUserEvent, removeUserEvent } = useUserEvents();
   const [isUserEventModalOpen, setIsUserEventModalOpen] = useState(false);
-  const [isUserEventsListOpen, setIsUserEventsListOpen] = useState(false);
 
   // User Event Form State
   const [userEventFormInitialDate, setUserEventFormInitialDate] = useState<jDate>(today);
@@ -615,7 +587,6 @@ export function Calendar({
           }
         }}
         getEventsForDate={getUserEventsForDate}
-        navigateMonth={() => {}}
         today={today}
         calendarView={calendarView}
         theme={Themes.Warm}
@@ -708,10 +679,11 @@ export function Calendar({
 
       <EventsListModal
         isOpen={isUserEventsListOpen}
-        onClose={() => setIsUserEventsListOpen(false)}
+        onClose={() => {
+          onCloseUserEventsList();
+        }}
         events={userEvents}
         lang={lang as 'en' | 'he'}
-        textInLanguage={textInLanguage}
         handleEditEvent={(event, date) => {
           handleEditUserEvent(event, date);
         }}
@@ -723,6 +695,7 @@ export function Calendar({
         }}
         navigateToDate={date => {
           onDayClick(date);
+          onCloseUserEventsList();
         }}
       />
     </>
