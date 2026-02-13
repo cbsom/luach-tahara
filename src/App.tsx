@@ -82,7 +82,14 @@ function App() {
   const [isFlaggedDatesListOpen, setIsFlaggedDatesListOpen] = useState(false);
   const [isUserEventsListOpen, setIsUserEventsListOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isJumpModalOpen, setIsJumpModalOpen] = useState(false); // Added for header prop compatibility
+  const [isJumpModalOpen, setIsJumpModalOpen] = useState(false);
+  const [isDailyInfoOpen, setIsDailyInfoOpen] = useState(() => {
+    // Check for window existence (in case of SSR) and width
+    if (typeof window !== 'undefined') {
+      return window.innerWidth > 1024;
+    }
+    return false;
+  });
 
   // Jump Date State
   const [jumpGregDate, setJumpGregDate] = useState(new Date().toISOString().split('T')[0]);
@@ -148,7 +155,7 @@ function App() {
 
   const handleDayClick = (date: jDate) => {
     setSelectedJDate(date);
-    // TODO: Open day details sidebar
+    setIsDailyInfoOpen(true);
   };
 
   const handleJumpToGregorian = () => {
@@ -272,6 +279,7 @@ function App() {
         setIsJumpModalOpen={setIsJumpModalOpen}
         calendarView={calendarView}
         setCalendarView={setCalendarView}
+        onDailyInfoClick={() => setIsDailyInfoOpen(true)}
       />
 
       <div className="main-layout">
@@ -297,6 +305,8 @@ function App() {
             onCloseFlaggedDatesList={() => setIsFlaggedDatesListOpen(false)}
             isUserEventsListOpen={isUserEventsListOpen}
             onCloseUserEventsList={() => setIsUserEventsListOpen(false)}
+            isDailyInfoOpen={isDailyInfoOpen}
+            onCloseDailyInfo={() => setIsDailyInfoOpen(false)}
           />
         </div>
       </div>

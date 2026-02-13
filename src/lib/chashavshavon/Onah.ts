@@ -1,16 +1,14 @@
 // Onah - Represents either the night-time or the day-time of a single Jewish Date
 import { jDate } from 'jcal-zmanim';
-import { JewishDate } from '@/types';
+import { JewishDate, NightDay } from '@/types';
 import { toJDate, fromJDate } from '@/lib/jcal';
 
+export { NightDay };
+
 /**
- * Enum for Night/Day
- * Night = -1, Day = 1 (matches original implementation)
+ * Represents either the night-time or the day-time of a single Jewish Date.
+ * This is used for Halachic calculations related to Vesset and Entry tracking.
  */
-export enum NightDay {
-    Night = -1,
-    Day = 1,
-}
 
 /**
  * Represents either the night-time or the day-time of a single Jewish Date.

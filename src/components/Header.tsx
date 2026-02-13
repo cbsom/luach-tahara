@@ -6,6 +6,7 @@ import {
   Calendar as CalendarIcon,
   Languages,
   CalendarDays,
+  Info,
 } from 'lucide-react';
 import { getThemeIcon, cycleTheme } from '../utils.tsx';
 import { Themes } from '../types-luach-web';
@@ -36,6 +37,7 @@ interface HeaderProps {
   setIsJumpModalOpen: (isOpen: boolean) => void;
   calendarView: 'jewish' | 'secular';
   setCalendarView: (view: 'jewish' | 'secular') => void;
+  onDailyInfoClick: () => void;
 }
 
 export function Header({
@@ -60,6 +62,7 @@ export function Header({
   setIsJumpModalOpen,
   calendarView,
   setCalendarView,
+  onDailyInfoClick,
 }: HeaderProps) {
   const textInLanguage = {
     goToDate: lang === 'he' ? 'עבור לתאריך' : 'Go to Date',
@@ -74,7 +77,7 @@ export function Header({
   };
 
   return (
-    <header className="glass-panel p-2 md:p-4 px-3 md:px-6 flex flex-col md:flex-row items-center justify-between main-header gap-3 md:gap-4">
+    <header className="glass-panel p-2 md:p-4 px-3 md:px-6 flex flex-row items-center justify-between main-header gap-3 md:gap-4">
       {/* Top Row / Left Side */}
       <div className="flex items-center justify-between w-full md:w-auto gap-4">
         <div className="flex items-center gap-2 md:gap-4">
@@ -162,6 +165,13 @@ export function Header({
               title={lang === 'he' ? 'וסתות' : 'Kavuahs'}
             >
               <Repeat size={18} />
+            </button>
+            <button
+              onClick={onDailyInfoClick}
+              className="p-2 hover:bg-glass-hover rounded-lg"
+              title={lang === 'he' ? 'מידע יומי' : 'Daily Info'}
+            >
+              <Info size={18} />
             </button>
           </div>
         )}

@@ -23,6 +23,8 @@ import { EventModal } from './events/EventModal';
 import { EventsListModal } from './events/EventsListModal';
 import { UserEventTypes } from '../types-luach-web';
 import { nanoid } from 'nanoid';
+import { DailyInfoSidebar } from './DailyInfoSidebar';
+import { ZmanimUtils, getNotifications } from 'jcal-zmanim';
 
 import { toJDate } from '../lib/jcal';
 import StatusCalculator from '../lib/chashavshavon/StatusCalculator';
@@ -50,6 +52,8 @@ interface CalendarWrapperProps {
   onCloseFlaggedDatesList?: () => void;
   isUserEventsListOpen?: boolean;
   onCloseUserEventsList?: () => void;
+  isDailyInfoOpen?: boolean;
+  onCloseDailyInfo?: () => void;
 }
 
 export function Calendar({
@@ -69,6 +73,8 @@ export function Calendar({
   onCloseFlaggedDatesList = () => {},
   isUserEventsListOpen = false,
   onCloseUserEventsList = () => {},
+  isDailyInfoOpen = false,
+  onCloseDailyInfo = () => {},
 }: CalendarWrapperProps) {
   const today = new jDate();
 
@@ -427,6 +433,65 @@ export function Calendar({
     resetUserEventForm();
   };
 
+  // -------------------------------------------------------------------------
+  // Daily Info Sidebar Data
+  // -------------------------------------------------------------------------
+  const selectedEntries = useMemo(() => {
+    return entryRecords
+      .filter(r => {
+        const d = r.jewishDate;
+        return (
+          d.day === selectedJDate.Day &&
+          d.month === selectedJDate.Month &&
+          d.year === selectedJDate.Year
+        );
+      })
+      .map(r => ({
+        id: r.id,
+        date: r.jewishDate,
+        onah: r.onah,
+        haflaga: r.haflaga,
+        ignoreForFlaggedDates: r.ignoreForFlaggedDates,
+        ignoreForKavuah: r.ignoreForKavuah,
+        notes: r.comments,
+        createdAt: r.createdAt,
+        updatedAt: r.updatedAt,
+      }));
+  }, [entryRecords, selectedJDate]);
+
+  const selectedTaharaEvents = useMemo(() => {
+    return taharaEvents.filter(
+      e =>
+        e.date.day === selectedJDate.Day &&
+        e.date.month === selectedJDate.Month &&
+        e.date.year === selectedJDate.Year
+    );
+  }, [taharaEvents, selectedJDate]);
+
+  const selectedFlags = useMemo(() => {
+    return flaggedOnahs.filter(po => po.jdate.Abs === selectedJDate.Abs);
+  }, [flaggedOnahs, selectedJDate]);
+
+  const selectedUserEvents = useMemo(
+    () => getUserEventsForDate(selectedJDate),
+    [userEvents, selectedJDate]
+  );
+
+  const selectedZmanim = useMemo(() => {
+    return ZmanimUtils.getAllZmanim(selectedJDate, location);
+  }, [selectedJDate, location]);
+
+  const selectedDailyNotes = useMemo(() => {
+    return getNotifications(
+      selectedJDate,
+      { hour: 10, minute: 0 },
+      location,
+      lang === 'en',
+      true,
+      false
+    );
+  }, [selectedJDate, location, lang]);
+
   // Open form for new entry
   const handleAddNewEntry = (date: jDate) => {
     setEntryFormInitialDate(date);
@@ -565,39 +630,41 @@ export function Calendar({
   // Overwrite textInLanguage to include event modal strings handled above
 
   return (
-    <>
-      <LuachWebCalendar
-        lang={lang as 'en' | 'he'}
-        textInLanguage={textInLanguage}
-        currentJDate={currentJDate}
-        monthInfo={monthInfo}
-        selectedJDate={selectedJDate}
-        location={location}
-        setSelectedJDate={onDayClick}
-        handleAddNewEventForDate={(e, date) => {
-          e?.stopPropagation();
-          handleAddNewEntry(date);
-        }}
-        handleEditEvent={(event: UserEvent | EntryData, date: jDate) => {
-          // Check if it's an entry
-          if ('date' in event) {
-            handleEditEntry(event as EntryData);
-          } else {
-            handleEditUserEvent(event as UserEvent, date);
-          }
-        }}
-        getEventsForDate={getUserEventsForDate}
-        today={today}
-        calendarView={calendarView}
-        theme={Themes.Warm}
-        entries={entriesForView}
-        flaggedOnahs={flaggedOnahs}
-        taharaEvents={taharaEvents}
-        dayStatus={statusMap}
-        onAddTaharaEvent={handleAddTaharaEvent}
-        onRemoveTaharaEvent={handleDeleteTaharaEvent}
-        onAddUserEvent={handleAddNewUserEvent}
-      />
+    <div className="flex flex-row gap-4 h-full w-full overflow-hidden relative">
+      <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden">
+        <LuachWebCalendar
+          lang={lang as 'en' | 'he'}
+          textInLanguage={textInLanguage}
+          currentJDate={currentJDate}
+          monthInfo={monthInfo}
+          selectedJDate={selectedJDate}
+          location={location}
+          setSelectedJDate={onDayClick}
+          handleAddNewEventForDate={(e, date) => {
+            e?.stopPropagation();
+            handleAddNewEntry(date);
+          }}
+          handleEditEvent={(event: UserEvent | EntryData, date: jDate) => {
+            // Check if it's an entry
+            if ('date' in event) {
+              handleEditEntry(event as EntryData);
+            } else {
+              handleEditUserEvent(event as UserEvent, date);
+            }
+          }}
+          getEventsForDate={getUserEventsForDate}
+          today={today}
+          calendarView={calendarView}
+          theme={Themes.Warm}
+          entries={entriesForView}
+          flaggedOnahs={flaggedOnahs}
+          taharaEvents={taharaEvents}
+          dayStatus={statusMap}
+          onAddTaharaEvent={handleAddTaharaEvent}
+          onRemoveTaharaEvent={handleDeleteTaharaEvent}
+          onAddUserEvent={handleAddNewUserEvent}
+        />
+      </div>
 
       <EntryForm
         isOpen={isEntryFormOpen}
@@ -698,6 +765,44 @@ export function Calendar({
           onCloseUserEventsList();
         }}
       />
-    </>
+
+      <DailyInfoSidebar
+        isOpen={isDailyInfoOpen}
+        onClose={onCloseDailyInfo}
+        isDesktopHidden={!isDailyInfoOpen}
+        onToggleDesktopMode={() => onCloseDailyInfo()}
+        lang={lang as 'en' | 'he'}
+        textInLanguage={textInLanguage}
+        selectedJDate={selectedJDate}
+        selectedEvents={selectedUserEvents}
+        selectedZmanim={selectedZmanim}
+        selectedNotes={selectedDailyNotes}
+        location={location}
+        entries={selectedEntries}
+        taharaEvents={selectedTaharaEvents}
+        flaggedOnahs={selectedFlags}
+        handleEditEvent={(item, date) => {
+          if ('onah' in item) {
+            handleEditEntry(item as EntryData);
+          } else if (
+            'type' in item &&
+            ['hefsek', 'bedika', 'shailah', 'mikvah'].includes((item as any).type)
+          ) {
+            // For now just allow deleting/seeing. If editing needed, we add it.
+          } else {
+            handleEditUserEvent(item as UserEvent, date);
+          }
+        }}
+        deleteEvent={async (id, type) => {
+          if (type === 'entry') await removeEntry(id);
+          else if (type === 'user') await removeUserEvent(id);
+          else if (type === 'tahara') await removeTaharaEvent(id);
+        }}
+        handleAddNewEventForDate={(e, date) => {
+          e.stopPropagation();
+          handleAddNewEntry(date);
+        }}
+      />
+    </div>
   );
 }

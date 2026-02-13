@@ -1,6 +1,12 @@
 // Type Definitions for Luach Tahara
-import { NightDay } from '@/lib/chashavshavon/Onah';
-export { NightDay };
+/**
+ * Enum for Night/Day
+ * Night = -1, Day = 1
+ */
+export enum NightDay {
+    Night = -1,
+    Day = 1,
+}
 
 /**
  * Jewish Date representation

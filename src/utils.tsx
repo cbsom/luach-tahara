@@ -70,3 +70,46 @@ export function cycleTheme(currentTheme: Themes, setTheme: (theme: Themes) => vo
   const nextIndex = (currentIndex + 1) % themes.length;
   setTheme(themes[nextIndex]);
 }
+/**
+ * Get relative description of a date (Yesterday, Today, Tomorrow)
+ */
+export function getRelativeDescription(date: jDate, lang: 'en' | 'he'): string {
+  const today = new jDate();
+  const diff = date.Abs - today.Abs;
+
+  if (diff === 0) return lang === 'he' ? 'היום' : 'Today';
+  if (diff === 1) return lang === 'he' ? 'מחר' : 'Tomorrow';
+  if (diff === -1) return lang === 'he' ? 'אתמול' : 'Yesterday';
+
+  if (diff > 1 && diff < 7) {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Shabbos'];
+    const daysHe = [
+      'יום ראשון',
+      'יום שני',
+      'יום שלישי',
+      'יום רביעי',
+      'יום חמישי',
+      'ערב שבת',
+      'שבת קודש',
+    ];
+    return lang === 'he' ? daysHe[date.DayOfWeek] : `Next ${days[date.DayOfWeek]}`;
+  }
+
+  return '';
+}
+
+/**
+ * Inject a line break at a specific character
+ */
+export function injectLineBreak(text: string, char: string): React.ReactNode {
+  if (!text.includes(char)) return text;
+  const parts = text.split(char);
+  return (
+    <>
+      {parts[0]}
+      {char}
+      <br />
+      {parts[1]}
+    </>
+  );
+}
