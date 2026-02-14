@@ -220,7 +220,7 @@ export function CalendarDay({
             const isGenerated = event.id?.startsWith('generated-');
             return (
               <button
-                key={idx}
+                key={event.id || idx}
                 className={`tahara-event-badge ${isGenerated ? 'is-generated' : ''}`}
                 onClick={e => {
                   e.stopPropagation();
@@ -233,7 +233,7 @@ export function CalendarDay({
                 title={
                   isGenerated
                     ? `${lang === 'he' ? 'אשר: ' : 'Confirm: '}${getTaharaEventLabel(event)}`
-                    : getTaharaEventLabel(event)
+                    : `${lang === 'he' ? 'מחק: ' : 'Delete: '}${getTaharaEventLabel(event)}`
                 }
               >
                 {getTaharaEventIcon(event)}
@@ -293,6 +293,7 @@ export function CalendarDay({
             onClick={e => {
               e.stopPropagation();
               onAddEntry();
+              e.currentTarget.parentElement?.classList.remove('show');
             }}
           >
             {lang === 'he' ? 'ראייה' : 'Entry'}
@@ -301,6 +302,7 @@ export function CalendarDay({
             onClick={e => {
               e.stopPropagation();
               onAddHefsek();
+              e.currentTarget.parentElement?.classList.remove('show');
             }}
           >
             {lang === 'he' ? 'הפסק טהרה' : 'Hefsek'}
@@ -309,6 +311,7 @@ export function CalendarDay({
             onClick={e => {
               e.stopPropagation();
               onAddBedika();
+              e.currentTarget.parentElement?.classList.remove('show');
             }}
           >
             {lang === 'he' ? 'בדיקה' : 'Bedika'}
@@ -317,6 +320,7 @@ export function CalendarDay({
             onClick={e => {
               e.stopPropagation();
               onAddShailah();
+              e.currentTarget.parentElement?.classList.remove('show');
             }}
           >
             {lang === 'he' ? 'שאלה' : 'Shailah'}
@@ -325,21 +329,21 @@ export function CalendarDay({
             onClick={e => {
               e.stopPropagation();
               onAddMikvah();
+              e.currentTarget.parentElement?.classList.remove('show');
             }}
           >
             {lang === 'he' ? 'מקווה' : 'Mikvah'}
           </button>
 
-          {onAddUserEvent && (
-            <button
-              onClick={e => {
-                e.stopPropagation();
-                onAddUserEvent();
-              }}
-            >
-              {lang === 'he' ? 'אירוע' : 'Event'}
-            </button>
-          )}
+          <button
+            onClick={e => {
+              e.stopPropagation();
+              if (onAddUserEvent) onAddUserEvent();
+              e.currentTarget.parentElement?.classList.remove('show');
+            }}
+          >
+            {lang === 'he' ? 'אירוע' : 'Event'}
+          </button>
         </div>
       </div>
     </div>

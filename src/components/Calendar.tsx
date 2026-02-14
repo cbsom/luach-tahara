@@ -52,6 +52,22 @@ export const Calendar: React.FC<CalendarProps> = ({
   onRemoveTaharaEvent,
   onAddUserEvent,
 }) => {
+  // Close menus when clicking outside
+  React.useEffect(() => {
+    const handleGlobalClick = (e: MouseEvent) => {
+      // If the click is not inside an add-menu or add-button, close all open menus
+      const target = e.target as HTMLElement;
+      if (!target.closest('.add-menu') && !target.closest('.add-button')) {
+        document.querySelectorAll('.add-menu.show').forEach(el => {
+          el.classList.remove('show');
+        });
+      }
+    };
+
+    document.addEventListener('click', handleGlobalClick);
+    return () => document.removeEventListener('click', handleGlobalClick);
+  }, []);
+
   return (
     <main className="calendar-container">
       <section className="flex flex-col gap-4 mb-4">

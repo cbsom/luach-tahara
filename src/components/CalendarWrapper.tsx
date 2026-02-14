@@ -1,7 +1,7 @@
 // Simplified Calendar wrapper for luach-tahara
 import { useState, useMemo, useEffect } from 'react';
 import { jDate } from 'jcal-zmanim';
-import { fromJDate } from '../lib/jcal';
+
 import { Calendar as LuachWebCalendar } from './Calendar';
 import { Themes, type UserEvent } from '../types-luach-web';
 import type { Location } from 'jcal-zmanim';
@@ -196,8 +196,25 @@ export function Calendar({
 
   // Handlers for Tahara Events
   const handleAddTaharaEvent = async (type: TaharaEventType, date: jDate) => {
+    // Check for duplicates: Only for Hefsek and Mikvah
+    if (type === 'hefsek' || type === 'mikvah') {
+      const existing = taharaRecords.find(
+        e =>
+          e.type === type &&
+          e.jewishDate.day === date.Day &&
+          e.jewishDate.month === date.Month &&
+          e.jewishDate.year === date.Year
+      );
+
+      if (existing) {
+        // Already exists, don't add.
+        console.log(`Tahara event ${type} already exists on this date.`);
+        return;
+      }
+    }
+
     const eventData = {
-      jewishDate: fromJDate(date),
+      jewishDate: { year: date.Year, month: date.Month, day: date.Day },
       type: type,
     };
     await addTaharaEvent(eventData);

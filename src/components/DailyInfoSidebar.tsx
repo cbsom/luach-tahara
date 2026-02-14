@@ -279,7 +279,14 @@ export const DailyInfoSidebar: React.FC<DailyInfoSidebarProps> = ({
                           <Droplet size={14} className="text-accent-teal" />
                         </div>
                         <span className="font-bold text-sm uppercase tracking-wide">
-                          {event.type}
+                          {lang === 'he'
+                            ? {
+                                hefsek: 'הפסק טהרה',
+                                bedika: 'בדיקה',
+                                shailah: 'שאלה',
+                                mikvah: 'מקווה',
+                              }[event.type] || event.type
+                            : event.type}
                         </span>
                       </div>
                       <button
