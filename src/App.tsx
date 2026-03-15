@@ -13,7 +13,7 @@ import { MobileFooter } from './components/MobileFooter';
 import { useTranslation, useCurrentLanguage, useIsRTL } from './i18n/hooks';
 import { useSettings } from './services/db/hooks';
 import { Themes } from './types-luach-web';
-import { useAuth } from './services/firebase/hooks';
+import { useAuth, useAutoSync } from './services/firebase/hooks';
 import { AuthModal } from './components/auth/AuthModal';
 import { JumpDateModal } from './components/JumpDateModal';
 
@@ -22,6 +22,9 @@ function App() {
   const currentLang = useCurrentLanguage();
   const isRTL = useIsRTL();
   const { user, signOut } = useAuth();
+
+  // Start auto-syncing if user is logged in
+  useAutoSync(true);
 
   // Theme state
   const [theme, setTheme] = useState<Themes>(() => {

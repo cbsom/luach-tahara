@@ -52,6 +52,15 @@ export const Calendar: React.FC<CalendarProps> = ({
   onRemoveTaharaEvent,
   onAddUserEvent,
 }) => {
+  // Memoize sorted entries for daysSinceEntry calculation
+  const sortedEntriesDesc = React.useMemo(() => {
+    return [...(entries || [])].sort((a, b) => {
+      const absA = new jDate(a.date.year, a.date.month, a.date.day).Abs;
+      const absB = new jDate(b.date.year, b.date.month, b.date.day).Abs;
+      return absB - absA; // Descending (newest first)
+    });
+  }, [entries]);
+
   // Close menus when clicking outside
   React.useEffect(() => {
     const handleGlobalClick = (e: MouseEvent) => {
@@ -135,6 +144,24 @@ export const Calendar: React.FC<CalendarProps> = ({
 
               const status = dayStatus?.get(date.Abs);
 
+              // Calculate daysSinceEntry
+              let daysSinceEntry: number | undefined = undefined;
+              if (status === NiddahStatus.Niddah) {
+                const mostRecentEntry = sortedEntriesDesc.find(e => {
+                  const eAbs = new jDate(e.date.year, e.date.month, e.date.day).Abs;
+                  return eAbs <= date.Abs;
+                });
+
+                if (mostRecentEntry) {
+                  const eAbs = new jDate(
+                    mostRecentEntry.date.year,
+                    mostRecentEntry.date.month,
+                    mostRecentEntry.date.day
+                  ).Abs;
+                  daysSinceEntry = date.Abs - eAbs + 1;
+                }
+              }
+
               return (
                 <CalendarDay
                   key={i}
@@ -143,11 +170,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                   isSelected={isSelected}
                   isOtherMonth={isOtherMonth}
                   entry={entry}
-                  daysSinceEntry={entry ? 1 : undefined} // Logic for daysSinceEntry needed? CalendarDay uses it.
-                  // Note: CalendarDay logic for daysSinceEntry was not fully implemented in wrapper yet, but prop exists.
-                  // We'll leave it undefined for MVP or implement simple logic if entry exists.
-                  // Actually, daysSinceEntry implies calculation from PREVIOUS entry. Here current entry makes it Day 1.
-
+                  daysSinceEntry={daysSinceEntry}
                   calendarView={calendarView}
                   lang={lang as 'en' | 'he'}
                   taharaEvents={dayTaharaEvents}
