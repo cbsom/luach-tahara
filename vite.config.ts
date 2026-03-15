@@ -85,11 +85,24 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'firebase-vendor': ['firebase/app', 'firebase/auth', 'firebase/firestore'],
-          'jcal-vendor': ['jcal-zmanim'],
-          'ui-vendor': ['zustand', 'react-hook-form', 'zod']
+        manualChunks(id) {
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router-dom')) {
+            return 'react-vendor';
+          }
+
+          if (id.includes('node_modules/firebase')) {
+            return 'firebase-vendor';
+          }
+
+          if (id.includes('node_modules/jcal-zmanim')) {
+            return 'jcal-vendor';
+          }
+
+          if (id.includes('node_modules/zustand') || id.includes('node_modules/react-hook-form') || id.includes('node_modules/zod')) {
+            return 'ui-vendor';
+          }
+
+          return undefined;
         }
       }
     }

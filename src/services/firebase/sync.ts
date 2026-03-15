@@ -10,6 +10,14 @@ import {
     type EntryRecord,
     type KavuahRecord,
 } from '../db';
+import {
+    createEntry,
+    updateEntry,
+} from '../db/entryService';
+import {
+    createKavuah,
+    updateKavuah,
+} from '../db/kavuahService';
 import { getSettings, saveSettings } from '../db/settingsService';
 
 /**
@@ -115,10 +123,6 @@ export async function pullFromFirebase(): Promise<{
     }
 
     try {
-        // Import IndexedDB services
-        const { createEntry, updateEntry } = await import('../db/entryService');
-        const { createKavuah, updateKavuah } = await import('../db/kavuahService');
-
         // Pull entries
         const entries = await getUserDocuments<EntryRecord>(user.uid, 'entries');
         for (const entry of entries) {
