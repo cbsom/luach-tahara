@@ -278,7 +278,15 @@ export function CalendarDay({
           className="add-button"
           onClick={e => {
             e.stopPropagation();
-            // Toggle menu
+            
+            // Close all other open menus
+            document.querySelectorAll('.add-menu.show').forEach(el => {
+              if (el !== e.currentTarget.nextElementSibling) {
+                el.classList.remove('show');
+              }
+            });
+
+            // Toggle this menu
             const menu = e.currentTarget.nextElementSibling;
             if (menu) {
               menu.classList.toggle('show');
