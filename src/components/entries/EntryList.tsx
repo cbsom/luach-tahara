@@ -10,7 +10,7 @@ interface EntryListProps {
   onClose: () => void;
   lang: 'en' | 'he';
   onEdit: (entry: EntryData) => void;
-  entries: any[]; // Todo: Type strictly EntryRecord[]
+  entries: any[];
   onRemove: (id: string) => Promise<void>;
 }
 
@@ -72,7 +72,7 @@ export const EntryList: React.FC<EntryListProps> = ({
       height="80vh"
     >
       <div className="flex flex-col gap-3">
-        {loading && <div className="text-center p-4">Loading...</div>}
+        {loading && <div className="text-center p-4">{lang === 'he' ? 'טוען...' : 'Loading...'}</div>}
 
         {!loading && sortedEntries.length === 0 && (
           <div className="text-center opacity-70 p-8">
@@ -84,6 +84,12 @@ export const EntryList: React.FC<EntryListProps> = ({
           const displayDate = entry.jewishDate || entry.date;
           if (!displayDate) return null;
 
+          const jd = new jDate(
+            displayDate.year || displayDate.Year,
+            displayDate.month || displayDate.Month,
+            displayDate.day || displayDate.Day
+          );
+
           return (
             <div
               key={entry.id}
@@ -91,11 +97,12 @@ export const EntryList: React.FC<EntryListProps> = ({
             >
               <div className="flex items-center gap-4">
                 {/* Date Box */}
-                <div className="flex flex-col items-center bg-glass-surface rounded-lg p-2 min-w-[60px]">
-                  <span className="font-bold text-lg">{displayDate.day || displayDate.Day}</span>
-                  <span className="text-xs opacity-70">
-                    {displayDate.month || displayDate.Month} /{' '}
-                    {displayDate.year || displayDate.Year}
+                <div className="flex flex-col items-center bg-glass-surface rounded-lg p-2 min-w-[140px]">
+                  <span className="font-bold text-center">
+                    {lang === 'he' ? jd.toStringHeb() : jd.toString()}
+                  </span>
+                  <span className="text-xs opacity-70 mt-1">
+                    {jd.getDate().toLocaleDateString(lang === 'he' ? 'he-IL' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </span>
                 </div>
 
@@ -107,7 +114,7 @@ export const EntryList: React.FC<EntryListProps> = ({
                   </div>
                   {entry.haflaga !== undefined && entry.haflaga > 0 && (
                     <div className="text-sm opacity-70 flex items-center gap-1">
-                      <span className="text-accent-coral">Haflaga: {entry.haflaga}</span>
+                      <span className="text-accent-coral">{lang === 'he' ? 'הפלגה:' : 'Haflaga:'} {entry.haflaga}</span>
                     </div>
                   )}
                   {entry.comments && (
