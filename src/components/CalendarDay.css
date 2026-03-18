@@ -239,6 +239,12 @@
     pointer-events: auto;
 }
 
+/* For the top 2 rows (first 14 days), open the menu downwards to avoid hiding behind the header */
+.calendar-days > .calendar-day-niddah:nth-child(-n+14) .add-menu {
+    bottom: auto;
+    top: 100%;
+}
+
 [dir="rtl"] .add-menu {
     right: auto;
     left: 0;
