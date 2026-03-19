@@ -1,12 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import {
-  jDate,
-  Utils,
-  Locations,
-  type Location,
-  JewishMonthsHeb,
-  JewishMonthsEng,
-} from 'jcal-zmanim';
+import { jDate, Utils, Locations, JewishMonthsHeb, JewishMonthsEng } from 'jcal-zmanim';
 import { Header } from './components/Header';
 import { Calendar } from './components/CalendarWrapper';
 import { MobileFooter } from './components/MobileFooter';
@@ -47,23 +40,12 @@ function App() {
   const { settings } = useSettings();
 
   // Location
-  const locationName = settings?.location.name || 'Jerusalem';
+  const locationName = settings?.locationName || settings?.location?.name || 'Jerusalem';
   const location = useMemo(() => {
-    if (settings?.location) {
-      // Map user settings location to jcal-zmanim Location object
-      return {
-        Name: settings.location.name,
-        Latitude: settings.location.latitude,
-        Longitude: settings.location.longitude,
-        UTCOffset: settings.location.utcOffset,
-        Elevation: settings.location.elevation || 0,
-        Israel: settings.location.israel || false,
-      } as Location;
-    }
     return (
       Locations.find(l => l.Name === locationName) || Locations.find(l => l.Name === 'Jerusalem')!
     );
-  }, [locationName, settings]);
+  }, [locationName]);
 
   // Today start mode
   const todayStartMode = 'sunset'; // Can be made configurable later

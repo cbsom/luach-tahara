@@ -108,7 +108,8 @@ export interface Location {
  * Settings Model
  */
 export interface Settings {
-    location: Location;
+    locationName?: string;
+    location?: Location; // Deprecated, kept for backward compatibility to trigger migrations
     showFlagsOnMainScreen: boolean;
     showEntryInfo: boolean;
     hideFlagsWeekAfterEntry: boolean;
@@ -134,6 +135,10 @@ export interface Settings {
     noProbsAfterEntry: boolean;
     /** Use 4 days for Hefsek Tahara instead of 5 (Common Sephardic custom) */
     fourDaysHefsek?: boolean;
+    emailRemindersEnabled?: boolean;
+    browserNotificationsEnabled?: boolean;
+    lang?: 'en' | 'he';
+    desktopSidebarMode?: 'permanent' | 'hidden';
     createdAt: number;
     updatedAt: number;
     syncedAt?: number;

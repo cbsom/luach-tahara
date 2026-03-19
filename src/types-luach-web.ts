@@ -25,6 +25,7 @@ export interface UserEvent {
     remindDayBefore?: boolean;
     createdAt?: number;
     updatedAt?: number;
+    syncedAt?: number;
     syncStatus?: 'synced' | 'pending' | 'conflict';
     deleted?: boolean;
 }

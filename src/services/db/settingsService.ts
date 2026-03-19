@@ -31,6 +31,10 @@ export const DEFAULT_SETTINGS: Settings = {
     showOhrZeruah: false,
     keepLongerHaflagah: false,
     noProbsAfterEntry: false,
+    emailRemindersEnabled: true,
+    browserNotificationsEnabled: true,
+    lang: 'en',
+    desktopSidebarMode: 'permanent',
     createdAt: Date.now(),
     updatedAt: Date.now(),
 };

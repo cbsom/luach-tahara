@@ -3,6 +3,7 @@ import { getDB } from './schema';
 import { getPendingEntries, markEntrySynced } from './entryService';
 import { getPendingKavuahs, markKavuahSynced } from './kavuahService';
 import { areSettingsPendingSync, markSettingsSynced } from './settingsService';
+import { getPendingUserEvents, markUserEventSynced } from './userEventService';
 
 const SYNC_META_KEY = 'sync-metadata';
 
@@ -60,13 +61,14 @@ export async function updateSyncMetadata(updates: Partial<SyncMetadata>): Promis
  * Get count of pending changes
  */
 export async function getPendingChangesCount(): Promise<number> {
-    const [pendingEntries, pendingKavuahs, settingsPending] = await Promise.all([
+    const [pendingEntries, pendingKavuahs, pendingEvents, settingsPending] = await Promise.all([
         getPendingEntries(),
         getPendingKavuahs(),
+        getPendingUserEvents(),
         areSettingsPendingSync(),
     ]);
 
-    return pendingEntries.length + pendingKavuahs.length + (settingsPending ? 1 : 0);
+    return pendingEntries.length + pendingKavuahs.length + pendingEvents.length + (settingsPending ? 1 : 0);
 }
 
 /**
@@ -111,15 +113,17 @@ export async function markSyncFailed(): Promise<void> {
  * Get all pending data for sync
  */
 export async function getAllPendingData() {
-    const [entries, kavuahs, settingsPending] = await Promise.all([
+    const [entries, kavuahs, events, settingsPending] = await Promise.all([
         getPendingEntries(),
         getPendingKavuahs(),
+        getPendingUserEvents(),
         areSettingsPendingSync(),
     ]);
 
     return {
         entries,
         kavuahs,
+        events,
         settingsPending,
     };
 }
@@ -130,13 +134,17 @@ export async function getAllPendingData() {
  */
 export async function markAllSynced(
     entryIds: string[],
-    kavuahIds: string[]
+    kavuahIds: string[],
+    eventIds: string[] = []
 ): Promise<void> {
     // Mark entries as synced
     await Promise.all(entryIds.map(id => markEntrySynced(id)));
 
     // Mark kavuahs as synced
     await Promise.all(kavuahIds.map(id => markKavuahSynced(id)));
+
+    // Mark events as synced
+    await Promise.all(eventIds.map(id => markUserEventSynced(id)));
 
     // Mark settings as synced
     await markSettingsSynced();

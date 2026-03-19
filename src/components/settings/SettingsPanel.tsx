@@ -219,14 +219,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                           <button
                             key={loc.Name}
                             onClick={() => {
-                              updateSetting('location', {
-                                name: loc.Name,
-                                latitude: loc.Latitude,
-                                longitude: loc.Longitude,
-                                utcOffset: loc.UTCOffset,
-                                israel: loc.Israel,
-                                elevation: loc.Elevation,
-                              });
+                              updateSetting('locationName', loc.Name);
                               setLocationSearch('');
                             }}
                             className="w-full text-left px-4 py-2 hover:bg-glass-overlay flex justify-between items-center"
@@ -239,33 +232,41 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   )}
                 </div>
 
-                <div className="bg-glass-surface rounded-xl p-4 mt-6 space-y-3 opacity-80 pointer-events-none">
-                  <div className="flex justify-between border-b border-glass-border pb-2">
-                    <span className="font-bold">{t('Current Location', 'מיקום נוכחי')}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="opacity-60">{t('Name', 'שם')}:</span>
-                      <span>{settings.location.name}</span>
+                {(() => {
+                  const currentLocationName =
+                    settings.locationName || settings.location?.name || 'Jerusalem';
+                  const locDetails = Locations.find(l => l.Name === currentLocationName);
+                  if (!locDetails) return null;
+                  return (
+                    <div className="bg-glass-surface rounded-xl p-4 mt-6 space-y-3 opacity-80 pointer-events-none">
+                      <div className="flex justify-between border-b border-glass-border pb-2">
+                        <span className="font-bold">{t('Current Location', 'מיקום נוכחי')}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="opacity-60">{t('Name', 'שם')}:</span>
+                          <span>{locDetails.Name}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="opacity-60">{t('Latitude', 'קו רוחב')}:</span>
+                          <span>{locDetails.Latitude?.toFixed(4)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="opacity-60">{t('Longitude', 'קו אורך')}:</span>
+                          <span>{locDetails.Longitude?.toFixed(4)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="opacity-60">{t('UTC Offset', 'UTC')}:</span>
+                          <span>{locDetails.UTCOffset}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="opacity-60">{t('Israel', 'ישראל')}:</span>
+                          <span>{locDetails.Israel ? t('Yes', 'כן') : t('No', 'לא')}</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="opacity-60">{t('Latitude', 'קו רוחב')}:</span>
-                      <span>{settings.location.latitude?.toFixed(4)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="opacity-60">{t('Longitude', 'קו אורך')}:</span>
-                      <span>{settings.location.longitude?.toFixed(4)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="opacity-60">{t('UTC Offset', 'UTC')}:</span>
-                      <span>{settings.location.utcOffset}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="opacity-60">{t('Israel', 'ישראל')}:</span>
-                      <span>{settings.location.israel ? t('Yes', 'כן') : t('No', 'לא')}</span>
-                    </div>
-                  </div>
-                </div>
+                  );
+                })()}
               </div>
             )}
           </div>

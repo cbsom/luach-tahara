@@ -1,6 +1,8 @@
 // Firebase Sync Service - Syncs IndexedDB with Firebase
 import { getCurrentUser } from './auth';
-import { getUserDocuments, setDocument, batchSetDocuments } from './firestore';
+import { db as firestore } from './config';
+import { collection, query, onSnapshot } from 'firebase/firestore';
+import { setDocument, batchSetDocuments } from './firestore';
 import {
     getAllPendingData,
     markAllSynced,
@@ -19,9 +21,117 @@ import {
     updateKavuah,
 } from '../db/kavuahService';
 import { getSettings, saveSettings } from '../db/settingsService';
+import { createUserEvent, updateUserEvent } from '../db/userEventService';
+import type { UserEvent } from '@/types-luach-web';
+
+// Store unsubscribers so we can clean up
+let unsubEntries: (() => void) | null = null;
+let unsubKavuahs: (() => void) | null = null;
+let unsubEvents: (() => void) | null = null;
+let unsubSettings: (() => void) | null = null;
+let activeSyncInterval: ReturnType<typeof setInterval> | null = null;
 
 /**
- * Sync all pending changes to Firebase
+ * Initialize robust real-time synchronization with Firestore
+ */
+export function startOnSnapshotSync(userId: string) {
+    if (unsubSettings) return; // Already started
+
+    // 1. Listen for Settings
+    const settingsRef = collection(firestore, 'users', userId, 'settings');
+    unsubSettings = onSnapshot(query(settingsRef), async (snapshot) => {
+        const docSettings = snapshot.docs.find(d => d.id === 'user-settings');
+        if (docSettings) {
+             const data = docSettings.data();
+             await saveSettings(data as Parameters<typeof saveSettings>[0]);
+             console.log('☁️ Settings updated from Cloud');
+        }
+    });
+
+    // 2. Listen for Entries
+    const entriesRef = collection(firestore, 'users', userId, 'entries');
+    unsubEntries = onSnapshot(query(entriesRef), async (snapshot) => {
+        const changes = snapshot.docChanges();
+        for (const change of changes) {
+            const data = change.doc.data() as EntryRecord;
+            const entryData = {
+                id: change.doc.id,
+                jewishDate: data.jewishDate,
+                onah: data.onah,
+                haflaga: data.haflaga,
+                ignoreForFlaggedDates: data.ignoreForFlaggedDates,
+                ignoreForKavuah: data.ignoreForKavuah,
+                comments: data.comments,
+            };
+            if (change.type === 'added' || change.type === 'modified') {
+                try {
+                    await createEntry(entryData);
+                } catch {
+                    await updateEntry(entryData.id, entryData);
+                }
+            }
+        }
+        if (changes.length > 0) console.log(`☁️ ${changes.length} Entries updated from Cloud`);
+    });
+
+    // 3. Listen for Kavuahs
+    const kavuahsRef = collection(firestore, 'users', userId, 'kavuahs');
+    unsubKavuahs = onSnapshot(query(kavuahsRef), async (snapshot) => {
+        const changes = snapshot.docChanges();
+        for (const change of changes) {
+            const data = change.doc.data() as KavuahRecord;
+            const kavuahData = {
+                id: change.doc.id,
+                kavuahType: data.kavuahType,
+                settingEntryId: data.settingEntryId,
+                specialNumber: data.specialNumber,
+                cancelsOnahBeinunis: data.cancelsOnahBeinunis,
+                active: data.active,
+                ignore: data.ignore,
+            };
+            if (change.type === 'added' || change.type === 'modified') {
+                try {
+                    await createKavuah(kavuahData);
+                } catch {
+                    await updateKavuah(kavuahData.id, kavuahData);
+                }
+            }
+        }
+        if (changes.length > 0) console.log(`☁️ ${changes.length} Kavuahs updated from Cloud`);
+    });
+
+    // 4. Listen for User Events (Occasions)
+    const eventsRef = collection(firestore, 'users', userId, 'events');
+    unsubEvents = onSnapshot(query(eventsRef), async (snapshot) => {
+        const changes = snapshot.docChanges();
+        for (const change of changes) {
+            const data = change.doc.data() as UserEvent;
+            const eventData = { ...data, id: change.doc.id };
+            if (change.type === 'added' || change.type === 'modified') {
+                try {
+                    await createUserEvent(eventData);
+                } catch {
+                    await updateUserEvent(eventData.id, eventData);
+                }
+            }
+        }
+        if (changes.length > 0) console.log(`☁️ ${changes.length} Events updated from Cloud`);
+    });
+}
+
+function stopOnSnapshotSync() {
+    if (unsubSettings) unsubSettings();
+    if (unsubEntries) unsubEntries();
+    if (unsubKavuahs) unsubKavuahs();
+    if (unsubEvents) unsubEvents();
+    unsubSettings = null;
+    unsubEntries = null;
+    unsubKavuahs = null;
+    unsubEvents = null;
+}
+
+/**
+ * Sync all pending local changes UP to Firebase
  */
 export async function syncToFirebase(): Promise<{
     success: boolean;
@@ -40,7 +150,7 @@ export async function syncToFirebase(): Promise<{
         await markSyncStarted();
 
         // Get all pending data
-        const { entries, kavuahs, settingsPending } = await getAllPendingData();
+        const { entries, kavuahs, events, settingsPending } = await getAllPendingData();
 
         // Sync entries
         if (entries.length > 0) {
@@ -58,7 +168,6 @@ export async function syncToFirebase(): Promise<{
                     deleted: entry.deleted || false,
                 },
             }));
-
             await batchSetDocuments(user.uid, 'entries', entryDocs);
         }
 
@@ -78,8 +187,32 @@ export async function syncToFirebase(): Promise<{
                     deleted: kavuah.deleted || false,
                 },
             }));
-
             await batchSetDocuments(user.uid, 'kavuahs', kavuahDocs);
+        }
+
+        // Sync user events
+        if (events && events.length > 0) {
+            const eventDocs = events.map(event => ({
+                id: event.id,
+                data: {
+                    name: event.name || (event as unknown as { title: string }).title || "Occasion", // Fallback for safety
+                    notes: event.notes || "",
+                    type: event.type !== undefined ? event.type : 1,
+                    jYear: event.jYear || (event as unknown as { date: { year: number } }).date?.year,
+                    jMonth: event.jMonth || (event as unknown as { date: { month: number } }).date?.month,
+                    jDay: event.jDay || (event as unknown as { date: { day: number } }).date?.day,
+                    jAbs: event.jAbs,
+                    sDate: event.sDate,
+                    backColor: event.backColor || (event as unknown as { color: string }).color,
+                    textColor: event.textColor || "#ffffff",
+                    remindDayOf: event.remindDayOf || false,
+                    remindDayBefore: event.remindDayBefore || false,
+                    createdAt: event.createdAt || Date.now(),
+                    updatedAt: event.updatedAt || Date.now(),
+                    deleted: event.deleted || false,
+                },
+            }));
+            await batchSetDocuments(user.uid, 'events', eventDocs);
         }
 
         // Sync settings
@@ -88,10 +221,11 @@ export async function syncToFirebase(): Promise<{
             await setDocument(user.uid, 'settings', 'user-settings', settings);
         }
 
-        // Mark all as synced
+        // Mark all as synced so they aren't pushed repeatedly
         await markAllSynced(
             entries.map(e => e.id),
-            kavuahs.map(k => k.id)
+            kavuahs.map(k => k.id),
+            events ? events.map(e => e.id) : []
         );
 
         return { success: true };
@@ -107,7 +241,6 @@ export async function syncToFirebase(): Promise<{
 
 /**
  * Pull data from Firebase to IndexedDB
- * This is typically done on first login or when restoring data
  */
 export async function pullFromFirebase(): Promise<{
     success: boolean;
@@ -116,80 +249,17 @@ export async function pullFromFirebase(): Promise<{
     const user = getCurrentUser();
 
     if (!user) {
-        return {
-            success: false,
-            error: 'User not authenticated',
-        };
+        return { success: false, error: 'User not authenticated' };
     }
 
     try {
-        // Pull entries
-        const entries = await getUserDocuments<EntryRecord>(user.uid, 'entries');
-        for (const entry of entries) {
-            try {
-                await createEntry({
-                    id: entry.id,
-                    jewishDate: entry.jewishDate,
-                    onah: entry.onah,
-                    haflaga: entry.haflaga,
-                    ignoreForFlaggedDates: entry.ignoreForFlaggedDates,
-                    ignoreForKavuah: entry.ignoreForKavuah,
-                    comments: entry.comments,
-                });
-            } catch {
-                // Entry might already exist, try updating
-                await updateEntry(entry.id, {
-                    jewishDate: entry.jewishDate,
-                    onah: entry.onah,
-                    haflaga: entry.haflaga,
-                    ignoreForFlaggedDates: entry.ignoreForFlaggedDates,
-                    ignoreForKavuah: entry.ignoreForKavuah,
-                    comments: entry.comments,
-                });
-            }
+        if (!unsubSettings) {
+             startOnSnapshotSync(user.uid);
         }
-
-        // Pull kavuahs
-        const kavuahs = await getUserDocuments<KavuahRecord>(user.uid, 'kavuahs');
-        for (const kavuah of kavuahs) {
-            try {
-                await createKavuah({
-                    id: kavuah.id,
-                    kavuahType: kavuah.kavuahType,
-                    settingEntryId: kavuah.settingEntryId,
-                    specialNumber: kavuah.specialNumber,
-                    cancelsOnahBeinunis: kavuah.cancelsOnahBeinunis,
-                    active: kavuah.active,
-                    ignore: kavuah.ignore,
-                });
-            } catch {
-                // Kavuah might already exist, try updating
-                await updateKavuah(kavuah.id, {
-                    kavuahType: kavuah.kavuahType,
-                    settingEntryId: kavuah.settingEntryId,
-                    specialNumber: kavuah.specialNumber,
-                    cancelsOnahBeinunis: kavuah.cancelsOnahBeinunis,
-                    active: kavuah.active,
-                    ignore: kavuah.ignore,
-                });
-            }
-        }
-
-        // Pull settings
-        const settings = await getUserDocuments(user.uid, 'settings');
-        if (settings.length > 0) {
-            await saveSettings(settings[0] as any); // Type assertion needed for Firebase data
-        }
-
         await markSyncSuccess();
-
         return { success: true };
     } catch (error) {
-        console.error('Pull from Firebase failed:', error);
-        return {
-            success: false,
-            error: error instanceof Error ? error.message : 'Unknown error',
-        };
+        return { success: false, error: String(error) };
     }
 }
 
@@ -200,27 +270,27 @@ export async function fullSync(): Promise<{
     success: boolean;
     error?: string;
 }> {
-    // First pull from Firebase
-    const pullResult = await pullFromFirebase();
-    if (!pullResult.success) {
-        return pullResult;
-    }
-
-    // Then push any pending changes
+    // With onSnapshot, "pulling" is automatic. We just need to push pending.
     return syncToFirebase();
 }
 
 /**
- * Auto-sync - runs periodically
+ * Auto-sync - runs periodically for pushing ONLY. Pulling is real-time via onSnapshot.
  */
-let syncInterval: ReturnType<typeof setInterval> | null = null;
-
-export function startAutoSync(intervalMs: number = 5 * 60 * 1000): void {
-    if (syncInterval) {
-        clearInterval(syncInterval);
+export function startAutoSync(intervalMs: number = 30 * 1000): void {
+    const user = getCurrentUser();
+    
+    // Safety check - we shouldn't setup snapshots if unauthenticated
+    if (user && !unsubSettings) {
+        startOnSnapshotSync(user.uid);
     }
 
-    syncInterval = setInterval(async () => {
+    if (activeSyncInterval) {
+        clearInterval(activeSyncInterval);
+    }
+
+    // Set a much faster push loop since local changes should be saved immediately
+    activeSyncInterval = setInterval(async () => {
         if (getCurrentUser()) {
             await syncToFirebase();
         }
@@ -228,8 +298,9 @@ export function startAutoSync(intervalMs: number = 5 * 60 * 1000): void {
 }
 
 export function stopAutoSync(): void {
-    if (syncInterval) {
-        clearInterval(syncInterval);
-        syncInterval = null;
+    if (activeSyncInterval) {
+        clearInterval(activeSyncInterval);
+        activeSyncInterval = null;
     }
+    stopOnSnapshotSync();
 }

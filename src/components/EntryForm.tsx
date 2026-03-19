@@ -1,6 +1,6 @@
 // Entry Form Component - For creating and editing entries (ראיות)
 import { useState, useEffect } from 'react';
-import { jDate } from 'jcal-zmanim';
+import { jDate, ZmanimUtils } from 'jcal-zmanim';
 import { NightDay } from '@/types';
 import type { Entry, JewishDate } from '@/types';
 import { toJDate, fromJDate } from '@/lib/jcal';
@@ -158,7 +158,15 @@ export function EntryForm({
     const jDateObj = toJDate(date);
     // Ensure location is valid if processed, or rely on jcal default
     if (location) {
-      const { sunrise, sunset } = jDateObj.getSunriseSunset(location);
+      // Use the exact same utility as DailyInfoSidebar to guarantee identical results
+      const allZmanim = ZmanimUtils.getAllZmanim(jDateObj, location);
+      
+      // DailyInfoSidebar uses NetzMishor (ID 5) for Sunrise and shkiaElevation (ID 15) for Sunset
+      const sunriseZman = allZmanim.find((z: any) => z.zmanType.id === 5);
+      const sunsetZman = allZmanim.find((z: any) => z.zmanType.id === 15);
+
+      const sunrise = sunriseZman?.time;
+      const sunset = sunsetZman?.time;
 
       const formatTime = (time: any) => {
         if (!time) return lang === 'he' ? 'אף פעם' : 'Never';

@@ -89,3 +89,25 @@ export async function saveUserEvents(events: UserEvent[]): Promise<void> {
 
     await tx.done;
 }
+
+/**
+ * Get pending user events for sync
+ */
+export async function getPendingUserEvents(): Promise<UserEvent[]> {
+    const db = await getDB();
+    const events = await db.getAll('userEvents');
+    return events.filter((e: UserEvent) => e.syncStatus === 'pending');
+}
+
+/**
+ * Mark a user event as synced
+ */
+export async function markUserEventSynced(id: string): Promise<void> {
+    const db = await getDB();
+    const event = await db.get('userEvents', id);
+    if (event) {
+        event.syncStatus = 'synced';
+        event.syncedAt = Date.now();
+        await db.put('userEvents', event);
+    }
+}
