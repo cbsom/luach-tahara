@@ -15,6 +15,7 @@ import { Dafyomi, Utils, jDate, Location } from 'jcal-zmanim';
 import { UserEvent } from '../types-luach-web';
 import { Entry, TaharaEvent } from '../types';
 import { ProblemOnah } from '../lib/chashavshavon/ProblemOnah';
+import { translateFlagDescription } from '../lib/chashavshavon/FlaggedDatesTranslations';
 import {
   formatTime,
   getAnniversaryNumber,
@@ -331,7 +332,7 @@ export const DailyInfoSidebar: React.FC<DailyInfoSidebarProps> = ({
                     <div className="flex flex-col gap-1 pl-7">
                       {po.flagsList.map((flag: string, fidx: number) => (
                         <span key={fidx} className="text-xs opacity-90 leading-tight">
-                          • {flag}
+                          • {translateFlagDescription(flag, lang)}
                         </span>
                       ))}
                     </div>

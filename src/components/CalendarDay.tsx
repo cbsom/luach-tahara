@@ -6,6 +6,8 @@ import { UserEvent } from '@/types-luach-web';
 import { NightDay } from '@/types';
 import { ProblemOnah } from '@/lib/chashavshavon/ProblemOnah';
 import { NiddahStatus } from '@/lib/chashavshavon/StatusCalculator';
+import { toHebrewNumber } from '@/lib/jcal/hebrewNumbers';
+import { translateFlagDescription } from '@/lib/chashavshavon/FlaggedDatesTranslations';
 import './CalendarDay.css';
 
 interface CalendarDayProps {
@@ -79,8 +81,9 @@ export function CalendarDay({
       // Split background for entry or flagged dates
       // We overlay this on top of the status background if needed, but CSS background is one property.
       // So we use the gradient.
+      const direction = lang === 'he' ? 'to left' : 'to right';
       return {
-        background: `linear-gradient(to right, 
+        background: `linear-gradient(${direction}, 
           ${hasNightEntry ? 'rgba(255, 200, 200, 0.5)' : hasNightFlag ? 'rgba(255, 235, 205, 0.5)' : status === NiddahStatus.Niddah ? 'rgba(255, 220, 220, 0.3)' : 'transparent'} 0%, 
           ${hasNightEntry ? 'rgba(255, 200, 200, 0.5)' : hasNightFlag ? 'rgba(255, 235, 205, 0.5)' : status === NiddahStatus.Niddah ? 'rgba(255, 220, 220, 0.3)' : 'transparent'} 50%, 
           ${hasDayEntry ? 'rgba(255, 200, 200, 0.5)' : hasDayFlag ? 'rgba(255, 235, 205, 0.5)' : status === NiddahStatus.Niddah ? 'rgba(255, 220, 220, 0.3)' : 'transparent'} 50%, 
@@ -132,8 +135,10 @@ export function CalendarDay({
   };
 
   const getFlagDescription = (flag: ProblemOnah): string => {
-    // Join all flags with line breaks
-    return flag.flagsList.join(', ');
+    // Join all flags with labels, translating each one if necessary
+    return flag.flagsList
+      .map(f => translateFlagDescription(f, lang))
+      .join(', ');
   };
 
   return (
@@ -146,13 +151,13 @@ export function CalendarDay({
       <div className="day-number-container">
         {calendarView === 'jewish' ? (
           <>
-            <span className="hebrew-day">{date.Day}</span>
+            <span className="hebrew-day">{lang === 'he' ? toHebrewNumber(date.Day) : date.Day}</span>
             <span className="secular-day">{date.getDate().getDate()}</span>
           </>
         ) : (
           <>
             <span className="secular-day-primary">{date.getDate().getDate()}</span>
-            <span className="hebrew-day-secondary">{date.Day}</span>
+            <span className="hebrew-day-secondary">{lang === 'he' ? toHebrewNumber(date.Day) : date.Day}</span>
           </>
         )}
       </div>

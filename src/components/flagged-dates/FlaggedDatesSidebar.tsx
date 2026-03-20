@@ -3,6 +3,7 @@ import { jDate } from 'jcal-zmanim';
 import { Modal } from '../Modal';
 import { ProblemOnah } from '../../lib/chashavshavon/ProblemOnah';
 import { NightDay } from '../../lib/chashavshavon/Onah';
+import { translateFlagDescription } from '../../lib/chashavshavon/FlaggedDatesTranslations';
 import { AlertTriangle, Moon, Sun } from 'lucide-react';
 
 interface FlaggedDatesSidebarProps {
@@ -95,7 +96,7 @@ export const FlaggedDatesSidebar: React.FC<FlaggedDatesSidebarProps> = ({
                   {po.flagsList.map((flag, i) => (
                     <div key={i} className="text-sm opacity-90 flex items-start gap-2">
                       <span className="text-accent-amber opacity-60">•</span>
-                      <span>{flag}</span>
+                      <span>{translateFlagDescription(flag, lang)}</span>
                     </div>
                   ))}
                 </div>
