@@ -3,7 +3,7 @@ import { Modal } from '../Modal';
 import { Settings } from '@/types';
 import { Locations } from 'jcal-zmanim';
 
-import { Globe, BookOpen, Layout } from 'lucide-react';
+import { Globe, BookOpen, Layout, Cloud, CloudOff, RefreshCw, LogIn } from 'lucide-react';
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -11,6 +11,11 @@ interface SettingsPanelProps {
   lang: 'en' | 'he';
   settings: Settings | null;
   updateSetting: <K extends keyof Settings>(key: K, value: Settings[K]) => Promise<Settings>;
+  onImportEntries?: () => Promise<void>;
+  onForceSync?: () => Promise<void>;
+  isSyncing?: boolean;
+  isAuthenticated?: boolean;
+  onOpenAuth?: () => void;
 }
 
 type TabType = 'general' | 'halacha' | 'location';
@@ -21,6 +26,11 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   lang,
   settings,
   updateSetting,
+  onImportEntries,
+  onForceSync,
+  isSyncing,
+  isAuthenticated,
+  onOpenAuth,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('general');
   const [locationSearch, setLocationSearch] = useState('');
@@ -98,11 +108,55 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                       )
                     }
                   >
-                    <option value="jewish">{t('Jewish Month', 'חודש עברי')}</option>
-                    <option value="secular">{t('Secular Month', 'חודש לועזי')}</option>
+                    <option value="jewish">{t('Jewish', 'עברי')}</option>
+                    <option value="secular">{t('Secular', 'לועזי')}</option>
                   </select>
                 </div>
 
+                <SectionTitle>{t('Cloud Sync & Backup', 'גיבוי וסנכרון ענן')}</SectionTitle>
+                <div className="bg-glass-overlay p-4 rounded-lg space-y-3">
+                  {!isAuthenticated ? (
+                    <div className="text-center space-y-3">
+                      <div className="flex justify-center text-amber-500">
+                        <CloudOff size={32} />
+                      </div>
+                      <p className="text-sm opacity-80">
+                        {t('Sign in to sync your data across devices and keep it safe.', 'התחבר כדי לסנכרן את הנתונים שלך בין מכשירים ולשמור עליהם.')}
+                      </p>
+                      <button 
+                        onClick={onOpenAuth}
+                        className="btn-primary w-full flex items-center justify-center gap-2"
+                      >
+                        <LogIn size={18} />
+                        {t('Sign In', 'התחברות')}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className={isSyncing ? "text-blue-500 animate-spin" : "text-green-500"}>
+                          <Cloud size={24} />
+                        </div>
+                        <div className="flex-grow">
+                          <p className="font-semibold text-sm">
+                            {isSyncing ? t('Syncing...', 'מסנכרן...') : t('Connected to Cloud', 'מחובר לענן')}
+                          </p>
+                          <p className="text-xs opacity-60">
+                            {t('Your data is automatically backed up.', 'הנתונים שלך מגובים באופן אוטומטי.')}
+                          </p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={onForceSync}
+                        disabled={isSyncing}
+                        className="btn-secondary w-full flex items-center justify-center gap-2 py-2"
+                      >
+                        <RefreshCw size={16} className={isSyncing ? "animate-spin" : ""} />
+                        {t('Force Backup Now', 'גבה עכשיו לענן')}
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <SectionTitle>{t('Behavior', 'התנהגות')}</SectionTitle>
                 <Toggle
                   label={t('Hide Flags Week After Entry', 'הסתר התראות שבוע אחרי ראייה')}
@@ -120,6 +174,25 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   value={settings.numberMonthsAheadToWarn}
                   onChange={v => updateSetting('numberMonthsAheadToWarn', parseInt(v) || 12)}
                 />
+
+                {onImportEntries && (
+                  <div className="mt-8 pt-4 border-t border-glass-border">
+                    <SectionTitle>{t('Developer Tools', 'כלי מפתח')}</SectionTitle>
+                    <button
+                      onClick={onImportEntries}
+                      className="w-full p-3 rounded-xl bg-accent-rose/20 border border-accent-rose/30 text-accent-rose font-bold hover:bg-accent-rose/30 transition-all flex items-center justify-center gap-2"
+                    >
+                      <Layout size={18} />
+                      {t('Import Shared Entry List', 'ייבוא רשימת ראיות משותפת')}
+                    </button>
+                    <p className="text-[10px] opacity-50 mt-2 text-center">
+                      {t(
+                        'Warning: This will replace all your current entries.',
+                        'אזהרה: פעולה זו תחליף את כל הראיות הקיימות.'
+                      )}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 

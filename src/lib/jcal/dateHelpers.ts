@@ -69,12 +69,16 @@ export const formatJewishDate = (jewishDate: JewishDate, includeYear = true): st
         'Teves',
         'Shvat',
         'Adar',
-        'Adar I',
         'Adar II',
     ];
 
     const day = jewishDate.day;
-    const month = months[jewishDate.month] || 'Unknown';
+    const isLeap = jDate.isJdLeapY(jewishDate.year);
+    const monthIndex = jewishDate.month;
+    let month = months[monthIndex] || 'Unknown';
+    if (monthIndex === 12 && isLeap) {
+        month = 'Adar I';
+    }
     const year = jewishDate.year;
 
     if (includeYear) {

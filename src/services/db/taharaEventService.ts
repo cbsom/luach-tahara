@@ -91,3 +91,32 @@ export async function deleteTaharaEvent(id: string): Promise<void> {
 
     await db.put('taharaEvents', deleted);
 }
+
+/**
+ * Permanently delete a tahara event
+ */
+export async function permanentlyDeleteTaharaEvent(id: string): Promise<void> {
+    const db = await getDB();
+    await db.delete('taharaEvents', id);
+}
+
+/**
+ * Get tahara events pending sync
+ */
+export async function getPendingTaharaEvents(): Promise<TaharaEventRecord[]> {
+    const db = await getDB();
+    return db.getAllFromIndex('taharaEvents', 'by-sync-status', 'pending');
+}
+
+/**
+ * Mark tahara event as synced
+ */
+export async function markTaharaEventSynced(id: string): Promise<void> {
+    const db = await getDB();
+    const event = await db.get('taharaEvents', id);
+
+    if (event) {
+        event.syncStatus = 'synced';
+        await db.put('taharaEvents', event);
+    }
+}

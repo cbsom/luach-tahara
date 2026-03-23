@@ -1,156 +1,166 @@
-// Firebase Sync Service - Syncs IndexedDB with Firebase
+import { 
+    collection, 
+    doc, 
+    onSnapshot, 
+    setDoc, 
+    getDocs, 
+    query, 
+} from 'firebase/firestore';
+import { db } from './config';
 import { getCurrentUser } from './auth';
-import { db as firestore } from './config';
-import { collection, query, onSnapshot } from 'firebase/firestore';
-import { setDocument, batchSetDocuments } from './firestore';
 import {
     getAllPendingData,
     markAllSynced,
+    getSettings,
+    saveSettings,
     markSyncStarted,
-    markSyncSuccess,
     markSyncFailed,
-    type EntryRecord,
-    type KavuahRecord,
+    markEverythingPending,
 } from '../db';
-import {
-    createEntry,
-    updateEntry,
-} from '../db/entryService';
-import {
-    createKavuah,
-    updateKavuah,
-} from '../db/kavuahService';
-import { getSettings, saveSettings } from '../db/settingsService';
-import { createUserEvent, updateUserEvent } from '../db/userEventService';
-import type { UserEvent } from '@/types-luach-web';
+import { batchSetDocuments } from './firestore';
 
-// Store unsubscribers so we can clean up
+// Global unsubscribe functions to prevent multiple listeners
+let unsubSettings: (() => void) | null = null;
 let unsubEntries: (() => void) | null = null;
 let unsubKavuahs: (() => void) | null = null;
 let unsubEvents: (() => void) | null = null;
-let unsubSettings: (() => void) | null = null;
-let activeSyncInterval: ReturnType<typeof setInterval> | null = null;
+let unsubTaharaEvents: (() => void) | null = null;
+let autoSyncInterval: any = null;
 
 /**
- * Initialize robust real-time synchronization with Firestore
+ * Start real-time sync listeners
  */
-export function startOnSnapshotSync(userId: string) {
-    if (unsubSettings) return; // Already started
+export async function startOnSnapshotSync(userId: string) {
+    stopOnSnapshotSync();
 
-    // 1. Listen for Settings
-    const settingsRef = collection(firestore, 'users', userId, 'settings');
-    unsubSettings = onSnapshot(query(settingsRef), async (snapshot) => {
-        const docSettings = snapshot.docs.find(d => d.id === 'user-settings');
-        if (docSettings) {
-             const data = docSettings.data();
-             await saveSettings(data as Parameters<typeof saveSettings>[0]);
-             console.log('☁️ Settings updated from Cloud');
+    const { getDB } = await import('../db/schema');
+    const dbInstance = await getDB();
+
+    // Settings Listener
+    const settingsRef = doc(db, 'users', userId, 'settings', 'general');
+    unsubSettings = onSnapshot(settingsRef, async (snapshot) => {
+        if (snapshot.exists()) {
+            const cloudSettings = snapshot.data();
+            await saveSettings(cloudSettings as any);
+            console.log('☁️ Settings updated from Cloud');
+            window.dispatchEvent(new CustomEvent('db-updated-settings'));
         }
     });
 
-    // 2. Listen for Entries
-    const entriesRef = collection(firestore, 'users', userId, 'entries');
-    unsubEntries = onSnapshot(query(entriesRef), async (snapshot) => {
+    // Entries Listener
+    const entriesRef = collection(doc(db, 'users', userId), 'entries');
+    unsubEntries = onSnapshot(entriesRef, async (snapshot) => {
         const changes = snapshot.docChanges();
         for (const change of changes) {
-            const data = change.doc.data() as EntryRecord;
-            const entryData = {
-                id: change.doc.id,
-                jewishDate: data.jewishDate,
-                onah: data.onah,
-                haflaga: data.haflaga,
-                ignoreForFlaggedDates: data.ignoreForFlaggedDates,
-                ignoreForKavuah: data.ignoreForKavuah,
-                comments: data.comments,
-            };
+            const data = change.doc.data() as any;
+            data.id = change.doc.id;
+            data.syncStatus = 'synced';
+
             if (change.type === 'added' || change.type === 'modified') {
-                try {
-                    await createEntry(entryData);
-                } catch {
-                    await updateEntry(entryData.id, entryData);
-                }
+                await dbInstance.put('entries', data);
+            } else if (change.type === 'removed') {
+                await dbInstance.delete('entries', change.doc.id);
             }
         }
-        if (changes.length > 0) console.log(`☁️ ${changes.length} Entries updated from Cloud`);
+        if (changes.length > 0) {
+            console.log(`☁️ ${changes.length} Entries updated from Cloud`);
+            window.dispatchEvent(new CustomEvent('db-updated-entries'));
+        }
     });
 
-    // 3. Listen for Kavuahs
-    const kavuahsRef = collection(firestore, 'users', userId, 'kavuahs');
-    unsubKavuahs = onSnapshot(query(kavuahsRef), async (snapshot) => {
+    // Kavuahs Listener
+    const kavuahsRef = collection(doc(db, 'users', userId), 'kavuahs');
+    unsubKavuahs = onSnapshot(kavuahsRef, async (snapshot) => {
         const changes = snapshot.docChanges();
         for (const change of changes) {
-            const data = change.doc.data() as KavuahRecord;
-            const kavuahData = {
-                id: change.doc.id,
-                kavuahType: data.kavuahType,
-                settingEntryId: data.settingEntryId,
-                specialNumber: data.specialNumber,
-                cancelsOnahBeinunis: data.cancelsOnahBeinunis,
-                active: data.active,
-                ignore: data.ignore,
-            };
+            const data = change.doc.data() as any;
+            data.id = change.doc.id;
+            data.syncStatus = 'synced';
+
             if (change.type === 'added' || change.type === 'modified') {
-                try {
-                    await createKavuah(kavuahData);
-                } catch {
-                    await updateKavuah(kavuahData.id, kavuahData);
-                }
+                await dbInstance.put('kavuahs', data);
+            } else if (change.type === 'removed') {
+                await dbInstance.delete('kavuahs', change.doc.id);
             }
         }
-        if (changes.length > 0) console.log(`☁️ ${changes.length} Kavuahs updated from Cloud`);
+        if (changes.length > 0) {
+            console.log(`☁️ ${changes.length} Kavuahs updated from Cloud`);
+            window.dispatchEvent(new CustomEvent('db-updated-kavuahs'));
+        }
     });
 
-    // 4. Listen for User Events (Occasions)
-    const eventsRef = collection(firestore, 'users', userId, 'events');
-    unsubEvents = onSnapshot(query(eventsRef), async (snapshot) => {
+    // Events (Occasions) Listener
+    const eventsRef = collection(doc(db, 'users', userId), 'events');
+    unsubEvents = onSnapshot(eventsRef, async (snapshot) => {
         const changes = snapshot.docChanges();
         for (const change of changes) {
-            const data = change.doc.data() as UserEvent;
-            const eventData = { ...data, id: change.doc.id };
+            const data = change.doc.data() as any;
+            data.id = change.doc.id;
+            data.syncStatus = 'synced';
+
             if (change.type === 'added' || change.type === 'modified') {
-                try {
-                    await createUserEvent(eventData);
-                } catch {
-                    await updateUserEvent(eventData.id, eventData);
-                }
+                await dbInstance.put('userEvents', data);
+            } else if (change.type === 'removed') {
+                await dbInstance.delete('userEvents', change.doc.id);
             }
         }
-        if (changes.length > 0) console.log(`☁️ ${changes.length} Events updated from Cloud`);
+        if (changes.length > 0) {
+            console.log(`☁️ ${changes.length} Events updated from Cloud`);
+            window.dispatchEvent(new CustomEvent('db-updated-events'));
+        }
+    });
+
+    // Tahara Events Listener
+    const taharaRef = collection(doc(db, 'users', userId), 'tahara-events');
+    unsubTaharaEvents = onSnapshot(taharaRef, async (snapshot) => {
+        const changes = snapshot.docChanges();
+        for (const change of changes) {
+            const data = change.doc.data() as any;
+            data.id = change.doc.id;
+            data.syncStatus = 'synced';
+
+            if (change.type === 'added' || change.type === 'modified') {
+                await dbInstance.put('taharaEvents', data);
+            } else if (change.type === 'removed') {
+                await dbInstance.delete('taharaEvents', change.doc.id);
+            }
+        }
+        if (changes.length > 0) {
+            console.log(`☁️ ${changes.length} Tahara Events updated from Cloud`);
+            window.dispatchEvent(new CustomEvent('db-updated-tahara'));
+        }
     });
 }
 
-function stopOnSnapshotSync() {
+/**
+ * Stop all real-time sync listeners
+ */
+export function stopOnSnapshotSync() {
     if (unsubSettings) unsubSettings();
     if (unsubEntries) unsubEntries();
     if (unsubKavuahs) unsubKavuahs();
     if (unsubEvents) unsubEvents();
+    if (unsubTaharaEvents) unsubTaharaEvents();
+    
     unsubSettings = null;
     unsubEntries = null;
     unsubKavuahs = null;
     unsubEvents = null;
+    unsubTaharaEvents = null;
 }
 
 /**
  * Sync all pending local changes UP to Firebase
  */
-export async function syncToFirebase(): Promise<{
-    success: boolean;
-    error?: string;
-}> {
+export async function syncToFirebase(): Promise<{ success: boolean; error?: string }> {
     const user = getCurrentUser();
-
-    if (!user) {
-        return {
-            success: false,
-            error: 'User not authenticated',
-        };
-    }
+    if (!user) return { success: false, error: 'User not logged in' };
 
     try {
         await markSyncStarted();
 
         // Get all pending data
-        const { entries, kavuahs, events, settingsPending } = await getAllPendingData();
+        const { entries, kavuahs, events, taharaEvents, settingsPending } = await getAllPendingData();
 
         // Sync entries
         if (entries.length > 0) {
@@ -159,10 +169,10 @@ export async function syncToFirebase(): Promise<{
                 data: {
                     jewishDate: entry.jewishDate,
                     onah: entry.onah,
+                    comments: entry.comments,
                     haflaga: entry.haflaga,
                     ignoreForFlaggedDates: entry.ignoreForFlaggedDates,
                     ignoreForKavuah: entry.ignoreForKavuah,
-                    comments: entry.comments,
                     createdAt: entry.createdAt,
                     updatedAt: entry.updatedAt,
                     deleted: entry.deleted || false,
@@ -190,117 +200,171 @@ export async function syncToFirebase(): Promise<{
             await batchSetDocuments(user.uid, 'kavuahs', kavuahDocs);
         }
 
-        // Sync user events
+        // Sync user events (occasions)
         if (events && events.length > 0) {
             const eventDocs = events.map(event => ({
                 id: event.id,
                 data: {
-                    name: event.name || (event as unknown as { title: string }).title || "Occasion", // Fallback for safety
-                    notes: event.notes || "",
-                    type: event.type !== undefined ? event.type : 1,
-                    jYear: event.jYear || (event as unknown as { date: { year: number } }).date?.year,
-                    jMonth: event.jMonth || (event as unknown as { date: { month: number } }).date?.month,
-                    jDay: event.jDay || (event as unknown as { date: { day: number } }).date?.day,
+                    name: event.name || (event as any).title || "Occasion",
+                    notes: event.notes,
+                    type: event.type,
                     jAbs: event.jAbs,
+                    jYear: event.jYear,
+                    jMonth: event.jMonth,
+                    jDay: event.jDay,
                     sDate: event.sDate,
-                    backColor: event.backColor || (event as unknown as { color: string }).color,
-                    textColor: event.textColor || "#ffffff",
-                    remindDayOf: event.remindDayOf || false,
-                    remindDayBefore: event.remindDayBefore || false,
-                    createdAt: event.createdAt || Date.now(),
-                    updatedAt: event.updatedAt || Date.now(),
+                    backColor: event.backColor || (event as any).color,
+                    textColor: event.textColor,
+                    remindDayOf: event.remindDayOf,
+                    remindDayBefore: event.remindDayBefore,
+                    createdAt: event.createdAt,
+                    updatedAt: event.updatedAt,
                     deleted: event.deleted || false,
                 },
             }));
             await batchSetDocuments(user.uid, 'events', eventDocs);
         }
 
+        // Sync tahara events
+        if (taharaEvents && taharaEvents.length > 0) {
+            const taharaDocs = taharaEvents.map(event => ({
+                id: event.id,
+                data: {
+                    jewishDate: event.jewishDate,
+                    type: event.type,
+                    createdAt: event.createdAt,
+                    updatedAt: event.updatedAt,
+                    deleted: event.deleted || false,
+                },
+            }));
+            await batchSetDocuments(user.uid, 'tahara-events', taharaDocs);
+        }
+
         // Sync settings
         if (settingsPending) {
             const settings = await getSettings();
-            await setDocument(user.uid, 'settings', 'user-settings', settings);
+            const settingsRef = doc(db, 'users', user.uid, 'settings', 'general');
+            await setDoc(settingsRef, { ...settings, updatedAt: Date.now() }, { merge: true });
         }
 
-        // Mark all as synced so they aren't pushed repeatedly
         await markAllSynced(
             entries.map(e => e.id),
             kavuahs.map(k => k.id),
-            events ? events.map(e => e.id) : []
+            events ? events.map(e => e.id) : [],
+            taharaEvents ? taharaEvents.map(t => t.id) : []
         );
 
         return { success: true };
     } catch (error) {
-        console.error('Sync to Firebase failed:', error);
+        console.error('Push sync failed:', error);
         await markSyncFailed();
-        return {
-            success: false,
-            error: error instanceof Error ? error.message : 'Unknown error',
-        };
+        return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
 }
 
 /**
- * Pull data from Firebase to IndexedDB
+ * Pull all data from Firebase (Full Pull)
  */
-export async function pullFromFirebase(): Promise<{
-    success: boolean;
-    error?: string;
-}> {
+export async function pullFromFirebase(): Promise<{ success: boolean; error?: string }> {
     const user = getCurrentUser();
-
-    if (!user) {
-        return { success: false, error: 'User not authenticated' };
-    }
+    if (!user) return { success: false, error: 'User not logged in' };
 
     try {
-        if (!unsubSettings) {
-             startOnSnapshotSync(user.uid);
+        const { getDB } = await import('../db/schema');
+        const dbInstance = await getDB();
+
+        // Pull Settings
+        const settingsSnap = await getDocs(query(collection(db, 'users', user.uid, 'settings')));
+        const cloudSettings = settingsSnap.docs.find(d => d.id === 'general')?.data();
+        if (cloudSettings) {
+            await saveSettings(cloudSettings as any);
         }
-        await markSyncSuccess();
+
+        // Pull Entries
+        const entriesSnap = await getDocs(collection(db, 'users', user.uid, 'entries'));
+        for (const docSnap of entriesSnap.docs) {
+            const data = docSnap.data() as any;
+            data.id = docSnap.id;
+            data.syncStatus = 'synced';
+            await dbInstance.put('entries', data);
+        }
+
+        // Pull Kavuahs
+        const kavuahsSnap = await getDocs(collection(db, 'users', user.uid, 'kavuahs'));
+        for (const docSnap of kavuahsSnap.docs) {
+            const data = docSnap.data() as any;
+            data.id = docSnap.id;
+            data.syncStatus = 'synced';
+            await dbInstance.put('kavuahs', data);
+        }
+
+        // Pull Events
+        const eventsSnap = await getDocs(collection(db, 'users', user.uid, 'events'));
+        for (const docSnap of eventsSnap.docs) {
+            const data = docSnap.data() as any;
+            data.id = docSnap.id;
+            data.syncStatus = 'synced';
+            await dbInstance.put('userEvents', data);
+        }
+
+        // Pull Tahara Events
+        const taharaSnap = await getDocs(collection(db, 'users', user.uid, 'tahara-events'));
+        for (const docSnap of taharaSnap.docs) {
+            const data = docSnap.data() as any;
+            data.id = docSnap.id;
+            data.syncStatus = 'synced';
+            await dbInstance.put('taharaEvents', data);
+        }
+
+        // Notify UI that EVERYTHING has been updated
+        window.dispatchEvent(new CustomEvent('db-updated-settings'));
+        window.dispatchEvent(new CustomEvent('db-updated-entries'));
+        window.dispatchEvent(new CustomEvent('db-updated-kavuahs'));
+        window.dispatchEvent(new CustomEvent('db-updated-events'));
+        window.dispatchEvent(new CustomEvent('db-updated-tahara'));
+
         return { success: true };
     } catch (error) {
-        return { success: false, error: String(error) };
+        console.error('Pull sync failed:', error);
+        return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
 }
 
 /**
- * Full sync - pull from Firebase then push any local changes
+ * Perform a full two-way sync
  */
-export async function fullSync(): Promise<{
-    success: boolean;
-    error?: string;
-}> {
-    // With onSnapshot, "pulling" is automatic. We just need to push pending.
-    return syncToFirebase();
+export async function fullSync(): Promise<{ success: boolean; error?: string }> {
+    const pushResult = await syncToFirebase();
+    if (!pushResult.success) return pushResult;
+    return await pullFromFirebase();
 }
 
 /**
- * Auto-sync - runs periodically for pushing ONLY. Pulling is real-time via onSnapshot.
+ * Start periodic auto-sync
  */
-export function startAutoSync(intervalMs: number = 30 * 1000): void {
-    const user = getCurrentUser();
-    
-    // Safety check - we shouldn't setup snapshots if unauthenticated
-    if (user && !unsubSettings) {
-        startOnSnapshotSync(user.uid);
-    }
-
-    if (activeSyncInterval) {
-        clearInterval(activeSyncInterval);
-    }
-
-    // Set a much faster push loop since local changes should be saved immediately
-    activeSyncInterval = setInterval(async () => {
-        if (getCurrentUser()) {
+export function startAutoSync(intervalMs = 30000) {
+    stopAutoSync();
+    autoSyncInterval = setInterval(async () => {
+        const user = getCurrentUser();
+        if (user) {
             await syncToFirebase();
         }
     }, intervalMs);
 }
 
-export function stopAutoSync(): void {
-    if (activeSyncInterval) {
-        clearInterval(activeSyncInterval);
-        activeSyncInterval = null;
+/**
+ * Stop periodic auto-sync
+ */
+export function stopAutoSync() {
+    if (autoSyncInterval) {
+        clearInterval(autoSyncInterval);
+        autoSyncInterval = null;
     }
-    stopOnSnapshotSync();
+}
+
+/**
+ * Force mark everything as pending
+ */
+export async function forceMarkEverythingPending(): Promise<void> {
+    await markEverythingPending();
 }

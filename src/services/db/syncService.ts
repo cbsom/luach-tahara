@@ -2,8 +2,9 @@
 import { getDB } from './schema';
 import { getPendingEntries, markEntrySynced } from './entryService';
 import { getPendingKavuahs, markKavuahSynced } from './kavuahService';
-import { areSettingsPendingSync, markSettingsSynced } from './settingsService';
+import { areSettingsPendingSync, markSettingsSynced, markSettingsPending } from './settingsService';
 import { getPendingUserEvents, markUserEventSynced } from './userEventService';
+import { getPendingTaharaEvents, markTaharaEventSynced } from './taharaEventService';
 
 const SYNC_META_KEY = 'sync-metadata';
 
@@ -61,14 +62,15 @@ export async function updateSyncMetadata(updates: Partial<SyncMetadata>): Promis
  * Get count of pending changes
  */
 export async function getPendingChangesCount(): Promise<number> {
-    const [pendingEntries, pendingKavuahs, pendingEvents, settingsPending] = await Promise.all([
+    const [pendingEntries, pendingKavuahs, pendingEvents, pendingTahara, settingsPending] = await Promise.all([
         getPendingEntries(),
         getPendingKavuahs(),
         getPendingUserEvents(),
+        getPendingTaharaEvents(),
         areSettingsPendingSync(),
     ]);
 
-    return pendingEntries.length + pendingKavuahs.length + pendingEvents.length + (settingsPending ? 1 : 0);
+    return pendingEntries.length + pendingKavuahs.length + pendingEvents.length + pendingTahara.length + (settingsPending ? 1 : 0);
 }
 
 /**
@@ -113,10 +115,11 @@ export async function markSyncFailed(): Promise<void> {
  * Get all pending data for sync
  */
 export async function getAllPendingData() {
-    const [entries, kavuahs, events, settingsPending] = await Promise.all([
+    const [entries, kavuahs, events, taharaEvents, settingsPending] = await Promise.all([
         getPendingEntries(),
         getPendingKavuahs(),
         getPendingUserEvents(),
+        getPendingTaharaEvents(),
         areSettingsPendingSync(),
     ]);
 
@@ -124,6 +127,7 @@ export async function getAllPendingData() {
         entries,
         kavuahs,
         events,
+        taharaEvents,
         settingsPending,
     };
 }
@@ -135,7 +139,8 @@ export async function getAllPendingData() {
 export async function markAllSynced(
     entryIds: string[],
     kavuahIds: string[],
-    eventIds: string[] = []
+    eventIds: string[] = [],
+    taharaIds: string[] = []
 ): Promise<void> {
     // Mark entries as synced
     await Promise.all(entryIds.map(id => markEntrySynced(id)));
@@ -146,11 +151,56 @@ export async function markAllSynced(
     // Mark events as synced
     await Promise.all(eventIds.map(id => markUserEventSynced(id)));
 
+    // Mark tahara events as synced
+    await Promise.all(taharaIds.map(id => markTaharaEventSynced(id)));
+
     // Mark settings as synced
     await markSettingsSynced();
 
     // Update sync metadata
     await markSyncSuccess();
+}
+
+/**
+ * Mark all local data as pending so it gets pushed to cloud
+ */
+export async function markEverythingPending(): Promise<void> {
+    const db = await getDB();
+    
+    // Entries
+    const entries = await db.getAll('entries');
+    for (const entry of entries) {
+        entry.syncStatus = 'pending';
+        entry.updatedAt = Date.now();
+        await db.put('entries', entry);
+    }
+
+    // Kavuahs
+    const kavuahs = await db.getAll('kavuahs');
+    for (const kavuah of kavuahs) {
+        kavuah.syncStatus = 'pending';
+        kavuah.updatedAt = Date.now();
+        await db.put('kavuahs', kavuah);
+    }
+
+    // Tahara Events
+    const tahara = await db.getAll('taharaEvents');
+    for (const event of tahara) {
+        event.syncStatus = 'pending';
+        event.updatedAt = Date.now();
+        await db.put('taharaEvents', event);
+    }
+
+    // User Events
+    const userEvents = await db.getAll('userEvents');
+    for (const event of userEvents) {
+        event.syncStatus = 'pending';
+        event.updatedAt = Date.now();
+        await db.put('userEvents', event);
+    }
+    
+    // Settings
+    await markSettingsPending();
 }
 
 /**

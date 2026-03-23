@@ -1,11 +1,13 @@
-// React hooks for IndexedDB operations
 import { useState, useEffect, useCallback } from 'react';
+import { syncToFirebase } from '../firebase/sync';
 import {
     getAllEntries,
     createEntry,
     updateEntry,
     deleteEntry,
     getEntriesByDate,
+    clearAllEntries,
+    addEntries,
     type EntryRecord,
     type EntryData,
 } from './entryService';
@@ -69,23 +71,46 @@ export function useEntries() {
 
     useEffect(() => {
         loadEntries();
+
+        // Listen for external updates (like cloud sync)
+        const handleUpdate = () => loadEntries();
+        window.addEventListener('db-updated-entries', handleUpdate);
+        return () => window.removeEventListener('db-updated-entries', handleUpdate);
     }, [loadEntries]);
 
     const addEntry = useCallback(async (data: EntryData) => {
         const entry = await createEntry(data);
         setEntries(prev => [...prev, entry]);
+        syncToFirebase(); // Immediate push
         return entry;
     }, []);
 
     const modifyEntry = useCallback(async (id: string, updates: Partial<EntryData>) => {
         const updated = await updateEntry(id, updates);
         setEntries(prev => prev.map(e => e.id === id ? updated : e));
+        syncToFirebase(); // Immediate push
         return updated;
     }, []);
 
     const removeEntry = useCallback(async (id: string) => {
         await deleteEntry(id);
         setEntries(prev => prev.filter(e => e.id !== id));
+        syncToFirebase(); // Immediate push
+    }, []);
+
+    const bulkAdd = useCallback(async (dataList: EntryData[], replace = false) => {
+        const newEntries = await addEntries(dataList);
+        if (replace) {
+            setEntries(newEntries);
+        } else {
+            setEntries(prev => [...prev, ...newEntries]);
+        }
+        return newEntries;
+    }, []);
+
+    const clearEntries = useCallback(async () => {
+        await clearAllEntries();
+        setEntries([]);
     }, []);
 
     return {
@@ -93,8 +118,10 @@ export function useEntries() {
         loading,
         error,
         addEntry,
+        bulkAdd,
         modifyEntry,
         removeEntry,
+        clearEntries,
         reload: loadEntries,
     };
 }
@@ -156,11 +183,16 @@ export function useTaharaEvents() {
 
     useEffect(() => {
         loadTaharaEvents();
+        
+        const handleUpdate = () => loadTaharaEvents();
+        window.addEventListener('db-updated-tahara', handleUpdate);
+        return () => window.removeEventListener('db-updated-tahara', handleUpdate);
     }, [loadTaharaEvents]);
 
     const addTaharaEvent = useCallback(async (data: TaharaEventData) => {
         const event = await createTaharaEvent(data);
         setTaharaEvents(prev => [...prev, event]);
+        syncToFirebase(); // Immediate push
         return event;
     }, []);
 
@@ -209,11 +241,16 @@ export function useUserEvents() {
 
     useEffect(() => {
         loadUserEvents();
+        
+        const handleUpdate = () => loadUserEvents();
+        window.addEventListener('db-updated-events', handleUpdate);
+        return () => window.removeEventListener('db-updated-events', handleUpdate);
     }, [loadUserEvents]);
 
     const addUserEvent = useCallback(async (data: UserEvent) => {
         const event = await createUserEvent(data);
         setUserEvents(prev => [...prev, event]);
+        syncToFirebase(); // Immediate push
         return event;
     }, []);
 
@@ -262,11 +299,16 @@ export function useKavuahs(activeOnly = false) {
 
     useEffect(() => {
         loadKavuahs();
+        
+        const handleUpdate = () => loadKavuahs();
+        window.addEventListener('db-updated-kavuahs', handleUpdate);
+        return () => window.removeEventListener('db-updated-kavuahs', handleUpdate);
     }, [loadKavuahs]);
 
     const addKavuah = useCallback(async (data: KavuahData) => {
         const kavuah = await createKavuah(data);
         setKavuahs(prev => [...prev, kavuah]);
+        syncToFirebase(); // Immediate push
         return kavuah;
     }, []);
 
@@ -322,6 +364,10 @@ export function useSettings() {
 
     useEffect(() => {
         loadSettings();
+        
+        const handleUpdate = () => loadSettings();
+        window.addEventListener('db-updated-settings', handleUpdate);
+        return () => window.removeEventListener('db-updated-settings', handleUpdate);
     }, [loadSettings]);
 
     const updateSettings = useCallback(async (updates: Partial<Settings>) => {
@@ -336,6 +382,7 @@ export function useSettings() {
     ) => {
         const updated = await updateSetting(key, value);
         setSettings(updated);
+        syncToFirebase(); // Immediate push
         return updated;
     }, []);
 

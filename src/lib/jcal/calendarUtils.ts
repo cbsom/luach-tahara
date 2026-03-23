@@ -54,7 +54,6 @@ export const getMonthName = (month: number, year?: number): string => {
         'Teves',
         'Shvat',
         'Adar',
-        'Adar I',
         'Adar II',
     ];
 
@@ -84,7 +83,6 @@ export const getMonthNameHebrew = (month: number, year?: number): string => {
         'טבת',
         'שבט',
         'אדר',
-        'אדר א׳',
         'אדר ב׳',
     ];
 

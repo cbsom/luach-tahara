@@ -40,6 +40,35 @@ export async function createEntry(data: EntryData): Promise<EntryRecord> {
 }
 
 /**
+ * Bulk create entries
+ */
+export async function addEntries(dataList: EntryData[]): Promise<EntryRecord[]> {
+    const db = await getDB();
+    const now = Date.now();
+    const records: EntryRecord[] = [];
+
+    const tx = db.transaction('entries', 'readwrite');
+    for (const data of dataList) {
+        const entry: EntryRecord = {
+            id: data.id || nanoid(),
+            jewishDate: data.jewishDate,
+            onah: data.onah,
+            haflaga: data.haflaga,
+            ignoreForFlaggedDates: data.ignoreForFlaggedDates,
+            ignoreForKavuah: data.ignoreForKavuah,
+            comments: data.comments,
+            createdAt: now,
+            updatedAt: now,
+            syncStatus: 'pending',
+        };
+        await tx.store.put(entry);
+        records.push(entry);
+    }
+    await tx.done;
+    return records;
+}
+
+/**
  * Get entry by ID
  */
 export async function getEntry(id: string): Promise<EntryRecord | undefined> {

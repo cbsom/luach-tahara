@@ -16,6 +16,7 @@ import {
     fullSync,
     startAutoSync,
     stopAutoSync,
+    forceMarkEverythingPending as markEverythingPending,
 } from './sync';
 
 /**
@@ -173,6 +174,23 @@ export function useSync() {
         }
     }, []);
 
+    const forceFullSync = useCallback(async () => {
+        setSyncing(true);
+        setSyncError(null);
+        try {
+            await markEverythingPending();
+            const result = await syncToFirebase();
+            if (result.success) {
+                setLastSyncTime(new Date());
+            } else {
+                setSyncError(result.error || 'Force sync failed');
+            }
+            return result;
+        } finally {
+            setSyncing(false);
+        }
+    }, []);
+
     return {
         syncing,
         lastSyncTime,
@@ -180,6 +198,7 @@ export function useSync() {
         sync,
         pull,
         fullSync: fullSyncNow,
+        forceFullSync,
     };
 }
 

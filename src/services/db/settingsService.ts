@@ -134,3 +134,17 @@ export async function markSettingsSynced(): Promise<void> {
         await db.put('settings', stored);
     }
 }
+
+/**
+ * Mark settings as pending sync
+ */
+export async function markSettingsPending(): Promise<void> {
+    const db = await getDB();
+    const stored = await db.get('settings', SETTINGS_KEY);
+
+    if (stored) {
+        stored.syncStatus = 'pending';
+        stored.updatedAt = Date.now();
+        await db.put('settings', stored);
+    }
+}

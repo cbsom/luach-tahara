@@ -1,4 +1,3 @@
-// Simplified Calendar wrapper for luach-tahara
 import { useState, useMemo, useEffect } from 'react';
 import { jDate } from 'jcal-zmanim';
 
@@ -6,7 +5,8 @@ import { Calendar as LuachWebCalendar } from './Calendar';
 import { Themes, type UserEvent } from '../types-luach-web';
 import type { Location } from 'jcal-zmanim';
 import { EntryForm } from './EntryForm';
-import { useEntries, useKavuahs, useSettings, useTaharaEvents } from '../services/db/hooks';
+import { useEntries, useSettings, useKavuahs, useTaharaEvents } from '../services/db/hooks';
+import { useAuth, useSync } from '../services/firebase/hooks';
 import type { Entry as EntryData } from '../types';
 import Entry from '../lib/chashavshavon/Entry';
 import FlaggedDatesGenerator from '../lib/chashavshavon/FlaggedDatesGenerator';
@@ -79,7 +79,16 @@ export function Calendar({
   const today = new jDate();
 
   // DB Hooks
-  const { entries: entryRecords, addEntry, modifyEntry, removeEntry } = useEntries();
+  const {
+    entries: entryRecords,
+    addEntry,
+    modifyEntry,
+    removeEntry,
+    bulkAdd,
+    clearEntries,
+  } = useEntries();
+  const { isAuthenticated } = useAuth();
+  const { syncing, forceFullSync, sync } = useSync();
   const { kavuahs: kavuahRecords, addKavuah } = useKavuahs(true);
   const { settings, updateSingleSetting } = useSettings();
   const { taharaEvents: taharaRecords, addTaharaEvent, removeTaharaEvent } = useTaharaEvents();
@@ -644,6 +653,87 @@ export function Calendar({
     await removeEntry(entry.id);
   };
 
+  // Shared Entry List Import
+  const handleImportSharedEntries = async () => {
+    if (
+      !confirm(
+        lang === 'he'
+          ? 'פעולה זו תמחק את כל הראיות הקיימות ותחליף אותן ברשימה המשותפת. האם להמשיך?'
+          : 'This will delete all current entries and replace them with the shared list. Continue?'
+      )
+    ) {
+      return;
+    }
+
+    const sharedData = {
+      Entries: [
+        { When: 'עונת יום - יום ראשון ב\' תשרי תשפ"ד', Abs: 738780, DN: 'Day' },
+        { When: 'עונת יום - יום ראשון ל\' תשרי תשפ"ד', Abs: 738808, DN: 'Day' },
+        { When: 'עונת יום - יום ראשון כ"ח חשון תשפ"ד', Abs: 738836, DN: 'Day' },
+        { When: 'עונת יום - יום חמישי כ"ד כסלו תשפ"ד', Abs: 738861, DN: 'Day' },
+        { When: 'עונת לילה - יום שלישי כ"א טבת תשפ"ד', Abs: 738887, DN: 'Night' },
+        { When: 'עונת לילה - יום שלישי כ"ז שבט תשפ"ד', Abs: 738922, DN: 'Night' },
+        { When: 'עונת יום - יום ראשון ט"ז אדר ראשון תשפ"ד', Abs: 738941, DN: 'Day' },
+        { When: 'עונת יום - יום שני ח\' אדר שני תשפ"ד', Abs: 738963, DN: 'Day' },
+        { When: 'עונת יום - ערב שבת קודש ד\' ניסן תשפ"ד', Abs: 738988, DN: 'Day' },
+        { When: 'עונת לילה - שבת קודש ג\' אייר תשפ"ד', Abs: 739017, DN: 'Night' },
+        { When: 'עונת יום - יום ראשון ג\' סיון תשפ"ד', Abs: 739046, DN: 'Day' },
+        { When: 'עונת יום - יום חמישי כ"ח סיון תשפ"ד', Abs: 739071, DN: 'Day' },
+        { When: 'עונת לילה - יום רביעי כ"ה תמוז תשפ"ד', Abs: 739098, DN: 'Night' },
+        { When: 'עונת יום - שבת קודש כ\' אב תשפ"ד', Abs: 739122, DN: 'Day' },
+        { When: 'עונת יום - יום רביעי ט"ו אלול תשפ"ד', Abs: 739147, DN: 'Day' },
+        { When: 'עונת יום - יום רביעי י"ד תשרי תשפ"ה', Abs: 739175, DN: 'Day' },
+        { When: 'עונת יום - יום ראשון ט"ו חשון תשפ"ה', Abs: 739207, DN: 'Day' },
+        { When: 'עונת יום - יום ראשון ז\' כסלו תשפ"ה', Abs: 739228, DN: 'Day' },
+        { When: 'עונת לילה - יום חמישי ב\' טבת תשפ"ה', Abs: 739253, DN: 'Night' },
+        { When: 'עונת לילה - יום ראשון כ"ו טבת תשפ"ה', Abs: 739277, DN: 'Night' },
+        { When: 'עונת יום - יום ראשון י"ח שבט תשפ"ה', Abs: 739298, DN: 'Day' },
+        { When: 'עונת יום - יום שלישי י"ח אדר תשפ"ה', Abs: 739328, DN: 'Day' },
+        { When: 'עונת יום - יום ראשון ט"ו ניסן תשפ"ה', Abs: 739354, DN: 'Day' },
+        { When: 'עונת יום - יום ראשון כ\' אייר תשפ"ה', Abs: 739389, DN: 'Day' },
+        { When: 'עונת יום - יום שלישי כ"א סיון תשפ"ה', Abs: 739419, DN: 'Day' },
+        { When: 'עונת יום - יום ראשון י"ז תמוז תשפ"ה', Abs: 739445, DN: 'Day' },
+        { When: 'עונת לילה - יום רביעי י"ב אב תשפ"ה', Abs: 739469, DN: 'Night' },
+        { When: 'עונת יום - יום רביעי י"ז אלול תשפ"ה', Abs: 739504, DN: 'Day' },
+        { When: 'עונת לילה - יום שני י"ד תשרי תשפ"ו', Abs: 739530, DN: 'Night' },
+        { When: 'עונת יום - שבת קודש י\' חשון תשפ"ו', Abs: 739556, DN: 'Day' },
+        { When: 'עונת לילה - ערב שבת קודש ח\' כסלו תשפ"ו', Abs: 739583, DN: 'Night' },
+        { When: 'עונת לילה - יום רביעי ד\' טבת תשפ"ו', Abs: 739609, DN: 'Night' },
+        { When: 'עונת יום - יום חמישי ט\' אדר תשפ"ו', Abs: 739673, DN: 'Day' },
+      ],
+    };
+
+    await clearEntries();
+
+    const importData = [];
+    let prevAbs = 0;
+
+    for (const entry of sharedData.Entries) {
+      const absVal = Number(entry.Abs);
+      const j = new jDate(absVal);
+      const haflaga = prevAbs === 0 ? 0 : absVal - prevAbs + 1;
+      prevAbs = absVal;
+
+      importData.push({
+        jewishDate: { year: j.Year, month: j.Month, day: j.Day },
+        onah: entry.DN === 'Day' ? 1 : -1,
+        haflaga: haflaga,
+        ignoreForFlaggedDates: false,
+        ignoreForKavuah: false,
+        comments: 'Imported from shared list',
+      });
+    }
+
+    await bulkAdd(importData, true);
+    alert(
+      lang === 'he' ? 'הייבוא הושלם בהצלחה!' : 'Import completed successfully!'
+    );
+    // Explicitly trigger sync after import
+    if (isAuthenticated) {
+        await sync();
+    }
+  };
+
   // Overwrite textInLanguage to include event modal strings handled above
 
   return (
@@ -709,6 +799,11 @@ export function Calendar({
         lang={lang as 'en' | 'he'}
         settings={settings}
         updateSetting={updateSingleSetting}
+        onImportEntries={handleImportSharedEntries}
+        onForceSync={async () => { await forceFullSync(); }}
+        isSyncing={syncing}
+        isAuthenticated={isAuthenticated}
+        onOpenAuth={() => (window as any).toggleAuthModal?.(true)}
       />
 
       <EntryList

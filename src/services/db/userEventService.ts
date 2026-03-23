@@ -72,6 +72,14 @@ export async function deleteUserEvent(id: string): Promise<void> {
 }
 
 /**
+ * Permanently delete a user event
+ */
+export async function permanentlyDeleteUserEvent(id: string): Promise<void> {
+    const db = await getDB();
+    await db.delete('userEvents', id);
+}
+
+/**
  * Save multiple user events (used for import/migration)
  */
 export async function saveUserEvents(events: UserEvent[]): Promise<void> {
