@@ -2,7 +2,7 @@
 import { jDate } from 'jcal-zmanim';
 import { Plus, Droplet, HelpCircle, Calendar as CalendarIcon, Waves } from 'lucide-react';
 import type { Entry, TaharaEvent, TaharaEventType } from '@/types';
-import { UserEvent } from '@/types-luach-web';
+import { UserEvent, Themes } from '@/types-luach-web';
 import { NightDay } from '@/types';
 import { ProblemOnah } from '@/lib/chashavshavon/ProblemOnah';
 import { NiddahStatus } from '@/lib/chashavshavon/StatusCalculator';
@@ -37,6 +37,7 @@ interface CalendarDayProps {
   onEditEntry?: (entry: Entry) => void;
   onEditUserEvent?: (event: UserEvent) => void;
   status?: NiddahStatus;
+  theme?: Themes;
 }
 
 export function CalendarDay({
@@ -66,6 +67,7 @@ export function CalendarDay({
   onEditUserEvent,
   onAddUserEvent,
   status,
+  theme,
 }: CalendarDayProps) {
   const hasNightEntry = entry && entry.onah === NightDay.Night;
   const hasDayEntry = entry && entry.onah === NightDay.Day;
@@ -75,35 +77,44 @@ export function CalendarDay({
 
   // Determine background styling
   const getBackgroundStyle = () => {
-    // Priority: Entry > Flagged Date > User Event > Holiday/Shabbos
-
+    // For entry days: show a very subtle split-half indicator
     if (entry || hasNightFlag || hasDayFlag) {
-      // Split background for entry or flagged dates
-      // We overlay this on top of the status background if needed, but CSS background is one property.
-      // So we use the gradient.
       const direction = lang === 'he' ? 'to left' : 'to right';
+      const entryAlpha = 'rgba(252, 165, 165, 0.08)';
+      const flagAlpha = 'rgba(251, 191, 36, 0.07)';
+      const niddahAlpha = 'rgba(252, 165, 165, 0.05)';
+      const none = 'transparent';
+
+      const nightHalf = hasNightEntry
+        ? entryAlpha
+        : hasNightFlag
+          ? flagAlpha
+          : status === NiddahStatus.Niddah
+            ? niddahAlpha
+            : none;
+      const dayHalf = hasDayEntry
+        ? entryAlpha
+        : hasDayFlag
+          ? flagAlpha
+          : status === NiddahStatus.Niddah
+            ? niddahAlpha
+            : none;
+
       return {
-        background: `linear-gradient(${direction}, 
-          ${hasNightEntry ? 'rgba(255, 200, 200, 0.5)' : hasNightFlag ? 'rgba(255, 235, 205, 0.5)' : status === NiddahStatus.Niddah ? 'rgba(255, 220, 220, 0.3)' : 'transparent'} 0%, 
-          ${hasNightEntry ? 'rgba(255, 200, 200, 0.5)' : hasNightFlag ? 'rgba(255, 235, 205, 0.5)' : status === NiddahStatus.Niddah ? 'rgba(255, 220, 220, 0.3)' : 'transparent'} 50%, 
-          ${hasDayEntry ? 'rgba(255, 200, 200, 0.5)' : hasDayFlag ? 'rgba(255, 235, 205, 0.5)' : status === NiddahStatus.Niddah ? 'rgba(255, 220, 220, 0.3)' : 'transparent'} 50%, 
-          ${hasDayEntry ? 'rgba(255, 200, 200, 0.5)' : hasDayFlag ? 'rgba(255, 235, 205, 0.5)' : status === NiddahStatus.Niddah ? 'rgba(255, 220, 220, 0.3)' : 'transparent'} 100%
-        )`,
+        background: `linear-gradient(${direction}, ${nightHalf} 0%, ${nightHalf} 50%, ${dayHalf} 50%, ${dayHalf} 100%)`,
       };
     }
 
     if (status === NiddahStatus.Niddah) {
-      return { backgroundColor: 'rgba(255, 220, 220, 0.3)' };
+      return { backgroundColor: 'rgba(252, 165, 165, 0.04)' };
     }
-    // Optional: Green for Tahara?
-    // if (status === NiddahStatus.Tahara) { return { backgroundColor: 'rgba(220, 255, 220, 0.1)' }; }
 
     if (userEvents.length > 0 && userEvents[0].backColor) {
-      return { backgroundColor: userEvents[0].backColor };
+      return { backgroundColor: userEvents[0].backColor + '33' };
     }
 
     if (isHoliday || isShabbos) {
-      return { backgroundColor: 'var(--holiday-bg)' };
+      return { backgroundColor: 'rgba(251, 191, 36, 0.04)' };
     }
 
     return {};
@@ -136,9 +147,7 @@ export function CalendarDay({
 
   const getFlagDescription = (flag: ProblemOnah): string => {
     // Join all flags with labels, translating each one if necessary
-    return flag.flagsList
-      .map(f => translateFlagDescription(f, lang))
-      .join(', ');
+    return flag.flagsList.map(f => translateFlagDescription(f, lang)).join(', ');
   };
 
   return (
@@ -147,17 +156,40 @@ export function CalendarDay({
       style={getBackgroundStyle()}
       onClick={onDayClick}
     >
+      {/* Astroid overlay for today */}
+      {isToday && (
+        <div className="astroid-overlay" style={{ zIndex: 1, pointerEvents: 'none' }}>
+          <svg
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            style={{ width: '200%', height: '120%' }}
+          >
+            <path
+              d="M 50 0 Q 50 50 100 50 Q 50 50 50 100 Q 50 50 0 50 Q 50 50 50 0"
+              fill={
+                theme === Themes.Dark || theme === Themes.Warm
+                  ? 'rgba(200, 200, 255, 0.25)'
+                  : 'rgba(0, 0, 100, 0.50)'
+              }
+            />
+          </svg>
+        </div>
+      )}
       {/* Date Number */}
       <div className="day-number-container">
         {calendarView === 'jewish' ? (
           <>
-            <span className="hebrew-day">{lang === 'he' ? toHebrewNumber(date.Day) : date.Day}</span>
+            <span className="hebrew-day">
+              {lang === 'he' ? toHebrewNumber(date.Day) : date.Day}
+            </span>
             <span className="secular-day">{date.getDate().getDate()}</span>
           </>
         ) : (
           <>
             <span className="secular-day-primary">{date.getDate().getDate()}</span>
-            <span className="hebrew-day-secondary">{lang === 'he' ? toHebrewNumber(date.Day) : date.Day}</span>
+            <span className="hebrew-day-secondary">
+              {lang === 'he' ? toHebrewNumber(date.Day) : date.Day}
+            </span>
           </>
         )}
       </div>
@@ -283,7 +315,7 @@ export function CalendarDay({
           className="add-button"
           onClick={e => {
             e.stopPropagation();
-            
+
             // Close all other open menus
             document.querySelectorAll('.add-menu.show').forEach(el => {
               if (el !== e.currentTarget.nextElementSibling) {

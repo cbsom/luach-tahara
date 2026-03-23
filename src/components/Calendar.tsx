@@ -44,6 +44,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   getEventsForDate,
   today,
   calendarView,
+  theme,
   entries,
   flaggedOnahs,
   taharaEvents,
@@ -78,9 +79,9 @@ export const Calendar: React.FC<CalendarProps> = ({
   }, []);
 
   return (
-    <main className="calendar-container">
-      <section className="flex flex-col gap-4 mb-4">
-        <div className="calendar-body">
+    <main className="calendar-container" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <section className="flex flex-col flex-1 min-h-0">
+        <div className="calendar-body" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
           <div className="calendar-weekdays">
             {(lang === 'he'
               ? ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
@@ -101,6 +102,7 @@ export const Calendar: React.FC<CalendarProps> = ({
               {
                 gridTemplateRows: `repeat(${monthInfo.weeksNeeded}, 1fr)`,
                 '--weeks': monthInfo.weeksNeeded,
+                flex: 1,
               } as React.CSSProperties
             }
           >
@@ -195,6 +197,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                   onAddTaharaEvent={type => onAddTaharaEvent(type, date)}
                   onRemoveTaharaEvent={onRemoveTaharaEvent}
                   onAddUserEvent={() => onAddUserEvent(date)}
+                  theme={theme}
                 />
               );
             })}

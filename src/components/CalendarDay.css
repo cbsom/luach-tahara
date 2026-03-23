@@ -2,23 +2,38 @@
 
 .calendar-day-niddah {
     position: relative;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.02);
     border: 1px solid var(--glass-border);
-    border-radius: 16px;
-    padding: 12px;
+    border-radius: 14px;
+    padding: 10px;
     display: flex;
     flex-direction: column;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
-    min-height: 120px;
+    min-height: 100px;
+    height: 100%;
     overflow: visible;
 }
 
+.astroid-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+}
+
+
 .calendar-day-niddah:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.2);
-    /* transform: translateY(-4px) scale(1.02); -- REMOVED to prevent z-index/clipping issues with popups */
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
     z-index: 10;
 }
 
@@ -42,38 +57,40 @@
 
 /* Entry Label */
 .entry-label {
-    background: rgba(255, 255, 255, 0.9);
-    border-left: 3px solid #dc2626;
-    padding: 4px 6px;
-    border-radius: 4px;
+    background: rgba(220, 38, 38, 0.12);
+    border-left: 2px solid rgba(220, 38, 38, 0.5);
+    padding: 3px 6px;
+    border-radius: 5px;
     margin-top: 4px;
     font-size: 0.7rem;
     line-height: 1.2;
 }
 
 .entry-text {
-    color: #dc2626;
+    color: rgba(252, 165, 165, 0.9);
     font-weight: 600;
 }
 
 .entry-haflaga {
-    color: #991b1b;
+    color: rgba(252, 165, 165, 0.6);
     font-weight: 500;
     margin-top: 2px;
 }
 
-/* Days Since Entry */
+/* Days Since Entry - subtle, not loud */
 .days-since-entry {
     position: absolute;
     bottom: 8px;
     left: 8px;
-    background: rgba(220, 38, 38, 0.9);
-    color: white;
-    padding: 2px 6px;
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 1px 5px;
     border-radius: 4px;
-    font-size: 0.65rem;
-    font-weight: 600;
+    font-size: 0.6rem;
+    font-weight: 500;
     z-index: 5;
+    letter-spacing: 0.01em;
 }
 
 [dir="rtl"] .days-since-entry {
@@ -90,8 +107,8 @@
 }
 
 .flagged-label {
-    background: rgba(255, 255, 255, 0.9);
-    border-left: 3px solid #92400e;
+    background: rgba(251, 191, 36, 0.08);
+    border-left: 2px solid rgba(251, 191, 36, 0.4);
     padding: 3px 5px;
     border-radius: 4px;
     font-size: 0.65rem;
@@ -99,13 +116,15 @@
 }
 
 .flagged-onah {
-    color: #92400e;
+    color: var(--accent-amber);
     font-weight: 600;
+    opacity: 0.85;
 }
 
 .flagged-description {
-    color: #78350f;
+    color: var(--text-secondary);
     font-weight: 500;
+    opacity: 0.7;
 }
 
 /* Tahara Events */
