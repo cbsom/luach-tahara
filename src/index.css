@@ -37,6 +37,7 @@
   --glow-1: rgba(251, 191, 36, 0.12);
   --glow-2: rgba(251, 146, 60, 0.12);
   --selected-bg: rgba(251, 191, 36, 0.15);
+  --holiday-bg: rgba(61, 36, 24, 0.3);
   --btn-bg: rgba(61, 36, 24, 0.4);
   --btn-bg-hover: rgba(61, 36, 24, 0.6);
   --btn-border: rgba(251, 191, 36, 0.15);
@@ -64,6 +65,7 @@
   --glow-1: rgba(251, 191, 36, 0.08);
   --glow-2: rgba(139, 92, 246, 0.08);
   --selected-bg: rgba(251, 191, 36, 0.1);
+  --holiday-bg: rgba(255, 255, 255, 0.05);
   --btn-bg: rgba(42, 42, 42, 0.4);
   --btn-bg-hover: rgba(42, 42, 42, 0.6);
   --btn-border: rgba(255, 255, 255, 0.1);
@@ -89,10 +91,40 @@
   --glow-1: rgba(251, 191, 36, 0.15);
   --glow-2: rgba(139, 92, 246, 0.15);
   --selected-bg: rgba(0, 0, 0, 0.12);
+  --holiday-bg: rgba(0, 0, 0, 0.05);
   --btn-bg: rgba(245, 245, 245, 0.6);
   --btn-bg-hover: rgba(229, 229, 229, 0.8);
   --btn-border: rgba(0, 0, 0, 0.1);
   --btn-border-hover: rgba(0, 0, 0, 0.2);
+}
+
+/* Tcheles (Sky Blue) Theme */
+[data-theme="tcheles"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-accent: #f1f5f9;
+  --text-primary: #1e3a8a;
+  --text-secondary: #2563eb;
+  --accent-amber: #1d4ed8;
+  --accent-coral: #3b82f6;
+  --accent-gold: #2563eb;
+  --accent-rose: #1e40af;
+  --accent-teal: #0284c7;
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(30, 64, 175, 0.15);
+  --glass-shadow: 0 10px 30px rgba(30, 64, 175, 0.1);
+  --body-bg: #f8fafc;
+  --glow-1: rgba(37, 99, 235, 0.1);
+  --glow-2: rgba(30, 64, 175, 0.08);
+  --holiday-bg: rgba(37, 99, 235, 0.08);
+  --selected-bg: rgba(37, 99, 235, 0.18);
+  --btn-bg: rgba(239, 246, 255, 0.8);
+  --btn-bg-hover: rgba(219, 234, 254, 0.9);
+  --btn-border: rgba(37, 99, 235, 0.2);
+  --btn-border-hover: rgba(37, 99, 235, 0.4);
+  --btn-accent-text: #ffffff;
+  --input-bg: rgba(30, 64, 175, 0.02);
+  --input-bg-focus: rgba(30, 64, 175, 0.05);
 }
 
 [dir="rtl"] {

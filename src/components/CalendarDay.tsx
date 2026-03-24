@@ -22,7 +22,12 @@ interface CalendarDayProps {
   userEvents?: UserEvent[]; // Regular events (from luach-web)
   isHoliday?: boolean;
   isShabbos?: boolean;
-  holidayName?: string;
+  /** Parasha string for Shabbos days (pre-computed by Calendar) */
+  parasha?: string;
+  /** Candle lighting time string, e.g. '18:23' */
+  candleLighting?: string;
+  /** Array of holiday/Omer/special-day note strings */
+  notifications?: string[];
   calendarView: 'jewish' | 'secular';
   lang: 'en' | 'he';
   onDayClick: () => void;
@@ -52,7 +57,9 @@ export function CalendarDay({
   userEvents = [],
   isHoliday,
   isShabbos,
-  holidayName,
+  parasha,
+  candleLighting,
+  notifications = [],
   calendarView,
   lang,
   onDayClick,
@@ -76,33 +83,27 @@ export function CalendarDay({
   const hasDayFlag = flaggedOnahs?.some(f => f.nightDay === NightDay.Day);
 
   // Determine background styling
+  // Holiday/Shabbos adds `--holiday-bg` as the "plain" half in the split gradient
+  const holidayBg = isHoliday || isShabbos ? 'var(--holiday-bg)' : 'transparent';
+
   const getBackgroundStyle = () => {
-    // For entry days: show a very subtle split-half indicator
     if (entry || hasNightFlag || hasDayFlag) {
       const direction = lang === 'he' ? 'to left' : 'to right';
-      const entryAlpha = 'rgba(252, 165, 165, 0.08)';
-      const flagAlpha = 'rgba(251, 191, 36, 0.07)';
-      const niddahAlpha = 'rgba(252, 165, 165, 0.05)';
-      const none = 'transparent';
+      const entryAlpha = 'rgba(252, 165, 165, 0.20)';
+      const flagAlpha = 'rgba(251, 191, 36, 0.20)';
 
-      const nightHalf = hasNightEntry
-        ? entryAlpha
-        : hasNightFlag
-          ? flagAlpha
-          : status === NiddahStatus.Niddah
-            ? niddahAlpha
-            : none;
-      const dayHalf = hasDayEntry
-        ? entryAlpha
-        : hasDayFlag
-          ? flagAlpha
-          : status === NiddahStatus.Niddah
-            ? niddahAlpha
-            : none;
+      // Only shade a half if it has an entry or flag — otherwise use holiday bg or transparent
+      const nightHalf = hasNightEntry ? entryAlpha : hasNightFlag ? flagAlpha : holidayBg;
+      const dayHalf   = hasDayEntry   ? entryAlpha : hasDayFlag   ? flagAlpha : holidayBg;
 
       return {
         background: `linear-gradient(${direction}, ${nightHalf} 0%, ${nightHalf} 50%, ${dayHalf} 50%, ${dayHalf} 100%)`,
       };
+    }
+
+    // Holiday / Shabbos takes priority over generic Niddah tint
+    if (isHoliday || isShabbos) {
+      return { backgroundColor: 'var(--holiday-bg)' };
     }
 
     if (status === NiddahStatus.Niddah) {
@@ -111,10 +112,6 @@ export function CalendarDay({
 
     if (userEvents.length > 0 && userEvents[0].backColor) {
       return { backgroundColor: userEvents[0].backColor + '33' };
-    }
-
-    if (isHoliday || isShabbos) {
-      return { backgroundColor: 'rgba(251, 191, 36, 0.04)' };
     }
 
     return {};
@@ -304,10 +301,37 @@ export function CalendarDay({
         </div>
       )}
 
-      {/* Holiday/Shabbos Name */}
-      {(isHoliday || isShabbos) && holidayName && !entry && !flaggedOnahs?.length && (
-        <div className="holiday-name">{holidayName}</div>
-      )}
+      {/* Notifications: Parasha, Candle Lighting, Omer, Holidays */}
+      <div className="day-notifications">
+        {/* Parasha on regular Shabbos */}
+        {isShabbos && !isHoliday && parasha && <div className="shabbos-indicator">{parasha}</div>}
+
+        {/* Candle Lighting */}
+        {candleLighting && (
+          <div className="candle-lighting-text">
+            <span style={{ opacity: 0.7 }}>{lang === 'he' ? 'הדלקת נרות' : 'Candles'}:</span>{' '}
+            {candleLighting}
+          </div>
+        )}
+
+        {/* Holiday / Omer / Special notes */}
+        {notifications.length > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              width: '100%',
+            }}
+          >
+            {notifications.map((note, idx) => (
+              <div key={idx} className="holiday-indicator">
+                {note}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Add Button with Menu */}
       <div className="add-menu-container">
