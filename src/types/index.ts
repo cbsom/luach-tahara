@@ -138,6 +138,7 @@ export interface Settings {
     emailRemindersEnabled?: boolean;
     browserNotificationsEnabled?: boolean;
     lang?: 'en' | 'he';
+    showEvents: boolean;
     desktopSidebarMode?: 'permanent' | 'hidden';
     createdAt: number;
     updatedAt: number;

@@ -31,6 +31,7 @@ interface CalendarProps {
   onAddTaharaEvent: (type: 'hefsek' | 'bedika' | 'shailah' | 'mikvah', date: jDate) => void;
   onRemoveTaharaEvent: (event: TaharaEvent) => void;
   onAddUserEvent: (date: jDate) => void;
+  showEvents: boolean;
 }
 
 export const Calendar: React.FC<CalendarProps> = ({
@@ -53,6 +54,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   onAddTaharaEvent,
   onRemoveTaharaEvent,
   onAddUserEvent,
+  showEvents,
 }) => {
   // Memoize sorted entries for daysSinceEntry calculation
   const sortedEntriesDesc = React.useMemo(() => {
@@ -129,58 +131,60 @@ export const Calendar: React.FC<CalendarProps> = ({
               const dayFlaggedOnahs = flaggedOnahs?.filter(po => po.jdate.Abs === date.Abs) || [];
 
               // Filter user events
-              const dayEvents = getEventsForDate(date);
+              const dayEvents = showEvents ? getEventsForDate(date) : [];
 
               // Holiday info — shade Yom Tov and Chol HaMoed (matches luach-web)
-              const isYomTov = date.isYomTovOrCholHamoed(location.Israel);
+              const isYomTov = showEvents ? date.isYomTovOrCholHamoed(location.Israel) : false;
               const isShabbos = date.getDayOfWeek() === 6; // jcal-zmanim: 0=Sun…6=Shabbos
 
               // Notifications (same logic as luach-web)
-              const notes = getNotifications(
+              const notes = showEvents ? getNotifications(
                 date,
                 { hour: 10, minute: 0 },
                 location,
                 lang === 'en',
                 true,
                 false
-              );
+              ) : { dayNotes: [] };
 
               // Parasha (Shabbos only, not Yom Tov)
               let parasha: string | undefined;
-              if (isShabbos && !date.isYomTovOrCholHamoed(location.Israel)) {
+              if (showEvents && isShabbos && !date.isYomTovOrCholHamoed(location.Israel)) {
                 const sedra = date.getSedra(location.Israel);
                 parasha = String(lang === 'he' ? sedra.toStringHeb() : sedra.toString());
               }
 
               // Candle lighting
-              const candlesTime = date.getCandleLighting(location, true);
+              const candlesTime = showEvents ? date.getCandleLighting(location, true) : null;
               const candleLighting = candlesTime ? formatTime(candlesTime) : undefined;
 
               // Build notification strings
               const allNotes: string[] = [];
-              const omerDay = date.getDayOfOmer();
-              if (omerDay > 0) {
-                allNotes.push(
-                  lang === 'he'
-                    ? `עומר: ${Utils.toJewishNumber(omerDay)}`
-                    : `Omer: ${omerDay}`
-                );
+              if (showEvents) {
+                const omerDay = date.getDayOfOmer();
+                if (omerDay > 0) {
+                  allNotes.push(
+                    lang === 'he'
+                      ? `עומר: ${Utils.toJewishNumber(omerDay)}`
+                      : `Omer: ${omerDay}`
+                  );
+                }
+                (notes.dayNotes || []).forEach((n: string) => allNotes.push(n));
+                const shulNotes = (notes as any).shulNotes || [];
+                shulNotes
+                  .filter((n: string) =>
+                    n.includes('Mevarchim') || n.includes('מברכים') ||
+                    n.includes('Shkalim')   || n.includes('שקלים') ||
+                    n.includes('Zachor')    || n.includes('זכור') ||
+                    n.includes('Parah')     || n.includes('פרה') ||
+                    n.includes('Hachodesh') || n.includes('החודש') ||
+                    n.includes('Hagadol')   || n.includes('הגדול') ||
+                    n.includes('Shuva')     || n.includes('שובה') ||
+                    n.includes('Chazon')    || n.includes('חזון') ||
+                    n.includes('Shira')     || n.includes('שירה')
+                  )
+                  .forEach((n: string) => { if (!allNotes.includes(n)) allNotes.push(n); });
               }
-              (notes.dayNotes || []).forEach((n: string) => allNotes.push(n));
-              const shulNotes = (notes as any).shulNotes || [];
-              shulNotes
-                .filter((n: string) =>
-                  n.includes('Mevarchim') || n.includes('מברכים') ||
-                  n.includes('Shkalim')   || n.includes('שקלים') ||
-                  n.includes('Zachor')    || n.includes('זכור') ||
-                  n.includes('Parah')     || n.includes('פרה') ||
-                  n.includes('Hachodesh') || n.includes('החודש') ||
-                  n.includes('Hagadol')   || n.includes('הגדול') ||
-                  n.includes('Shuva')     || n.includes('שובה') ||
-                  n.includes('Chazon')    || n.includes('חזון') ||
-                  n.includes('Shira')     || n.includes('שירה')
-                )
-                .forEach((n: string) => { if (!allNotes.includes(n)) allNotes.push(n); });
 
               // Filter Tahara events for this day
               const dayTaharaEvents =

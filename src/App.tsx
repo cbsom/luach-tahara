@@ -107,6 +107,86 @@ function App() {
     localStorage.setItem('luach-tahara-calendar-view', calendarView);
   }, [calendarView]);
 
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check for focused inputs/textareas/selects
+      const activeElement = document.activeElement;
+      if (
+        activeElement &&
+        ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeElement.tagName.toUpperCase())
+      ) {
+        return;
+      }
+
+      // Check for any open modals or overlays
+      if (
+        isSettingsOpen ||
+        isEntryListOpen ||
+        isKavuahListOpen ||
+        isFlaggedDatesListOpen ||
+        isUserEventsListOpen ||
+        isAuthModalOpen ||
+        isJumpModalOpen ||
+        document.querySelector('.modal-overlay')
+      ) {
+        return;
+      }
+
+      let newDate: jDate | null = null;
+      switch (e.key.toLowerCase()) {
+        case 'arrowleft':
+          newDate = selectedJDate.addDays(isRTL ? 1 : -1);
+          break;
+        case 'arrowright':
+          newDate = selectedJDate.addDays(isRTL ? -1 : 1);
+          break;
+        case 'arrowup':
+          newDate = selectedJDate.addDays(-7);
+          break;
+        case 'arrowdown':
+          newDate = selectedJDate.addDays(7);
+          break;
+        case 't':
+          handleGoToToday();
+          return;
+        default:
+          return;
+      }
+
+      if (newDate) {
+        e.preventDefault();
+        setSelectedJDate(newDate);
+
+        // Update current month if boundary is crossed
+        if (
+          newDate.Month !== currentJDate.Month ||
+          newDate.Year !== currentJDate.Year ||
+          (calendarView === 'secular' &&
+            (newDate.getDate().getMonth() !== currentJDate.getDate().getMonth() ||
+              newDate.getDate().getFullYear() !== currentJDate.getDate().getFullYear()))
+        ) {
+          setCurrentJDate(newDate);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [
+    selectedJDate,
+    currentJDate,
+    calendarView,
+    isRTL,
+    isSettingsOpen,
+    isEntryListOpen,
+    isKavuahListOpen,
+    isFlaggedDatesListOpen,
+    isUserEventsListOpen,
+    isAuthModalOpen,
+    isJumpModalOpen,
+  ]);
+
   const handleGoToToday = () => {
     const today = todayStartMode === 'sunset' ? Utils.nowAtLocation(location) : new jDate();
     setCurrentJDate(today);

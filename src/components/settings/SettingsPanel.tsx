@@ -96,6 +96,11 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   checked={settings.showEntryInfo}
                   onChange={v => updateSetting('showEntryInfo', v)}
                 />
+                <Toggle
+                  label={t('Show Events/Occasions', 'הצג אירועים/זמנים')}
+                  checked={settings.showEvents}
+                  onChange={v => updateSetting('showEvents', v)}
+                />
                 <div className="flex justify-between items-center bg-glass-overlay p-3 rounded-lg">
                   <span>{t('Calendar Display', 'תצוגת לוח שנה')}</span>
                   <select

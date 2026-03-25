@@ -770,6 +770,7 @@ export function Calendar({
           onAddTaharaEvent={handleAddTaharaEvent}
           onRemoveTaharaEvent={handleDeleteTaharaEvent}
           onAddUserEvent={handleAddNewUserEvent}
+          showEvents={settings?.showEvents ?? true}
         />
       </div>
 

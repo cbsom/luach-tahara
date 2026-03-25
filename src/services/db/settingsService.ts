@@ -34,6 +34,7 @@ export const DEFAULT_SETTINGS: Settings = {
     emailRemindersEnabled: true,
     browserNotificationsEnabled: true,
     lang: 'en',
+    showEvents: true,
     desktopSidebarMode: 'permanent',
     createdAt: Date.now(),
     updatedAt: Date.now(),
