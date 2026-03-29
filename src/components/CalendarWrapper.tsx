@@ -158,7 +158,8 @@ export function Calendar({
           r.cancelsOnahBeinunis,
           r.active,
           r.ignore,
-          r.id
+          r.id,
+          r.entryIds
         );
       })
       .filter(k => k !== null) as Kavuah[];
@@ -177,7 +178,7 @@ export function Calendar({
   }, [entryInstances, kavuahs, settings]);
 
   // Kavuah Suggestions using Logic Objects
-  const kavuahSuggestions = useMemo(() => {
+  const rawKavuahSuggestions = useMemo(() => {
     if (entryInstances.length > 0 && kavuahs && settings) {
       try {
         return Kavuah.getPossibleNewKavuahs(entryInstances, kavuahs, settings);
@@ -188,6 +189,17 @@ export function Calendar({
     }
     return [];
   }, [entryInstances, kavuahs, settings]);
+
+  const [snoozedSuggestionHashes, setSnoozedSuggestionHashes] = useState<Set<string>>(new Set());
+
+  const getSuggestionHash = (suggestion: KavuahSuggestion) => {
+    const k = suggestion.kavuah;
+    return `${k.kavuahType}-${k.specialNumber}-${k.settingEntry.id}`;
+  };
+
+  const kavuahSuggestions = useMemo(() => {
+    return rawKavuahSuggestions.filter(s => !snoozedSuggestionHashes.has(getSuggestionHash(s)));
+  }, [rawKavuahSuggestions, snoozedSuggestionHashes]);
 
   // Calculate Tahara Events
   const taharaEvents = useMemo(() => {
@@ -245,8 +257,18 @@ export function Calendar({
       cancelsOnahBeinunis: suggestion.kavuah.cancelsOnahBeinunis || false,
       active: true,
       ignore: isIgnored,
+      entryIds: suggestion.entries.map(e => e.id),
     };
     await addKavuah(kData);
+  };
+
+  const handleSnoozeSuggestion = (suggestion: KavuahSuggestion) => {
+    const hash = getSuggestionHash(suggestion);
+    setSnoozedSuggestionHashes(prev => {
+      const next = new Set(prev);
+      next.add(hash);
+      return next;
+    });
   };
 
   // Entry Form State
@@ -257,11 +279,11 @@ export function Calendar({
 
   // Reset snooze when entries change
   useEffect(() => {
+    setSnoozedSuggestionHashes(new Set());
     if (suggestionsSnoozed) {
-      const timer = setTimeout(() => setSuggestionsSnoozed(false), 0);
-      return () => clearTimeout(timer);
+      setSuggestionsSnoozed(false);
     }
-  }, [entryRecords, suggestionsSnoozed]);
+  }, [entryRecords]);
 
   // Calculate month info
   const monthInfo = useMemo(() => {
@@ -594,8 +616,22 @@ export function Calendar({
     const onahVal =
       (entry.onah as any).nightDay !== undefined ? (entry.onah as any).nightDay : entry.onah;
 
+    // Check for duplicate date/onah
+    const duplicate = entryInstances.find(e => {
+        if (e.id === entry.id) return false;
+        const eAbs = (e as any).date?.Abs || toJDate((e as any).date || (e as any).jewishDate).Abs;
+        return eAbs === currentDate.Abs && e.nightDay === onahVal;
+    });
+
+    if (duplicate) {
+        alert(lang === 'he' ? 'שגיאה: קיימת כבר ראייה בתאריך ובעונה זו.' : 'Error: An entry already exists on this date and onah.');
+        return;
+    }
+
+    const logicalId = `${currentDate.Abs}-${onahVal}`;
+
     const entryData = {
-      id: entry.id,
+      id: entry.id || logicalId,
       jewishDate: entry.date,
       onah: onahVal,
       haflaga: haflaga,
@@ -791,6 +827,7 @@ export function Calendar({
         suggestions={kavuahSuggestions}
         onAccept={s => handleCreateKavuah(s, false)}
         onIgnore={s => handleCreateKavuah(s, true)}
+        onSnooze={handleSnoozeSuggestion}
         lang={lang as 'en' | 'he'}
       />
 

@@ -6,7 +6,7 @@ import { UserEvent } from '../../types-luach-web';
 /**
  * Database version - increment when schema changes
  */
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const DB_NAME = 'luach-tahara-db';
 
 /**
@@ -47,6 +47,7 @@ export interface LuachTaharaDB extends DBSchema {
             cancelsOnahBeinunis: boolean;
             active: boolean;
             ignore: boolean;
+            entryIds?: string[];
             createdAt: number;
             updatedAt: number;
             syncStatus: 'synced' | 'pending' | 'conflict';
@@ -172,6 +173,19 @@ async function upgradeDB(db: IDBPDatabase<LuachTaharaDB>, oldVersion: number, ne
     // Create sync metadata store
     if (!db.objectStoreNames.contains('syncMeta')) {
         db.createObjectStore('syncMeta', { keyPath: 'key' });
+    }
+
+    // Migration for version 3: add entryIds to kavuahs
+    if (oldVersion < 3) {
+        // We handle this outside of the upgrade hook if it needs async IO from OTHER stores,
+        // but idb allows async inside upgrade for the current database transaction.
+        const kavuahs = await db.getAll('kavuahs');
+        for (const k of kavuahs) {
+            if (!k.entryIds) {
+                k.entryIds = [k.settingEntryId];
+                await db.put('kavuahs', k);
+            }
+        }
     }
 }
 

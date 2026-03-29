@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal } from '../Modal';
 import { useKavuahs } from '../../services/db/hooks';
-import { Trash2, CheckCircle, Ban, Activity } from 'lucide-react';
+import { Trash2, CheckCircle, Ban, Activity, Eye, EyeOff } from 'lucide-react';
 import { KavuahTypes } from '../../lib/chashavshavon/Kavuah';
 import type { KavuahRecord } from '../../services/db/kavuahService';
 import { KavuahForm } from './KavuahForm';
@@ -14,7 +14,7 @@ interface KavuahListProps {
 }
 
 export const KavuahList: React.FC<KavuahListProps> = ({ isOpen, onClose, lang }) => {
-  const { kavuahs, loading, removeKavuah, toggleActive, addKavuah } = useKavuahs(false);
+  const { kavuahs, loading, removeKavuah, toggleActive, toggleIgnore, addKavuah } = useKavuahs(false);
   const [isAdding, setIsAdding] = React.useState(false);
 
   if (!isOpen) return null;
@@ -88,13 +88,20 @@ export const KavuahList: React.FC<KavuahListProps> = ({ isOpen, onClose, lang })
                   <div
                     key={kavuah.id}
                     className={`bg-glass-overlay p-4 rounded-lg flex items-center justify-between transition-all ${
-                      !kavuah.active ? 'opacity-60 grayscale' : ''
+                      (!kavuah.active || kavuah.ignore) ? 'opacity-60 grayscale' : ''
                     }`}
                   >
                     <div className="flex flex-col">
-                      <span className="font-bold text-lg">
-                        {getKavuahTypeName(kavuah.kavuahType)}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-lg">
+                          {getKavuahTypeName(kavuah.kavuahType)}
+                        </span>
+                        {kavuah.ignore && (
+                          <span className="px-2 py-0.5 text-[10px] bg-accent-coral/20 text-accent-coral rounded-full border border-accent-coral/30">
+                            {t('Ignored', 'בוטל')}
+                          </span>
+                        )}
+                      </div>
                       <span className="text-xs opacity-70">
                         {t('Special Number:', 'מספר מיוחד:')} {kavuah.specialNumber}
                       </span>
@@ -106,6 +113,19 @@ export const KavuahList: React.FC<KavuahListProps> = ({ isOpen, onClose, lang })
                     </div>
 
                     <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => toggleIgnore(kavuah.id)}
+                        className={`p-2 rounded-full transition-colors ${
+                          !kavuah.ignore
+                            ? 'bg-accent-amber/20 text-accent-amber hover:bg-accent-amber/30'
+                            : 'bg-glass-border text-text-secondary hover:bg-glass-surface'
+                        }`}
+                        title={
+                          kavuah.ignore ? t('Enable', 'הפעל') : t('Ignore', 'התעלם')
+                        }
+                      >
+                        {kavuah.ignore ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
                       <button
                         onClick={() => toggleActive(kavuah.id)}
                         className={`p-2 rounded-full transition-colors ${

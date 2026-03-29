@@ -65,6 +65,8 @@ export default class Kavuah {
     public ignore: boolean;
     /** Database ID */
     public kavuahId?: string;
+    /** The entries that make up this Kavuah */
+    public entryIds: string[];
 
     constructor(
         kavuahType: KavuahTypes,
@@ -73,7 +75,8 @@ export default class Kavuah {
         cancelsOnahBeinunis?: boolean,
         active?: boolean,
         ignore?: boolean,
-        kavuahId?: string
+        kavuahId?: string,
+        entryIds?: string[]
     ) {
         this.kavuahType = kavuahType;
         this.settingEntry = settingEntry;
@@ -82,6 +85,7 @@ export default class Kavuah {
         this.active = active !== undefined ? active : true;
         this.ignore = !!ignore;
         this.kavuahId = kavuahId;
+        this.entryIds = entryIds || [];
     }
 
     /**
@@ -232,6 +236,23 @@ export default class Kavuah {
      * Check if this Kavuah matches another Kavuah
      */
     isMatchingKavuah(kavuah: Kavuah): boolean {
+        // Compare constituent entries using their logical keys if available
+        if (this.entryIds && this.entryIds.length > 0 && kavuah.entryIds && kavuah.entryIds.length > 0) {
+            if (this.entryIds.length !== kavuah.entryIds.length) {
+                return false;
+            }
+            // Sort to ensure order doesn't matter, though logically they should be in time order anyway
+            const thisKeys = [...this.entryIds].sort();
+            const otherKeys = [...kavuah.entryIds].sort();
+            const sameConstituents = thisKeys.every((key, index) => key === otherKeys[index]);
+            
+            if (sameConstituents && this.kavuahType === kavuah.kavuahType) {
+                // If they have the exact same constituents, they are the same kavuah
+                return true; 
+            }
+        }
+
+        // Fallback for older records
         return (
             this.kavuahType === kavuah.kavuahType &&
             this.settingEntry.onah.isSameOnah(kavuah.settingEntry.onah) &&
@@ -434,9 +455,9 @@ export default class Kavuah {
         kavuahList: Kavuah[],
         settings: Settings
     ): KavuahSuggestion[] {
-        const klist = kavuahList.filter(k => k.active);
+        // Suggest only Kavuahs that are NOT already in the Kavuah list (regardless of active/ignored status)
         return Kavuah.getKavuahSuggestionList(realEntrysList, kavuahList, settings).filter(
-            pk => !klist.find(k => k.isMatchingKavuah(pk.kavuah))
+            pk => !kavuahList.find(k => k.isMatchingKavuah(pk.kavuah))
         );
     }
 
@@ -528,9 +549,14 @@ export default class Kavuah {
             );
 
             if (thirdFind) {
+                const entries = [entry, secondFind, thirdFind];
                 list.push({
-                    kavuah: new Kavuah(KavuahTypes.DayOfMonth, thirdFind, thirdMonth.Day),
-                    entries: [entry, secondFind, thirdFind],
+                    kavuah: new Kavuah(
+                        KavuahTypes.DayOfMonth, thirdFind, thirdMonth.Day,
+                        undefined, undefined, undefined, undefined,
+                        entries.map(e => `${e.date.Abs}-${e.nightDay}`)
+                    ),
+                    entries,
                 });
             }
         }
@@ -567,9 +593,14 @@ export default class Kavuah {
             );
 
             if (finalFind) {
+                const entries = [entry, secondFind, finalFind];
                 list.push({
-                    kavuah: new Kavuah(KavuahTypes.DilugDayOfMonth, finalFind, dilugDays),
-                    entries: [entry, secondFind, finalFind],
+                    kavuah: new Kavuah(
+                        KavuahTypes.DilugDayOfMonth, finalFind, dilugDays,
+                        undefined, undefined, undefined, undefined,
+                        entries.map(e => `${e.date.Abs}-${e.nightDay}`)
+                    ),
+                    entries,
                 });
             }
         }
@@ -603,9 +634,14 @@ export default class Kavuah {
                 );
 
                 if (secondFind) {
+                    const entries = [entry, firstFind, secondFind];
                     list.push({
-                        kavuah: new Kavuah(KavuahTypes.DayOfWeek, secondFind, interval),
-                        entries: [entry, firstFind, secondFind],
+                        kavuah: new Kavuah(
+                            KavuahTypes.DayOfWeek, secondFind, interval,
+                            undefined, undefined, undefined, undefined,
+                            entries.map(e => `${e.date.Abs}-${e.nightDay}`)
+                        ),
+                        entries,
                     });
                 }
             }
@@ -622,9 +658,14 @@ export default class Kavuah {
             fourEntries[1].haflaga === fourEntries[2].haflaga &&
             fourEntries[2].haflaga === fourEntries[3].haflaga
         ) {
+            const entries = [...fourEntries];
             list.push({
-                kavuah: new Kavuah(KavuahTypes.Haflagah, fourEntries[3], fourEntries[3].haflaga),
-                entries: [...fourEntries],
+                kavuah: new Kavuah(
+                    KavuahTypes.Haflagah, fourEntries[3], fourEntries[3].haflaga,
+                    undefined, undefined, undefined, undefined,
+                    entries.map(e => `${e.date.Abs}-${e.nightDay}`)
+                ),
+                entries,
             });
         }
         return list;
@@ -641,9 +682,14 @@ export default class Kavuah {
             fourEntries[1].getOnahDifferential(fourEntries[2]) === onahs &&
             fourEntries[2].getOnahDifferential(fourEntries[3]) === onahs
         ) {
+            const entries = [...fourEntries];
             list.push({
-                kavuah: new Kavuah(KavuahTypes.HafalagaOnahs, fourEntries[3], onahs),
-                entries: [...fourEntries],
+                kavuah: new Kavuah(
+                    KavuahTypes.HafalagaOnahs, fourEntries[3], onahs,
+                    undefined, undefined, undefined, undefined,
+                    entries.map(e => `${e.date.Abs}-${e.nightDay}`)
+                ),
+                entries,
             });
         }
         return list;
@@ -662,9 +708,14 @@ export default class Kavuah {
             threeEntries[1].day === threeEntries[2].day &&
             threeEntries[1].date.diffMonths(threeEntries[2].date) === monthDiff
         ) {
+            const entries = [...threeEntries];
             list.push({
-                kavuah: new Kavuah(KavuahTypes.Sirug, threeEntries[2], monthDiff),
-                entries: [...threeEntries],
+                kavuah: new Kavuah(
+                    KavuahTypes.Sirug, threeEntries[2], monthDiff,
+                    undefined, undefined, undefined, undefined,
+                    entries.map(e => `${e.date.Abs}-${e.nightDay}`)
+                ),
+                entries,
             });
         }
         return list;
@@ -679,9 +730,14 @@ export default class Kavuah {
         const haflagaDiff2 = fourEntries[2].haflaga - fourEntries[1].haflaga;
 
         if (haflagaDiff1 !== 0 && haflagaDiff1 === haflagaDiff2) {
+            const entries = [...fourEntries];
             list.push({
-                kavuah: new Kavuah(KavuahTypes.DilugHaflaga, fourEntries[3], haflagaDiff1),
-                entries: [...fourEntries],
+                kavuah: new Kavuah(
+                    KavuahTypes.DilugHaflaga, fourEntries[3], haflagaDiff1,
+                    undefined, undefined, undefined, undefined,
+                    entries.map(e => `${e.date.Abs}-${e.nightDay}`)
+                ),
+                entries,
             });
         }
         return list;

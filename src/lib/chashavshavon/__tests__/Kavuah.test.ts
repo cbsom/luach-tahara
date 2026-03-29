@@ -16,6 +16,7 @@ const createMockSettings = (overrides?: Partial<Settings>): Settings => ({
         israel: true,
     },
     showFlagsOnMainScreen: true,
+    showEvents: true,
     showEntryInfo: true,
     hideFlagsWeekAfterEntry: false,
     calendarDisplaysCurrent: 'jewish',
@@ -211,6 +212,36 @@ describe('Kavuah', () => {
             const entry = new Entry(onah);
             const kavuah1 = new Kavuah(KavuahTypes.Haflagah, entry, 30);
             const kavuah2 = new Kavuah(KavuahTypes.Haflagah, entry, 31);
+
+            expect(kavuah1.isMatchingKavuah(kavuah2)).toBe(false);
+        });
+
+        it('should return true if logical entryIds match exactly', () => {
+            const jd = new jDate(5784, 1, 15);
+            const entry1 = new Entry(new Onah(jd, NightDay.Day));
+            Object.defineProperty(entry1, 'id', { value: `${jd.Abs}-1`, configurable: true });
+            
+            const jdPrev = new jDate(5784, 1, 1);
+            const entry0 = new Entry(new Onah(jdPrev, NightDay.Day));
+            Object.defineProperty(entry0, 'id', { value: `${jdPrev.Abs}-1`, configurable: true });
+
+            const kavuah1 = new Kavuah(KavuahTypes.Haflagah, entry1, 30, undefined, undefined, undefined, undefined, [entry0.id, entry1.id]);
+            const kavuah2 = new Kavuah(KavuahTypes.Haflagah, entry1, 30, undefined, undefined, undefined, undefined, [entry0.id, entry1.id]);
+
+            expect(kavuah1.isMatchingKavuah(kavuah2)).toBe(true);
+        });
+
+        it('should return false if entryIds arrays are different', () => {
+             const jd = new jDate(5784, 1, 15);
+            const entry1 = new Entry(new Onah(jd, NightDay.Day));
+            Object.defineProperty(entry1, 'id', { value: `${jd.Abs}-1`, configurable: true });
+            
+            const jdPrev = new jDate(5784, 1, 1);
+            const entry0 = new Entry(new Onah(jdPrev, NightDay.Day));
+            Object.defineProperty(entry0, 'id', { value: `${jdPrev.Abs}-1`, configurable: true });
+
+            const kavuah1 = new Kavuah(KavuahTypes.Haflagah, entry1, 30, undefined, undefined, undefined, undefined, [entry0.id, entry1.id]);
+            const kavuah2 = new Kavuah(KavuahTypes.Haflagah, entry1, 30, undefined, undefined, undefined, undefined, [entry1.id]);
 
             expect(kavuah1.isMatchingKavuah(kavuah2)).toBe(false);
         });

@@ -37,7 +37,7 @@ export async function startOnSnapshotSync(userId: string) {
     const dbInstance = await getDB();
 
     // Settings Listener
-    const settingsRef = doc(db, 'users', userId, 'settings', 'general');
+    const settingsRef = doc(db, 'users', userId, 'luach-tahara-settings', 'general');
     unsubSettings = onSnapshot(settingsRef, async (snapshot) => {
         if (snapshot.exists()) {
             const cloudSettings = snapshot.data();
@@ -162,97 +162,147 @@ export async function syncToFirebase(): Promise<{ success: boolean; error?: stri
         // Get all pending data
         const { entries, kavuahs, events, taharaEvents, settingsPending } = await getAllPendingData();
 
+        let syncedEntries: string[] = [];
+        let syncedKavuahs: string[] = [];
+        let syncedEvents: string[] = [];
+        let syncedTahara: string[] = [];
+        let syncedSettings = false;
+        let finalSuccess = true;
+        let lastErrorError: unknown = null;
+
         // Sync entries
         if (entries.length > 0) {
-            const entryDocs = entries.map(entry => ({
-                id: entry.id,
-                data: {
-                    jewishDate: entry.jewishDate,
-                    onah: entry.onah,
-                    comments: entry.comments,
-                    haflaga: entry.haflaga,
-                    ignoreForFlaggedDates: entry.ignoreForFlaggedDates,
-                    ignoreForKavuah: entry.ignoreForKavuah,
-                    createdAt: entry.createdAt,
-                    updatedAt: entry.updatedAt,
-                    deleted: entry.deleted || false,
-                },
-            }));
-            await batchSetDocuments(user.uid, 'entries', entryDocs);
+            try {
+                const entryDocs = entries.map(entry => ({
+                    id: entry.id,
+                    data: {
+                        jewishDate: entry.jewishDate,
+                        onah: entry.onah,
+                        comments: entry.comments,
+                        haflaga: entry.haflaga,
+                        ignoreForFlaggedDates: entry.ignoreForFlaggedDates,
+                        ignoreForKavuah: entry.ignoreForKavuah,
+                        createdAt: entry.createdAt,
+                        updatedAt: entry.updatedAt,
+                        deleted: entry.deleted || false,
+                    },
+                }));
+                await batchSetDocuments(user.uid, 'entries', entryDocs);
+                syncedEntries = entries.map(e => e.id);
+            } catch (e) {
+                console.error('Push sync failed for entries:', e);
+                finalSuccess = false;
+                lastErrorError = e;
+            }
         }
 
         // Sync kavuahs
         if (kavuahs.length > 0) {
-            const kavuahDocs = kavuahs.map(kavuah => ({
-                id: kavuah.id,
-                data: {
-                    kavuahType: kavuah.kavuahType,
-                    settingEntryId: kavuah.settingEntryId,
-                    specialNumber: kavuah.specialNumber,
-                    cancelsOnahBeinunis: kavuah.cancelsOnahBeinunis,
-                    active: kavuah.active,
-                    ignore: kavuah.ignore,
-                    createdAt: kavuah.createdAt,
-                    updatedAt: kavuah.updatedAt,
-                    deleted: kavuah.deleted || false,
-                },
-            }));
-            await batchSetDocuments(user.uid, 'kavuahs', kavuahDocs);
+            try {
+                const kavuahDocs = kavuahs.map(kavuah => ({
+                    id: kavuah.id,
+                    data: {
+                        kavuahType: kavuah.kavuahType,
+                        settingEntryId: kavuah.settingEntryId,
+                        specialNumber: kavuah.specialNumber,
+                        cancelsOnahBeinunis: kavuah.cancelsOnahBeinunis,
+                        active: kavuah.active,
+                        ignore: kavuah.ignore,
+                        createdAt: kavuah.createdAt,
+                        updatedAt: kavuah.updatedAt,
+                        deleted: kavuah.deleted || false,
+                    },
+                }));
+                await batchSetDocuments(user.uid, 'kavuahs', kavuahDocs);
+                syncedKavuahs = kavuahs.map(k => k.id);
+            } catch (e) {
+                console.error('Push sync failed for kavuahs:', e);
+                finalSuccess = false;
+                lastErrorError = e;
+            }
         }
 
         // Sync user events (occasions)
         if (events && events.length > 0) {
-            const eventDocs = events.map(event => ({
-                id: event.id,
-                data: {
-                    name: event.name || (event as any).title || "Occasion",
-                    notes: event.notes,
-                    type: event.type,
-                    jAbs: event.jAbs,
-                    jYear: event.jYear,
-                    jMonth: event.jMonth,
-                    jDay: event.jDay,
-                    sDate: event.sDate,
-                    backColor: event.backColor || (event as any).color,
-                    textColor: event.textColor,
-                    remindDayOf: event.remindDayOf,
-                    remindDayBefore: event.remindDayBefore,
-                    createdAt: event.createdAt,
-                    updatedAt: event.updatedAt,
-                    deleted: event.deleted || false,
-                },
-            }));
-            await batchSetDocuments(user.uid, 'events', eventDocs);
+            try {
+                const eventDocs = events.map(event => ({
+                    id: event.id,
+                    data: {
+                        name: event.name || (event as any).title || "Occasion",
+                        notes: event.notes,
+                        type: event.type,
+                        jAbs: event.jAbs,
+                        jYear: event.jYear,
+                        jMonth: event.jMonth,
+                        jDay: event.jDay,
+                        sDate: event.sDate,
+                        backColor: event.backColor || (event as any).color,
+                        textColor: event.textColor,
+                        remindDayOf: event.remindDayOf,
+                        remindDayBefore: event.remindDayBefore,
+                        createdAt: event.createdAt,
+                        updatedAt: event.updatedAt,
+                        deleted: event.deleted || false,
+                    },
+                }));
+                await batchSetDocuments(user.uid, 'events', eventDocs);
+                syncedEvents = events.map(e => e.id);
+            } catch (e) {
+                console.error('Push sync failed for events:', e);
+                finalSuccess = false;
+                lastErrorError = e;
+            }
         }
 
         // Sync tahara events
         if (taharaEvents && taharaEvents.length > 0) {
-            const taharaDocs = taharaEvents.map(event => ({
-                id: event.id,
-                data: {
-                    jewishDate: event.jewishDate,
-                    type: event.type,
-                    createdAt: event.createdAt,
-                    updatedAt: event.updatedAt,
-                    deleted: event.deleted || false,
-                },
-            }));
-            await batchSetDocuments(user.uid, 'tahara-events', taharaDocs);
+            try {
+                const taharaDocs = taharaEvents.map(event => ({
+                    id: event.id,
+                    data: {
+                        jewishDate: event.jewishDate,
+                        type: event.type,
+                        createdAt: event.createdAt,
+                        updatedAt: event.updatedAt,
+                        deleted: event.deleted || false,
+                    },
+                }));
+                await batchSetDocuments(user.uid, 'tahara-events', taharaDocs);
+                syncedTahara = taharaEvents.map(t => t.id);
+            } catch (e) {
+                console.error('Push sync failed for tahara events:', e);
+                finalSuccess = false;
+                lastErrorError = e;
+            }
         }
 
         // Sync settings
         if (settingsPending) {
-            const settings = await getSettings();
-            const settingsRef = doc(db, 'users', user.uid, 'settings', 'general');
-            await setDoc(settingsRef, { ...settings, updatedAt: Date.now() }, { merge: true });
+            try {
+                const settings = await getSettings();
+                const settingsRef = doc(db, 'users', user.uid, 'luach-tahara-settings', 'general');
+                await setDoc(settingsRef, { ...settings, updatedAt: Date.now() }, { merge: true });
+                syncedSettings = true;
+            } catch (e) {
+                console.error('Push sync failed for settings:', e);
+                finalSuccess = false;
+                lastErrorError = e;
+            }
         }
 
         await markAllSynced(
-            entries.map(e => e.id),
-            kavuahs.map(k => k.id),
-            events ? events.map(e => e.id) : [],
-            taharaEvents ? taharaEvents.map(t => t.id) : []
+            syncedEntries,
+            syncedKavuahs,
+            syncedEvents,
+            syncedTahara,
+            syncedSettings,
+            finalSuccess
         );
+
+        if (!finalSuccess) {
+            await markSyncFailed();
+            return { success: false, error: lastErrorError instanceof Error ? lastErrorError.message : String(lastErrorError) };
+        }
 
         return { success: true };
     } catch (error) {
@@ -274,7 +324,7 @@ export async function pullFromFirebase(): Promise<{ success: boolean; error?: st
         const dbInstance = await getDB();
 
         // Pull Settings
-        const settingsSnap = await getDocs(query(collection(db, 'users', user.uid, 'settings')));
+        const settingsSnap = await getDocs(query(collection(db, 'users', user.uid, 'luach-tahara-settings')));
         const cloudSettings = settingsSnap.docs.find(d => d.id === 'general')?.data();
         if (cloudSettings) {
             await saveSettings(cloudSettings as any);

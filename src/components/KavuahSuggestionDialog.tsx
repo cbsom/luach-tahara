@@ -9,6 +9,7 @@ interface KavuahSuggestionDialogProps {
   suggestions: KavuahSuggestion[];
   onAccept: (suggestion: KavuahSuggestion) => void;
   onIgnore: (suggestion: KavuahSuggestion) => void;
+  onSnooze: (suggestion: KavuahSuggestion) => void;
   lang: 'en' | 'he';
 }
 
@@ -18,6 +19,7 @@ export const KavuahSuggestionDialog: React.FC<KavuahSuggestionDialogProps> = ({
   suggestions,
   onAccept,
   onIgnore,
+  onSnooze,
   lang,
 }) => {
   if (!suggestions.length) return null;
@@ -53,18 +55,24 @@ export const KavuahSuggestionDialog: React.FC<KavuahSuggestionDialogProps> = ({
               </ul>
             </div>
 
-            <div className="flex gap-3 justify-end">
+            <div className="flex flex-wrap gap-3 justify-end items-center">
               <button
-                className="px-4 py-2 rounded-lg bg-glass-surface hover:bg-glass-hover text-sm"
+                className="px-4 py-2 rounded-lg bg-glass-surface hover:bg-glass-hover text-sm border border-glass-border"
+                onClick={() => onSnooze(s)}
+              >
+                {lang === 'he' ? 'התעלם לעכשיו' : 'Ignore for now'}
+              </button>
+              <button
+                className="px-4 py-2 rounded-lg bg-accent-coral/20 text-accent-coral hover:bg-accent-coral/30 text-sm border border-accent-coral/30"
                 onClick={() => onIgnore(s)}
               >
-                {lang === 'he' ? 'התעלם' : 'Ignore'}
+                {lang === 'he' ? 'תמיד תתעלם מהוסת' : 'Ignore this Kavuah'}
               </button>
               <button
                 className="px-4 py-2 rounded-lg bg-accent-amber text-white shadow-lg hover:shadow-xl hover:brightness-110 transition-all text-sm font-bold"
                 onClick={() => onAccept(s)}
               >
-                {lang === 'he' ? 'קבע וסת' : 'Set Kavuah'}
+                {lang === 'he' ? 'קבע וסת' : 'Set the Kavuah'}
               </button>
             </div>
           </div>

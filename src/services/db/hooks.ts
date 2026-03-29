@@ -18,6 +18,7 @@ import {
     updateKavuah,
     deleteKavuah,
     toggleKavuahActive,
+    toggleKavuahIgnore,
     type KavuahRecord,
     type KavuahData,
 } from './kavuahService';
@@ -329,6 +330,12 @@ export function useKavuahs(activeOnly = false) {
         return updated;
     }, []);
 
+    const toggleIgnore = useCallback(async (id: string) => {
+        const updated = await toggleKavuahIgnore(id);
+        setKavuahs(prev => prev.map(k => k.id === id ? updated : k));
+        return updated;
+    }, []);
+
     return {
         kavuahs,
         loading,
@@ -337,6 +344,7 @@ export function useKavuahs(activeOnly = false) {
         modifyKavuah,
         removeKavuah,
         toggleActive,
+        toggleIgnore,
         reload: loadKavuahs,
     };
 }

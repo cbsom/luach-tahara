@@ -140,25 +140,32 @@ export async function markAllSynced(
     entryIds: string[],
     kavuahIds: string[],
     eventIds: string[] = [],
-    taharaIds: string[] = []
+    taharaIds: string[] = [],
+    settingsSynced: boolean = true,
+    isFullSuccess: boolean = true
 ): Promise<void> {
     // Mark entries as synced
-    await Promise.all(entryIds.map(id => markEntrySynced(id)));
+    if (entryIds.length > 0) await Promise.all(entryIds.map(id => markEntrySynced(id)));
 
     // Mark kavuahs as synced
-    await Promise.all(kavuahIds.map(id => markKavuahSynced(id)));
+    if (kavuahIds.length > 0) await Promise.all(kavuahIds.map(id => markKavuahSynced(id)));
 
     // Mark events as synced
-    await Promise.all(eventIds.map(id => markUserEventSynced(id)));
+    if (eventIds.length > 0) await Promise.all(eventIds.map(id => markUserEventSynced(id)));
 
     // Mark tahara events as synced
-    await Promise.all(taharaIds.map(id => markTaharaEventSynced(id)));
+    if (taharaIds.length > 0) await Promise.all(taharaIds.map(id => markTaharaEventSynced(id)));
 
     // Mark settings as synced
-    await markSettingsSynced();
+    if (settingsSynced) await markSettingsSynced();
 
     // Update sync metadata
-    await markSyncSuccess();
+    if (isFullSuccess) {
+        await markSyncSuccess();
+    } else {
+        const pendingCount = await getPendingChangesCount();
+        await updateSyncMetadata({ pendingChanges: pendingCount });
+    }
 }
 
 /**

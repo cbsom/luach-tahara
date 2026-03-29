@@ -1,0 +1,66 @@
+
+[1m[46m RUN [49m[22m [36mv4.1.0 [39m[90mC:/repos_git/luach-tahara[39m
+
+ [31mΓ¥»[39m src/lib/chashavshavon/__tests__/Kavuah.test.ts [2m([22m[2m29 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 13[2mms[22m[39m
+       [32mΓ£ף[39m should create a Kavuah with all parameters[32m 2[2mms[22m[39m
+       [32mΓ£ף[39m should default active to true[32m 0[2mms[22m[39m
+       [32mΓ£ף[39m should return true for DayOfMonth[32m 0[2mms[22m[39m
+       [32mΓ£ף[39m should return true for DayOfWeek[32m 0[2mms[22m[39m
+       [32mΓ£ף[39m should return true for Sirug[32m 0[2mms[22m[39m
+       [32mΓ£ף[39m should return false for Haflagah[32m 0[2mms[22m[39m
+       [32mΓ£ף[39m should return false for DilugHaflaga[32m 0[2mms[22m[39m
+       [32mΓ£ף[39m should return string for Haflagah kavuah[32m 0[2mms[22m[39m
+       [32mΓ£ף[39m should return string for DayOfMonth kavuah[32m 0[2mms[22m[39m
+       [32mΓ£ף[39m should show INACTIVE for inactive kavuah[32m 0[2mms[22m[39m
+       [32mΓ£ף[39m should show IGNORED for ignored kavuah[32m 0[2mms[22m[39m
+       [32mΓ£ף[39m should return Hebrew string for Haflagah kavuah[32m 0[2mms[22m[39m
+       [32mΓ£ף[39m should return Hebrew string for DayOfMonth kavuah[32m 0[2mms[22m[39m
+       [32mΓ£ף[39m should return true for matching kavuahs[32m 0[2mms[22m[39m
+       [32mΓ£ף[39m should return false for different types[32m 0[2mms[22m[39m
+       [32mΓ£ף[39m should return false for different special numbers[32m 0[2mms[22m[39m
+[31m       [31m├ק[31m should return true if logical entryIds match exactly[39m[32m 2[2mms[22m[39m
+[31m       [31m├ק[31m should return false if entryIds arrays are different[39m[32m 0[2mms[22m[39m
+       [32mΓ£ף[39m should detect Haflagah kavuah from 4 entries with same haflaga[32m 1[2mms[22m[39m
+       [32mΓ£ף[39m should not detect Haflagah kavuah when haflagas differ[32m 0[2mms[22m[39m
+       [32mΓ£ף[39m should detect DayOfMonth kavuah from 3 entries on same day of month[32m 0[2mms[22m[39m
+       [32mΓ£ף[39m should not detect DayOfMonth kavuah when days differ[32m 0[2mms[22m[39m
+       [32mΓ£ף[39m should detect Sirug kavuah from 3 entries with 2-month intervals[32m 0[2mms[22m[39m
+       [32mΓ£ף[39m should not detect Sirug kavuah for 1-month intervals (that's DayOfMonth)[32m 0[2mms[22m[39m
+       [32mΓ£ף[39m should return correct text for each type[32m 0[2mms[22m[39m
+       [32mΓ£ף[39m should return correct Hebrew text for each type[32m 0[2mms[22m[39m
+       [32mΓ£ף[39m should return true for matching Haflagah[32m 0[2mms[22m[39m
+       [32mΓ£ף[39m should return true for matching DayOfMonth[32m 0[2mms[22m[39m
+       [32mΓ£ף[39m should return false for non-matching DayOfMonth[32m 0[2mms[22m[39m
+
+Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ» Failed Tests 2 Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»
+
+ FAIL  src/lib/chashavshavon/__tests__/Kavuah.test.ts > Kavuah > isMatchingKavuah > should return true if logical entryIds match exactly
+TypeError: Cannot set property id of [object Object] which has only a getter
+ Γ¥» src/lib/chashavshavon/__tests__/Kavuah.test.ts:222:29
+    220|             const jd = new jDate(5784, 1, 15);
+    221|             const entry1 = new Entry(new Onah(jd, NightDay.Day));
+    222|             (entry1 as any).id = `${jd.Abs}-1`;
+       |                             ^
+    223|
+    224|             const jdPrev = new jDate(5784, 1, 1);
+
+Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»[1/2]Γמ»
+
+ FAIL  src/lib/chashavshavon/__tests__/Kavuah.test.ts > Kavuah > isMatchingKavuah > should return false if entryIds arrays are different
+TypeError: Cannot set property id of [object Object] which has only a getter
+ Γ¥» src/lib/chashavshavon/__tests__/Kavuah.test.ts:237:29
+    235|              const jd = new jDate(5784, 1, 15);
+    236|             const entry1 = new Entry(new Onah(jd, NightDay.Day));
+    237|             (entry1 as any).id = `${jd.Abs}-1`;
+       |                             ^
+    238|
+    239|             const jdPrev = new jDate(5784, 1, 1);
+
+Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»Γמ»[2/2]Γמ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m27 passed[39m[22m[90m (29)[39m
+[2m   Start at [22m 12:06:54
+[2m   Duration [22m 1.39s[2m (transform 110ms, setup 166ms, import 478ms, tests 13ms, environment 603ms)[22m
+

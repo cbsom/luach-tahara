@@ -10,6 +10,7 @@ export interface KavuahData {
     cancelsOnahBeinunis: boolean;
     active: boolean;
     ignore: boolean;
+    entryIds?: string[];
 }
 
 export type KavuahRecord = LuachTaharaDB['kavuahs']['value'];
@@ -29,6 +30,7 @@ export async function createKavuah(data: KavuahData): Promise<KavuahRecord> {
         cancelsOnahBeinunis: data.cancelsOnahBeinunis,
         active: data.active,
         ignore: data.ignore,
+        entryIds: data.entryIds || [data.settingEntryId],
         createdAt: now,
         updatedAt: now,
         syncStatus: 'pending',
@@ -59,9 +61,8 @@ export async function getAllKavuahs(): Promise<KavuahRecord[]> {
  * Get active kavuahs only
  */
 export async function getActiveKavuahs(): Promise<KavuahRecord[]> {
-    const db = await getDB();
-    const kavuahs = await db.getAllFromIndex('kavuahs', 'by-active', 1);
-    return kavuahs.filter(k => !k.deleted);
+    const allKavuahs = await getAllKavuahs();
+    return allKavuahs.filter(k => k.active);
 }
 
 /**
@@ -102,6 +103,20 @@ export async function toggleKavuahActive(id: string): Promise<KavuahRecord> {
     }
 
     return updateKavuah(id, { active: !kavuah.active });
+}
+
+/**
+ * Toggle kavuah ignore status
+ */
+export async function toggleKavuahIgnore(id: string): Promise<KavuahRecord> {
+    const db = await getDB();
+    const kavuah = await db.get('kavuahs', id);
+
+    if (!kavuah) {
+        throw new Error(`Kavuah ${id} not found`);
+    }
+
+    return updateKavuah(id, { ignore: !kavuah.ignore });
 }
 
 /**

@@ -2,6 +2,7 @@
 import { getDB, type LuachTaharaDB } from './schema';
 import type { JewishDate, NightDay } from '@/types';
 import { nanoid } from 'nanoid';
+import { jDate } from 'jcal-zmanim';
 
 export interface EntryData {
     id?: string;
@@ -22,8 +23,10 @@ export async function createEntry(data: EntryData): Promise<EntryRecord> {
     const db = await getDB();
     const now = Date.now();
 
+    const abs = (data.jewishDate as any).abs || (data.jewishDate as any).Abs || jDate.absJd(data.jewishDate.year, data.jewishDate.month, data.jewishDate.day);
+
     const entry: EntryRecord = {
-        id: data.id || nanoid(),
+        id: data.id || `${abs}-${data.onah}`,
         jewishDate: data.jewishDate,
         onah: data.onah,
         haflaga: data.haflaga,
@@ -49,8 +52,9 @@ export async function addEntries(dataList: EntryData[]): Promise<EntryRecord[]> 
 
     const tx = db.transaction('entries', 'readwrite');
     for (const data of dataList) {
+        const abs = (data.jewishDate as any).abs || (data.jewishDate as any).Abs || jDate.absJd(data.jewishDate.year, data.jewishDate.month, data.jewishDate.day);
         const entry: EntryRecord = {
-            id: data.id || nanoid(),
+            id: data.id || `${abs}-${data.onah}`,
             jewishDate: data.jewishDate,
             onah: data.onah,
             haflaga: data.haflaga,
