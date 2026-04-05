@@ -29,6 +29,7 @@
     "react-hook-form": "^7.69.0",
     "react-i18next": "^16.5.1",
     "react-router-dom": "^7.11.0",
+    "sql.js": "^1.14.1",
     "zod": "^4.3.2",
     "zustand": "^5.0.9"
   },
@@ -41,6 +42,7 @@
     "@types/node": "^25.5.0",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
+    "@types/sql.js": "^1.4.11",
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/coverage-v8": "^4.1.0",
     "eslint": "^10.0.3",

@@ -11,7 +11,7 @@ interface SettingsPanelProps {
   lang: 'en' | 'he';
   settings: Settings | null;
   updateSetting: <K extends keyof Settings>(key: K, value: Settings[K]) => Promise<Settings>;
-  onImportEntries?: () => Promise<void>;
+  onImportRemoteBackup?: (username: string, password: string) => Promise<void>;
   onForceSync?: () => Promise<void>;
   isSyncing?: boolean;
   isAuthenticated?: boolean;
@@ -26,7 +26,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   lang,
   settings,
   updateSetting,
-  onImportEntries,
+  onImportRemoteBackup,
   onForceSync,
   isSyncing,
   isAuthenticated,
@@ -34,6 +34,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('general');
   const [locationSearch, setLocationSearch] = useState('');
+  const [remoteUsername, setRemoteUsername] = useState('');
+  const [remotePassword, setRemotePassword] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
 
   // Temporary state for Location editing (to allow text input before parsing)
   // Or just bind directly? Binding directly might be jumpy for numbers.
@@ -180,22 +183,44 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   onChange={v => updateSetting('numberMonthsAheadToWarn', parseInt(v) || 12)}
                 />
 
-                {onImportEntries && (
+                {onImportRemoteBackup && (
                   <div className="mt-8 pt-4 border-t border-glass-border">
-                    <SectionTitle>{t('Developer Tools', 'כלי מפתח')}</SectionTitle>
-                    <button
-                      onClick={onImportEntries}
-                      className="w-full p-3 rounded-xl bg-accent-rose/20 border border-accent-rose/30 text-accent-rose font-bold hover:bg-accent-rose/30 transition-all flex items-center justify-center gap-2"
-                    >
-                      <Layout size={18} />
-                      {t('Import Shared Entry List', 'ייבוא רשימת ראיות משותפת')}
-                    </button>
-                    <p className="text-[10px] opacity-50 mt-2 text-center">
-                      {t(
-                        'Warning: This will replace all your current entries.',
-                        'אזהרה: פעולה זו תחליף את כל הראיות הקיימות.'
-                      )}
-                    </p>
+                    <SectionTitle>{t('Import from Luach RN Backup', 'ייבוא גיבוי מ-Luach RN')}</SectionTitle>
+                    <div className="bg-glass-overlay p-4 rounded-lg space-y-3">
+                      <InputRow
+                        label={t('Remote Username', 'שם משתמש מרחוק')}
+                        value={remoteUsername}
+                        onChange={setRemoteUsername}
+                      />
+                      <InputRow
+                        label={t('Remote Password', 'סיסמה מרחוק')}
+                        value={remotePassword}
+                        onChange={setRemotePassword}
+                      />
+                      <button
+                        onClick={async () => {
+                          if (remoteUsername && remotePassword) {
+                            setIsImporting(true);
+                            try {
+                              await onImportRemoteBackup(remoteUsername, remotePassword);
+                            } finally {
+                              setIsImporting(false);
+                            }
+                          }
+                        }}
+                        disabled={isImporting || !remoteUsername || !remotePassword}
+                        className="w-full p-3 rounded-xl bg-accent-rose/20 border border-accent-rose/30 text-accent-rose font-bold hover:bg-accent-rose/30 transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
+                      >
+                        {isImporting ? <RefreshCw size={18} className="animate-spin" /> : <Layout size={18} />}
+                        {isImporting ? t('Importing...', 'מייבא...') : t('Import Backup', 'ייבא גיבוי')}
+                      </button>
+                      <p className="text-[10px] opacity-50 mt-2 text-center text-accent-rose">
+                        {t(
+                          'Warning: This logic will replace all your current entries with the remote backup.',
+                          'אזהרה: פעולה זו תשכתב את כל הנתונים הנוכחיים בראיות מהגיבוי.'
+                        )}
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
