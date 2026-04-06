@@ -328,7 +328,12 @@ function App() {
         onLogin={() => setIsAuthModalOpen(true)}
         onLogout={async () => {
           try {
-            await signOut();
+            const { clearAllData } = await import('./services/db');
+            if (window.confirm(currentLang === 'he' ? 'האם אתה בטוח שברצונך להתנתק? נתונים מקומיים יימחקו.' : 'Are you sure you want to log out? Local data will be cleared.')) {
+                await signOut();
+                await clearAllData();
+                window.location.reload();
+            }
           } catch (error) {
             console.error('Logout failed', error);
           }
@@ -372,6 +377,7 @@ function App() {
             onCloseUserEventsList={() => setIsUserEventsListOpen(false)}
             isDailyInfoOpen={isDailyInfoOpen}
             onCloseDailyInfo={() => setIsDailyInfoOpen(false)}
+            onOpenAuth={() => setIsAuthModalOpen(true)}
           />
         </div>
       </div>

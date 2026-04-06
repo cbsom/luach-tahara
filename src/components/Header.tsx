@@ -143,8 +143,7 @@ export function Header({
       {/* Right Side: Tools & Auth */}
       <div className="flex items-center gap-2 w-full md:w-auto justify-end">
         {/* Helper Navigation Icons (Hidden on very small screens or moved to bottom/sidebar ideally) */}
-        {!user ? null : (
-          <div className="hidden xl:flex items-center gap-1 mr-2" style={{ background: 'var(--btn-bg)', borderRadius: '10px', padding: '3px', border: '1px solid var(--btn-border)' }}>
+        <div className="hidden xl:flex items-center gap-1 mr-2" style={{ background: 'var(--btn-bg)', borderRadius: '10px', padding: '3px', border: '1px solid var(--btn-border)' }}>
             <button
               onClick={onEntriesClick}
               className="p-2 rounded-lg transition-colors"
@@ -185,8 +184,7 @@ export function Header({
             >
               <Info size={18} />
             </button>
-          </div>
-        )}
+        </div>
 
         <button
           onClick={() => setCalendarView(calendarView === 'jewish' ? 'secular' : 'jewish')}
@@ -224,38 +222,28 @@ export function Header({
           {getThemeIcon(theme)}
         </button>
 
-        {/* Auth Button */}
+        {/* User Events & Auth Buttons */}
         <div className="flex items-center gap-2 pl-2 ml-1" style={{ borderLeft: '1px solid var(--glass-border)' }}>
           <button
-            onClick={user ? onUserEventsClick : onLogin}
+            onClick={onUserEventsClick}
             className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-sm font-semibold"
-            style={user ? {
+            style={{
               background: 'var(--btn-bg)',
               border: '1px solid var(--btn-border)',
               color: 'var(--text-secondary)',
-            } : {
-              background: 'var(--btn-bg)',
-              border: '1px solid var(--accent-amber)',
-              color: 'var(--accent-amber)',
             }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--accent-amber)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent-amber)'; }}
             onMouseLeave={e => {
-              if (!user) {
-                (e.currentTarget as HTMLElement).style.color = 'var(--accent-amber)';
-                (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent-amber)';
-              } else {
                 (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)';
                 (e.currentTarget as HTMLElement).style.borderColor = 'var(--btn-border)';
-              }
             }}
-            title={
-              user ? (lang === 'he' ? 'אירועים' : 'User Events') : lang === 'he' ? 'התחבר' : 'Login'
-            }
+            title={lang === 'he' ? 'אירועים' : 'User Events'}
           >
-            {user ? <CalendarIcon size={16} /> : null}
-            {user ? (lang === 'he' ? 'אירועים' : 'Events') : lang === 'he' ? 'התחבר' : 'Login'}
+            <CalendarIcon size={16} />
+            {lang === 'he' ? 'אירועים' : 'Events'}
           </button>
-          {user && (
+          
+          {user ? (
             <button
               onClick={onLogout}
               className="text-xs font-semibold px-2 py-1.5 rounded-lg transition-all hidden sm:block"
@@ -264,6 +252,20 @@ export function Header({
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)'; }}
             >
               {lang === 'he' ? 'התנתק' : 'Logout'}
+            </button>
+          ) : (
+            <button
+              onClick={onLogin}
+              className="text-xs font-semibold px-2 py-1.5 rounded-lg transition-all hidden sm:block"
+              style={{
+                background: 'var(--btn-bg)',
+                border: '1px solid var(--accent-amber)',
+                color: 'var(--accent-amber)',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--accent-amber)'; (e.currentTarget as HTMLElement).style.color = 'var(--btn-bg)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'var(--btn-bg)'; (e.currentTarget as HTMLElement).style.color = 'var(--accent-amber)'; }}
+            >
+              {lang === 'he' ? 'התחבר' : 'Login'}
             </button>
           )}
         </div>

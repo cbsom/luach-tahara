@@ -56,6 +56,7 @@ interface CalendarWrapperProps {
   onCloseUserEventsList?: () => void;
   isDailyInfoOpen?: boolean;
   onCloseDailyInfo?: () => void;
+  onOpenAuth?: () => void;
 }
 
 export function Calendar({
@@ -77,6 +78,7 @@ export function Calendar({
   onCloseUserEventsList = () => {},
   isDailyInfoOpen = false,
   onCloseDailyInfo = () => {},
+  onOpenAuth = () => {},
 }: CalendarWrapperProps) {
   const today = new jDate();
 
@@ -89,7 +91,7 @@ export function Calendar({
     bulkAdd,
     clearEntries,
   } = useEntries();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, signOut } = useAuth();
   const { syncing, forceFullSync, sync } = useSync();
   const { kavuahs: kavuahRecords, addKavuah, removeKavuah } = useKavuahs(true);
   const { settings, updateSingleSetting, updateSettings } = useSettings();
@@ -818,7 +820,15 @@ export function Calendar({
         onForceSync={async () => { await forceFullSync(); }}
         isSyncing={syncing}
         isAuthenticated={isAuthenticated}
-        onOpenAuth={() => (window as any).toggleAuthModal?.(true)}
+        onOpenAuth={onOpenAuth}
+        onSignOut={async () => {
+            const { clearAllData } = await import('../services/db');
+            if (confirm(lang === 'he' ? 'האם אתה בטוח שברצונך להתנתק? נתונים מקומיים יימחקו.' : 'Are you sure you want to log out? Local data will be cleared.')) {
+                await signOut();
+                await clearAllData();
+                window.location.reload();
+            }
+        }}
       />
 
       <EntryList

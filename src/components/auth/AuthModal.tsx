@@ -88,6 +88,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={titles[mode]} maxWidth="400px">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {mode === 'login' && (
+          <p className="text-sm opacity-70 -mt-2">
+            {t('auth.loginHint') || 'Sign in with an independent email account, or skip this and connect with Google below.'}
+          </p>
+        )}
+        {mode === 'signup' && (
+          <p className="text-sm opacity-70 -mt-2">
+            {t('auth.signupHint') || 'Create an independent email account, or skip this and connect with Google below.'}
+          </p>
+        )}
+
         {error && (
           <div className="bg-red-500/10 border border-red-500/20 p-3 rounded-lg flex items-start gap-2 text-red-400 text-sm">
             <AlertCircle size={16} className="mt-0.5" />

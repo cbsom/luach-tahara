@@ -6,7 +6,7 @@ export * from './settingsService';
 export * from './syncService';
 
 // Re-export commonly used functions
-export { getDB, closeDB, initDB } from './schema';
+export { getDB, closeDB, initDB, clearAllData } from './schema';
 export {
     createEntry,
     getEntry,

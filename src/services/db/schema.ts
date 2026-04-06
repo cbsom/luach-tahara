@@ -210,3 +210,26 @@ export function closeDB(): void {
         dbInstance = null;
     }
 }
+
+/**
+ * Clear all data in the database safely
+ */
+export async function clearAllData(): Promise<void> {
+    try {
+        const db = await getDB();
+        const stores = ['entries', 'kavuahs', 'taharaEvents', 'userEvents', 'settings', 'syncMeta'] as const;
+        
+        for (const store of stores) {
+            try {
+                if (db.objectStoreNames.contains(store)) {
+                    await db.clear(store);
+                }
+            } catch (e) {
+                console.warn(`Failed to clear store ${store}`, e);
+            }
+        }
+        console.log('Local database cleared successfully.');
+    } catch (err) {
+        console.error('Failed to clear database stores:', err);
+    }
+}

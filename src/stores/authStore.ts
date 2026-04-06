@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { User } from 'firebase/auth';
 import { signInWithGoogle, signOut, onAuthChange } from '@/services/firebase';
+import { clearAllData } from '@/services/db';
 
 interface AuthState {
     user: User | null;
@@ -37,7 +38,10 @@ export const useAuthStore = create<AuthState>((set) => ({
         try {
             set({ loading: true, error: null });
             await signOut();
+            await clearAllData();
             set({ user: null, loading: false });
+            // Reload the app to clear all in-memory state and re-initialize settings
+            window.location.reload();
         } catch (error) {
             set({
                 error: error instanceof Error ? error.message : 'Failed to sign out',

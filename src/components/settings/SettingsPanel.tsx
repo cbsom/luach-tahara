@@ -16,6 +16,7 @@ interface SettingsPanelProps {
   isSyncing?: boolean;
   isAuthenticated?: boolean;
   onOpenAuth?: () => void;
+  onSignOut?: () => void;
 }
 
 type TabType = 'general' | 'halacha' | 'location';
@@ -31,6 +32,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   isSyncing,
   isAuthenticated,
   onOpenAuth,
+  onSignOut,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('general');
   const [locationSearch, setLocationSearch] = useState('');
@@ -154,14 +156,25 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                           </p>
                         </div>
                       </div>
-                      <button 
-                        onClick={onForceSync}
-                        disabled={isSyncing}
-                        className="btn-secondary w-full flex items-center justify-center gap-2 py-2"
-                      >
-                        <RefreshCw size={16} className={isSyncing ? "animate-spin" : ""} />
-                        {t('Force Backup Now', 'גבה עכשיו לענן')}
-                      </button>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={onForceSync}
+                          disabled={isSyncing}
+                          className="btn-secondary flex-1 flex items-center justify-center gap-2 py-2"
+                        >
+                          <RefreshCw size={16} className={isSyncing ? "animate-spin" : ""} />
+                          {t('Backup Now', 'גבה עכשיו')}
+                        </button>
+                        {onSignOut && (
+                          <button
+                            onClick={onSignOut}
+                            className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border border-red-500/30 text-red-500 hover:bg-red-500/10 transition-colors"
+                          >
+                            <CloudOff size={16} />
+                            {t('Sign Out', 'התנתק')}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
