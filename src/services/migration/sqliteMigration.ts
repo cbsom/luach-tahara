@@ -1,8 +1,9 @@
 import initSqlJs from 'sql.js';
+import wasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
 import { jDate, Locations } from 'jcal-zmanim';
 
 export async function parseSqliteAndMigrate(buffer: Uint8Array): Promise<any> {
-    const SQL = await initSqlJs({ locateFile: file => `/${file}` });
+    const SQL = await initSqlJs({ locateFile: () => wasmUrl });
     const db = new SQL.Database(buffer);
 
     const migratedData: any = {
