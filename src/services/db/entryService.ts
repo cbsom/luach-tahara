@@ -1,7 +1,6 @@
 // Entry Service - CRUD operations for entries
 import { getDB, type LuachTaharaDB } from './schema';
 import type { JewishDate, NightDay } from '@/types';
-import { nanoid } from 'nanoid';
 import { jDate } from 'jcal-zmanim';
 
 export interface EntryData {

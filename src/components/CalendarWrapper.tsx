@@ -25,6 +25,7 @@ import { UserEventTypes } from '../types-luach-web';
 import { nanoid } from 'nanoid';
 import { DailyInfoSidebar } from './DailyInfoSidebar';
 import { ZmanimUtils, getNotifications } from 'jcal-zmanim';
+import { clearAllData } from '../services/db';
 
 import { toJDate } from '../lib/jcal';
 import StatusCalculator from '../lib/chashavshavon/StatusCalculator';
@@ -822,7 +823,6 @@ export function Calendar({
         isAuthenticated={isAuthenticated}
         onOpenAuth={onOpenAuth}
         onSignOut={async () => {
-            const { clearAllData } = await import('../services/db');
             if (confirm(lang === 'he' ? 'האם אתה בטוח שברצונך להתנתק? נתונים מקומיים יימחקו.' : 'Are you sure you want to log out? Local data will be cleared.')) {
                 await signOut();
                 await clearAllData();

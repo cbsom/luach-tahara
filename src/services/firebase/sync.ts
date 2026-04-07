@@ -16,6 +16,7 @@ import {
     markSyncStarted,
     markSyncFailed,
     markEverythingPending,
+    getDB,
 } from '../db';
 import { batchSetDocuments } from './firestore';
 
@@ -33,7 +34,6 @@ let autoSyncInterval: any = null;
 export async function startOnSnapshotSync(userId: string) {
     stopOnSnapshotSync();
 
-    const { getDB } = await import('../db/schema');
     const dbInstance = await getDB();
 
     // Settings Listener
@@ -320,7 +320,6 @@ export async function pullFromFirebase(): Promise<{ success: boolean; error?: st
     if (!user) return { success: false, error: 'User not logged in' };
 
     try {
-        const { getDB } = await import('../db/schema');
         const dbInstance = await getDB();
 
         // Pull Settings

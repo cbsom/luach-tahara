@@ -9,6 +9,7 @@ import { Themes } from './types-luach-web';
 import { useAuth, useAutoSync } from './services/firebase/hooks';
 import { AuthModal } from './components/auth/AuthModal';
 import { JumpDateModal } from './components/JumpDateModal';
+import { clearAllData } from './services/db';
 
 function App() {
   const { i18n } = useTranslation();
@@ -328,7 +329,6 @@ function App() {
         onLogin={() => setIsAuthModalOpen(true)}
         onLogout={async () => {
           try {
-            const { clearAllData } = await import('./services/db');
             if (window.confirm(currentLang === 'he' ? 'האם אתה בטוח שברצונך להתנתק? נתונים מקומיים יימחקו.' : 'Are you sure you want to log out? Local data will be cleared.')) {
                 await signOut();
                 await clearAllData();
