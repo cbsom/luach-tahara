@@ -9,27 +9,28 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      manifestFilename: 'manifest.json',
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.png'],
       manifest: {
         name: 'Luach Tahara',
         short_name: 'Luach',
-        description: "Jewish Women's Halachic Calendar",
-        theme_color: '#4a5568',
+        description: "Jewish Women's Halachic Calendar - Luach Tahara",
+        theme_color: '#1a0f0a',
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/',
-        scope: '/',
+        start_url: '.',
+        scope: '.',
         icons: [
           {
-            src: '/icons/icon-192.png',
+            src: 'icons/icon-192.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any maskable'
           },
           {
-            src: '/icons/icon-512.png',
+            src: 'icons/icon-512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
