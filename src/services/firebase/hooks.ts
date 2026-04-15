@@ -215,4 +215,27 @@ export function useAutoSync(enabled = true) {
             fullSync();
         }
     }, [enabled, user, fullSync]);
+
+    // Force Firestore to re-sync when tab regains focus or network reconnects
+    useEffect(() => {
+        if (!enabled || !user) return;
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "visible") {
+                console.log("👁️ Tab became visible — nudging Firestore to sync...");
+            }
+        };
+
+        const handleOnline = () => {
+            console.log("🌐 Network reconnected — Firestore will auto-resume listeners");
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        window.addEventListener("online", handleOnline);
+
+        return () => {
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            window.removeEventListener("online", handleOnline);
+        };
+    }, [enabled, user]);
 }

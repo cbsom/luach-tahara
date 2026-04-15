@@ -36,100 +36,144 @@ export async function startOnSnapshotSync(userId: string) {
 
     const dbInstance = await getDB();
 
-    // Settings Listener
-    const settingsRef = doc(db, 'users', userId, 'luach-tahara-settings', 'general');
-    unsubSettings = onSnapshot(settingsRef, async (snapshot) => {
-        if (snapshot.exists()) {
-            const cloudSettings = snapshot.data();
-            await saveSettings(cloudSettings as any);
-            console.log('☁️ Settings updated from Cloud');
-            window.dispatchEvent(new CustomEvent('db-updated-settings'));
-        }
-    });
+    unsubSettings = setupSettingsListener(userId);
+    unsubEntries = setupCollectionListener(collection(doc(db, 'users', userId), 'entries'), dbInstance, 'entries', 'db-updated-entries');
+    unsubKavuahs = setupCollectionListener(collection(doc(db, 'users', userId), 'kavuahs'), dbInstance, 'kavuahs', 'db-updated-kavuahs');
+    unsubEvents = setupCollectionListener(collection(doc(db, 'users', userId), 'events'), dbInstance, 'userEvents', 'db-updated-events');
+    unsubTaharaEvents = setupCollectionListener(collection(doc(db, 'users', userId), 'tahara-events'), dbInstance, 'taharaEvents', 'db-updated-tahara');
+}
 
-    // Entries Listener
-    const entriesRef = collection(doc(db, 'users', userId), 'entries');
-    unsubEntries = onSnapshot(entriesRef, async (snapshot) => {
-        const changes = snapshot.docChanges();
-        for (const change of changes) {
-            const data = change.doc.data() as any;
-            data.id = change.doc.id;
-            data.syncStatus = 'synced';
+function setupSettingsListener(userId: string) {
+    let unsubscribe: (() => void) | null = null;
+    let reconnectTimer: any = null;
+    let isCancelled = false;
 
-            if (change.type === 'added' || change.type === 'modified') {
-                await dbInstance.put('entries', data);
-            } else if (change.type === 'removed') {
-                await dbInstance.delete('entries', change.doc.id);
+    const setup = () => {
+        const settingsRef = doc(db, 'users', userId, 'luach-tahara-settings', 'general');
+        unsubscribe = onSnapshot(
+            settingsRef,
+            { includeMetadataChanges: true },
+            async (snapshot) => {
+                if (isCancelled) return;
+                
+                const source = snapshot.metadata.fromCache ? "cache" : "server";
+                const hasPending = snapshot.metadata.hasPendingWrites;
+
+                // Skip local echoes to prevent prematurely overwriting recent local updates
+                if (source === "cache" && hasPending) return;
+
+                if (snapshot.exists()) {
+                    const cloudSettings = snapshot.data();
+                    await saveSettings(cloudSettings as any);
+                    console.log('☁️ Settings updated from Cloud');
+                    window.dispatchEvent(new CustomEvent('db-updated-settings'));
+                }
+            },
+            (error) => {
+                console.error(`❌ Firestore snapshot listener error [settings]:`, error);
+                
+                if (!isCancelled) {
+                    console.log(`🔄 Attempting to reconnect settings listener in 5 seconds...`);
+                    reconnectTimer = setTimeout(() => {
+                        if (!isCancelled) {
+                            console.log(`🔄 Reconnecting settings listener...`);
+                            if (unsubscribe) unsubscribe();
+                            setup();
+                        }
+                    }, 5000);
+                }
             }
-        }
-        if (changes.length > 0) {
-            console.log(`☁️ ${changes.length} Entries updated from Cloud`);
-            window.dispatchEvent(new CustomEvent('db-updated-entries'));
-        }
-    });
+        );
+    };
 
-    // Kavuahs Listener
-    const kavuahsRef = collection(doc(db, 'users', userId), 'kavuahs');
-    unsubKavuahs = onSnapshot(kavuahsRef, async (snapshot) => {
-        const changes = snapshot.docChanges();
-        for (const change of changes) {
-            const data = change.doc.data() as any;
-            data.id = change.doc.id;
-            data.syncStatus = 'synced';
+    setup();
 
-            if (change.type === 'added' || change.type === 'modified') {
-                await dbInstance.put('kavuahs', data);
-            } else if (change.type === 'removed') {
-                await dbInstance.delete('kavuahs', change.doc.id);
+    return () => {
+        isCancelled = true;
+        if (reconnectTimer) clearTimeout(reconnectTimer);
+        if (unsubscribe) unsubscribe();
+    };
+}
+
+function setupCollectionListener(
+    queryRef: any,
+    dbInstance: any,
+    storeName: string,
+    eventName: string
+) {
+    let unsubscribe: (() => void) | null = null;
+    let reconnectTimer: any = null;
+    let isCancelled = false;
+
+    const setup = () => {
+        unsubscribe = onSnapshot(
+            queryRef,
+            { includeMetadataChanges: true },
+            async (snapshot: any) => {
+                if (isCancelled) return;
+
+                const source = snapshot.metadata.fromCache ? "cache" : "server";
+                const hasPending = snapshot.metadata.hasPendingWrites;
+
+                // Skip local echoes to prevent prematurely marking data as 'synced'
+                if (source === "cache" && hasPending) {
+                    console.log(`⏳ Skipping local echo for ${storeName} to prevent overriding pending statuses`);
+                    return;
+                }
+                
+                // If this is an EMPTY snapshot from the cache WITHOUT pending writes,
+                // ignore it to prevent it from wiping local data.
+                if (source === "cache" && !hasPending && snapshot.docs.length === 0) {
+                    console.log(`⏳ Skipping empty cache snapshot for ${storeName}`);
+                    return;
+                }
+
+                const changes = snapshot.docChanges();
+                let hasChanges = false;
+                
+                for (const change of changes) {
+                    const data = change.doc.data() as any;
+                    data.id = change.doc.id;
+                    data.syncStatus = 'synced';
+
+                    if (change.type === 'added' || change.type === 'modified') {
+                        await dbInstance.put(storeName, data);
+                        hasChanges = true;
+                    } else if (change.type === 'removed') {
+                        await dbInstance.delete(storeName, change.doc.id);
+                        hasChanges = true;
+                    }
+                }
+                
+                if (hasChanges) {
+                    console.log(`☁️ ${changes.length} ${storeName} updated from Cloud`);
+                    window.dispatchEvent(new CustomEvent(eventName));
+                }
+            },
+            (error) => {
+                console.error(`❌ Firestore snapshot listener error [${storeName}]:`, error);
+                
+                if (!isCancelled) {
+                    console.log(`🔄 Attempting to reconnect ${storeName} listener in 5 seconds...`);
+                    reconnectTimer = setTimeout(() => {
+                        if (!isCancelled) {
+                            console.log(`🔄 Reconnecting ${storeName} listener...`);
+                            if (unsubscribe) unsubscribe();
+                            setup();
+                        }
+                    }, 5000);
+                }
             }
-        }
-        if (changes.length > 0) {
-            console.log(`☁️ ${changes.length} Kavuahs updated from Cloud`);
-            window.dispatchEvent(new CustomEvent('db-updated-kavuahs'));
-        }
-    });
+        );
+    };
 
-    // Events (Occasions) Listener
-    const eventsRef = collection(doc(db, 'users', userId), 'events');
-    unsubEvents = onSnapshot(eventsRef, async (snapshot) => {
-        const changes = snapshot.docChanges();
-        for (const change of changes) {
-            const data = change.doc.data() as any;
-            data.id = change.doc.id;
-            data.syncStatus = 'synced';
+    setup();
 
-            if (change.type === 'added' || change.type === 'modified') {
-                await dbInstance.put('userEvents', data);
-            } else if (change.type === 'removed') {
-                await dbInstance.delete('userEvents', change.doc.id);
-            }
-        }
-        if (changes.length > 0) {
-            console.log(`☁️ ${changes.length} Events updated from Cloud`);
-            window.dispatchEvent(new CustomEvent('db-updated-events'));
-        }
-    });
-
-    // Tahara Events Listener
-    const taharaRef = collection(doc(db, 'users', userId), 'tahara-events');
-    unsubTaharaEvents = onSnapshot(taharaRef, async (snapshot) => {
-        const changes = snapshot.docChanges();
-        for (const change of changes) {
-            const data = change.doc.data() as any;
-            data.id = change.doc.id;
-            data.syncStatus = 'synced';
-
-            if (change.type === 'added' || change.type === 'modified') {
-                await dbInstance.put('taharaEvents', data);
-            } else if (change.type === 'removed') {
-                await dbInstance.delete('taharaEvents', change.doc.id);
-            }
-        }
-        if (changes.length > 0) {
-            console.log(`☁️ ${changes.length} Tahara Events updated from Cloud`);
-            window.dispatchEvent(new CustomEvent('db-updated-tahara'));
-        }
-    });
+    return () => {
+        isCancelled = true;
+        if (reconnectTimer) clearTimeout(reconnectTimer);
+        if (unsubscribe) unsubscribe();
+    };
 }
 
 /**

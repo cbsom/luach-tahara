@@ -13,27 +13,73 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.png'],
       manifest: {
+        id: 'il.co.compute.luach-tahara',
         name: 'Luach Tahara',
         short_name: 'Luach',
         description: "Jewish Women's Halachic Calendar - Luach Tahara",
         theme_color: '#1a0f0a',
-        background_color: '#ffffff',
+        background_color: '#1a0f0a',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '.',
         scope: '.',
+        lang: 'he',
+        dir: 'rtl',
+        categories: ['lifestyle', 'productivity', 'personalization'],
         icons: [
           {
             src: 'icons/icon-192.png',
             sizes: '192x192',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'any'
           },
           {
             src: 'icons/icon-512.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'any'
+          },
+          {
+            src: 'icons/icon-192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+          {
+            src: 'icons/icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
+          }
+        ],
+        screenshots: [
+          {
+            src: 'screenshots/mobile-main.png',
+            sizes: '750x1334',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: 'Main Calendar View'
+          },
+          {
+            src: 'screenshots/desktop-main.png',
+            sizes: '1920x1080',
+            type: 'image/png',
+            form_factor: 'wide',
+            label: 'Desktop Calendar View'
+          }
+        ],
+        shortcuts: [
+          {
+            name: 'View Calendar',
+            short_name: 'Calendar',
+            url: '/',
+            icons: [{ src: 'icons/icon-192.png', sizes: '192x192' }]
+          },
+          {
+            name: 'Add Entry',
+            short_name: 'Add',
+            url: '/?add=true',
+            icons: [{ src: 'icons/icon-192.png', sizes: '192x192' }]
           }
         ]
       },
@@ -41,31 +87,31 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/firestore\.googleapis\.com\/.*/i,
-            handler: 'NetworkFirst',
+            // Cache Google Fonts
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: 'CacheFirst',
             options: {
-              cacheName: 'firestore-cache',
+              cacheName: 'google-fonts-cache',
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 // 24 hours
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
               }
             }
           },
           {
-            urlPattern: /^https:\/\/.*\.googleapis\.com\/.*/i,
-            handler: 'StaleWhileRevalidate',
+            // Cache Google Fonts static files
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: 'CacheFirst',
             options: {
-              cacheName: 'google-apis-cache',
+              cacheName: 'google-fonts-static-cache',
               expiration: {
-                maxEntries: 20,
-                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
               }
             }
           }
-        ]
+        ],
+        maximumFileSizeToCacheInBytes: 5242880 // 5 MiB
       },
       devOptions: {
         enabled: true,
