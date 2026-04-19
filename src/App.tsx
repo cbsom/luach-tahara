@@ -72,10 +72,16 @@ function App() {
   const [isDailyInfoOpen, setIsDailyInfoOpen] = useState(() => {
     // Check for window existence (in case of SSR) and width
     if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('luach-tahara-daily-info-open');
+      if (saved !== null) return saved === 'true';
       return window.innerWidth > 1024;
     }
     return false;
   });
+
+  useEffect(() => {
+    localStorage.setItem('luach-tahara-daily-info-open', String(isDailyInfoOpen));
+  }, [isDailyInfoOpen]);
 
   // Jump Date State
   const [jumpGregDate, setJumpGregDate] = useState(new Date().toISOString().split('T')[0]);

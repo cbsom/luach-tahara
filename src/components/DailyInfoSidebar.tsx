@@ -45,6 +45,8 @@ interface DailyInfoSidebarProps {
   onClose: () => void;
   isDesktopHidden?: boolean;
   onToggleDesktopMode?: () => void;
+  showEvents?: boolean;
+  handleAddUserEvent?: (e: React.MouseEvent, date: jDate) => void;
 }
 
 export const DailyInfoSidebar: React.FC<DailyInfoSidebarProps> = ({
@@ -65,7 +67,13 @@ export const DailyInfoSidebar: React.FC<DailyInfoSidebarProps> = ({
   onClose,
   isDesktopHidden,
   onToggleDesktopMode,
+  showEvents = true,
+  handleAddUserEvent,
 }) => {
+  const nowJDate = Utils.nowAtLocation(location);
+  const isCurrentJewishDay = selectedJDate.Abs === nowJDate.Abs;
+  const displayGregorianDate = isCurrentJewishDay ? new Date() : selectedJDate.getDate();
+
   const prakim = selectedJDate.getPirkeiAvos(location.Israel);
   const scrollRef = useRef<HTMLElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
@@ -105,13 +113,13 @@ export const DailyInfoSidebar: React.FC<DailyInfoSidebarProps> = ({
                   <h2 className="text-xl font-black leading-tight">
                     {injectLineBreak(
                       lang === 'he'
-                        ? selectedJDate.toStringHeb(false)
-                        : selectedJDate.toString(false, false),
+                        ? selectedJDate.toStringHeb(false, true, location.Israel)
+                        : selectedJDate.toString(false, false, true, location.Israel),
                       ','
                     )}
                   </h2>
                   <p className="text-text-secondary text-xs font-semibold opacity-70">
-                    {selectedJDate.getDate().toLocaleDateString(lang === 'he' ? 'he-IL' : 'en-US', {
+                    {displayGregorianDate.toLocaleDateString(lang === 'he' ? 'he-IL' : 'en-US', {
                       weekday: 'long',
                       year: 'numeric',
                       month: 'long',
@@ -137,9 +145,11 @@ export const DailyInfoSidebar: React.FC<DailyInfoSidebarProps> = ({
             </div>
 
             <div className="mt-1 flex items-center gap-1.5 px-1">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-accent-amber bg-accent-amber/10 px-2 py-0.5 rounded-md">
-                {getRelativeDescription(selectedJDate, lang)}
-              </p>
+              {getRelativeDescription(selectedJDate, lang) && (
+                <p className="text-[10px] font-bold uppercase tracking-widest text-accent-amber bg-accent-amber/10 px-2 py-0.5 rounded-md">
+                  {getRelativeDescription(selectedJDate, lang)}
+                </p>
+              )}
               {selectedJDate.isYomTov(location.Israel) && (
                 <p className="text-[10px] font-bold uppercase tracking-widest text-accent-rose bg-accent-rose/10 px-2 py-0.5 rounded-md">
                   {lang === 'he' ? 'יום טוב' : 'Yom Tov'}
@@ -150,17 +160,28 @@ export const DailyInfoSidebar: React.FC<DailyInfoSidebarProps> = ({
 
           <div className="divider"></div>
 
-          {/* Add Event Button */}
+          {/* Add Event Button (Add Entry) */}
           <button
             onClick={e => handleAddNewEventForDate(e, selectedJDate)}
-            className="group relative w-full overflow-hidden rounded-xl p-[1px] shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99] mb-3"
+            className="group relative w-full overflow-hidden rounded-xl p-[1px] shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99] mb-2 flex-shrink-0"
           >
-            <div className="bg-gradient-to-r from-accent-amber via-accent-coral to-accent-rose opacity-70 group-hover:opacity-100 transition-opacity" />
-            <div className="flex flex-row h-full items-center justify-center gap-2 rounded-xl bg-bg-primary/90 px-6 py-4 text-sm font-bold text-text-primary backdrop-blur-xl transition-all group-hover:bg-bg-primary/80 cursor-pointer">
+            <div className="absolute inset-0 bg-gradient-to-r from-accent-amber via-accent-coral to-accent-rose opacity-70 group-hover:opacity-100 transition-opacity" />
+            <div className="relative flex flex-row h-full items-center justify-center gap-2 rounded-xl bg-bg-primary/90 px-6 py-4 text-sm font-bold text-text-primary backdrop-blur-xl transition-all group-hover:bg-bg-primary/80 cursor-pointer">
               <Plus size={16} className="text-accent-amber" />
               <span>{lang === 'he' ? 'הוסף ראייה' : 'Add Entry'}</span>
             </div>
           </button>
+
+          {/* Add Event Button for Occasions */}
+          {showEvents && (
+            <button
+              onClick={e => handleAddUserEvent && handleAddUserEvent(e, selectedJDate)}
+              className="group w-full rounded-xl py-2 flex items-center justify-center gap-2 text-xs font-semibold text-text-secondary border border-glass-border hover:bg-white/5 transition-colors mb-3 flex-shrink-0 shadow-sm"
+            >
+              <Plus size={14} className="opacity-70 group-hover:opacity-100 transition-opacity" />
+              <span>{lang === 'he' ? 'הוסף אירוע' : 'Add Event'}</span>
+            </button>
+          )}
 
           <section
             ref={scrollRef}
@@ -222,15 +243,22 @@ export const DailyInfoSidebar: React.FC<DailyInfoSidebarProps> = ({
             {/* ENTRIES */}
             {entries.length > 0 && (
               <div className="flex flex-col gap-2 animate-slide-up delay-100">
-                <h3 className="text-[10px] font-bold uppercase tracking-widest opacity-50 px-1">
-                  {t('Entries', 'ראיות')}
-                </h3>
-                {entries.map(entry => (
-                  <div
-                    key={entry.id}
-                    className="p-3 rounded-xl bg-accent-coral/10 border border-accent-coral/20 flex flex-col gap-2 group hover:bg-accent-coral/20 transition-all cursor-pointer glass-card"
-                    onClick={() => handleEditEvent(entry, selectedJDate)}
-                  >
+                {entries.map(entry => {
+                  const isNight = entry.onah === -1;
+                  const direction = lang === 'he' ? 'to left' : 'to right';
+                  const entryAlpha = 'rgba(252, 165, 165, 0.20)';
+                  const transparent = 'transparent';
+                  const nightHalf = isNight ? entryAlpha : transparent;
+                  const dayHalf = !isNight ? entryAlpha : transparent;
+                  const bg = `linear-gradient(${direction}, ${nightHalf} 0%, ${nightHalf} 50%, ${dayHalf} 50%, ${dayHalf} 100%)`;
+
+                  return (
+                    <div
+                      key={entry.id}
+                      className="p-3 rounded-xl border border-accent-coral/20 flex flex-col gap-2 group hover:brightness-105 transition-all cursor-pointer glass-card"
+                      style={{ background: bg }}
+                      onClick={() => handleEditEvent(entry, selectedJDate)}
+                    >
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2">
                         <Heart size={16} className="text-accent-coral" />
@@ -258,7 +286,8 @@ export const DailyInfoSidebar: React.FC<DailyInfoSidebarProps> = ({
                       <p className="text-xs italic opacity-60 truncate">{entry.notes}</p>
                     )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
@@ -314,11 +343,21 @@ export const DailyInfoSidebar: React.FC<DailyInfoSidebarProps> = ({
                 <h3 className="text-[10px] font-bold uppercase tracking-widest opacity-50 px-1">
                   {t('Flagged Onahs', 'זמני פרישה')}
                 </h3>
-                {flaggedOnahs.map((po, idx) => (
-                  <div
-                    key={idx}
-                    className="p-3 rounded-xl bg-gradient-amber border border-accent-amber/20 flex flex-col gap-2 glass-card"
-                  >
+                {flaggedOnahs.map((po, idx) => {
+                  const isNight = po.nightDay === -1;
+                  const direction = lang === 'he' ? 'to left' : 'to right';
+                  const flagAlpha = 'rgba(251, 191, 36, 0.20)';
+                  const transparent = 'transparent';
+                  const nightHalf = isNight ? flagAlpha : transparent;
+                  const dayHalf = !isNight ? flagAlpha : transparent;
+                  const bg = `linear-gradient(${direction}, ${nightHalf} 0%, ${nightHalf} 50%, ${dayHalf} 50%, ${dayHalf} 100%)`;
+
+                  return (
+                    <div
+                      key={idx}
+                      className="p-3 rounded-xl border border-accent-amber/20 flex flex-col gap-2 glass-card"
+                      style={{ background: bg }}
+                    >
                     <div className="flex items-center gap-2">
                       <div className="p-1 rounded-md bg-accent-amber/20">
                         <AlertTriangle size={14} className="text-accent-amber" />
@@ -337,7 +376,8 @@ export const DailyInfoSidebar: React.FC<DailyInfoSidebarProps> = ({
                       ))}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
@@ -390,7 +430,7 @@ export const DailyInfoSidebar: React.FC<DailyInfoSidebarProps> = ({
             {/* PARASHA & DAF YOMI */}
             <div className="flex flex-col gap-2 mt-4 animate-slide-up delay-400">
               <h3 className="text-[10px] font-bold uppercase tracking-widest opacity-50 px-1">
-                {t('Torah Study', 'לימוד')}
+                {t('Daf Yomi', 'דף יומי')}
               </h3>
               {Dafyomi.toString(selectedJDate) && (
                 <div className="p-3 rounded-xl bg-accent-gold/5 border border-accent-gold/20 flex items-center gap-3 glass-card">

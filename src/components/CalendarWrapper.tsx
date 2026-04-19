@@ -939,6 +939,11 @@ export function Calendar({
           e.stopPropagation();
           handleAddNewEntry(date);
         }}
+        handleAddUserEvent={(e, date) => {
+          e.stopPropagation();
+          handleAddNewUserEvent(date);
+        }}
+        showEvents={settings?.showEvents ?? true}
       />
     </div>
   );

@@ -38,9 +38,6 @@
 }
 
 .calendar-day-niddah.is-today {
-    box-shadow:
-        0 0 0 2px var(--text-primary),
-        0 10px 20px rgba(0, 0, 0, 0.5);
     z-index: 20;
     /* transform: scale(1.02); */
 }
