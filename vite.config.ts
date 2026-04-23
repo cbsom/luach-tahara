@@ -21,8 +21,8 @@ export default defineConfig({
         background_color: '#1a0f0a',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '.',
-        scope: '.',
+        start_url: './',
+        scope: './',
         lang: 'he',
         dir: 'rtl',
         categories: ['lifestyle', 'productivity', 'personalization'],
@@ -84,7 +84,8 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        navigateFallback: 'index.html',
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,wasm}'],
         runtimeCaching: [
           {
             // Cache Google Fonts
