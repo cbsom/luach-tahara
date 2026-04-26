@@ -5,7 +5,7 @@ import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: './',
+  base: '/',
   plugins: [
     react(),
     VitePWA({
@@ -21,8 +21,8 @@ export default defineConfig({
         background_color: '#1a0f0a',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: './',
-        scope: './',
+        start_url: '/',
+        scope: '/',
         lang: 'he',
         dir: 'rtl',
         categories: ['lifestyle', 'productivity', 'personalization'],
@@ -86,6 +86,8 @@ export default defineConfig({
       workbox: {
         navigateFallback: 'index.html',
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,wasm}'],
+        navigateFallbackDenylist: [/^\/__\//, /recaptcha/, /api2/],
+        globIgnores: ['**/recaptcha**', '**/firebaseappcheck**'],
         runtimeCaching: [
           {
             // Cache Google Fonts
