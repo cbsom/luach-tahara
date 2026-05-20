@@ -18,6 +18,7 @@ interface CalendarProps {
   selectedJDate: jDate;
   location: Location;
   setSelectedJDate: (date: jDate) => void;
+  onShowDailyInfo?: (date: jDate) => void;
   handleAddNewEventForDate: (e: React.MouseEvent, date: jDate) => void;
   handleEditEvent: (event: UserEvent | Entry, date: jDate) => void;
   getEventsForDate: (date: jDate) => UserEvent[];
@@ -41,6 +42,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   selectedJDate,
   location,
   setSelectedJDate,
+  onShowDailyInfo,
   handleAddNewEventForDate,
   handleEditEvent,
   getEventsForDate,
@@ -236,6 +238,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                   notifications={allNotes}
                   status={status}
                   onDayClick={() => setSelectedJDate(date)}
+                  onShowDailyInfo={onShowDailyInfo ? () => onShowDailyInfo(date) : undefined}
                   onAddEntry={() =>
                     handleAddNewEventForDate(
                       { stopPropagation: () => {} } as React.MouseEvent,

@@ -1,6 +1,6 @@
 // Calendar Day Component with Niddah-specific coloring and labels
 import { jDate } from 'jcal-zmanim';
-import { Plus, Droplet, HelpCircle, Calendar as CalendarIcon, Waves } from 'lucide-react';
+import { Plus, Droplet, HelpCircle, Calendar as CalendarIcon, Waves, Info } from 'lucide-react';
 import type { Entry, TaharaEvent, TaharaEventType } from '@/types';
 import { UserEvent, Themes } from '@/types-luach-web';
 import { NightDay } from '@/types';
@@ -37,6 +37,7 @@ interface CalendarDayProps {
   onAddShailah: () => void;
   onAddMikvah: () => void;
   onAddUserEvent?: () => void;
+  onShowDailyInfo?: () => void;
   onAddTaharaEvent: (type: TaharaEventType) => void;
   onRemoveTaharaEvent: (event: TaharaEvent) => void;
   onEditEntry?: (entry: Entry) => void;
@@ -73,6 +74,7 @@ export function CalendarDay({
   onEditEntry,
   onEditUserEvent,
   onAddUserEvent,
+  onShowDailyInfo,
   status,
   theme,
 }: CalendarDayProps) {
@@ -94,7 +96,7 @@ export function CalendarDay({
 
       // Only shade a half if it has an entry or flag — otherwise use holiday bg or transparent
       const nightHalf = hasNightEntry ? entryAlpha : hasNightFlag ? flagAlpha : holidayBg;
-      const dayHalf   = hasDayEntry   ? entryAlpha : hasDayFlag   ? flagAlpha : holidayBg;
+      const dayHalf = hasDayEntry ? entryAlpha : hasDayFlag ? flagAlpha : holidayBg;
 
       return {
         background: `linear-gradient(${direction}, ${nightHalf} 0%, ${nightHalf} 50%, ${dayHalf} 50%, ${dayHalf} 100%)`,
@@ -335,6 +337,18 @@ export function CalendarDay({
 
       {/* Add Button with Menu */}
       <div className="add-menu-container">
+        {onShowDailyInfo && (
+          <button
+            className="info-button-mobile"
+            onClick={e => {
+              e.stopPropagation();
+              onShowDailyInfo();
+            }}
+            title={lang === 'he' ? 'מידע יומי' : 'Daily Info'}
+          >
+            <Info size={14} />
+          </button>
+        )}
         <button
           className="add-button"
           onClick={e => {

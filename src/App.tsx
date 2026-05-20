@@ -73,6 +73,7 @@ function App() {
     // Check for window existence (in case of SSR) and width
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('luach-tahara-daily-info-open');
+      if (window.innerWidth <= 1200) return false;
       if (saved !== null) return saved === 'true';
       return window.innerWidth > 1024;
     }
@@ -227,6 +228,13 @@ function App() {
 
   const handleDayClick = (date: jDate) => {
     setSelectedJDate(date);
+    if (window.innerWidth > 1200) {
+      setIsDailyInfoOpen(true);
+    }
+  };
+
+  const handleShowDailyInfo = (date: jDate) => {
+    setSelectedJDate(date);
     setIsDailyInfoOpen(true);
   };
 
@@ -369,6 +377,7 @@ function App() {
             onNextMonth={handleNextMonth}
             onGoToToday={handleGoToToday}
             onDayClick={handleDayClick}
+            onShowDailyInfo={handleShowDailyInfo}
             location={location}
             lang={currentLang}
             isSettingsOpen={isSettingsOpen}

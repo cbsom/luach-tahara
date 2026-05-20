@@ -41,6 +41,7 @@ interface CalendarWrapperProps {
   onNextMonth: () => void;
   onGoToToday: () => void;
   onDayClick: (date: jDate) => void;
+  onShowDailyInfo?: (date: jDate) => void;
   location: Location;
   lang: string;
   events?: UserEvent[];
@@ -65,6 +66,7 @@ export function Calendar({
   selectedJDate,
   calendarView,
   onDayClick,
+  onShowDailyInfo,
   location,
   lang,
   isSettingsOpen = false,
@@ -763,6 +765,7 @@ export function Calendar({
           selectedJDate={selectedJDate}
           location={location}
           setSelectedJDate={onDayClick}
+          onShowDailyInfo={onShowDailyInfo}
           handleAddNewEventForDate={(e, date) => {
             e?.stopPropagation();
             handleAddNewEntry(date);

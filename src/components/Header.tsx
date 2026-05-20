@@ -77,7 +77,7 @@ export function Header({
   };
 
   return (
-    <header className="glass-panel p-2 md:p-4 px-3 md:px-6 flex flex-row items-center justify-between main-header gap-3 md:gap-4">
+    <header className="glass-panel p-2 md:p-4 px-3 md:px-6 flex flex-wrap items-center justify-between main-header gap-3 md:gap-4">
       {/* Top Row / Left Side */}
       <div className="flex items-center justify-between w-full md:w-auto gap-4">
         <div className="flex items-center gap-2 md:gap-4">
@@ -142,7 +142,7 @@ export function Header({
       <div className="flex items-center gap-2 w-full md:w-auto justify-end">
         {/* Helper Navigation Icons (Hidden on very small screens or moved to bottom/sidebar ideally) */}
         <div
-          className="hidden xl:flex items-center gap-1 mr-2"
+          className="flex items-center gap-1 mr-2"
           style={{
             background: 'var(--btn-bg)',
             borderRadius: '10px',
@@ -306,7 +306,7 @@ export function Header({
           {user ? (
             <button
               onClick={onLogout}
-              className="text-xs font-semibold px-2 py-1.5 rounded-lg transition-all hidden sm:block"
+              className="text-xs font-semibold px-2 py-1.5 rounded-lg transition-all"
               style={{
                 background: 'var(--btn-bg)',
                 border: '1px solid var(--btn-border)',
@@ -324,7 +324,7 @@ export function Header({
           ) : (
             <button
               onClick={onLogin}
-              className="text-xs font-semibold px-2 py-1.5 rounded-lg transition-all hidden sm:block"
+              className="text-xs font-semibold px-2 py-1.5 rounded-lg transition-all"
               style={{
                 background: 'var(--btn-bg)',
                 border: '1px solid var(--accent-amber)',

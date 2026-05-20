@@ -29,7 +29,6 @@
     padding: 4px;
 }
 
-
 .calendar-day-niddah:hover {
     background: rgba(255, 255, 255, 0.05);
     border-color: rgba(255, 255, 255, 0.12);
@@ -81,7 +80,7 @@
     left: 8px;
     background: rgba(255, 255, 255, 0.07);
     color: var(--text-secondary);
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 1px 5px;
     border-radius: 4px;
     font-size: 0.6rem;
@@ -242,15 +241,11 @@
 
 /* Add Menu */
 .add-menu-container {
-    position: absolute;
-    bottom: 8px;
-    right: 8px;
     z-index: 100; /* Increased Z-Index */
 }
 
 [dir="rtl"] .add-menu-container {
     right: auto;
-    left: 8px;
 }
 
 .add-button {
@@ -297,7 +292,7 @@
 }
 
 /* For the top 2 rows (first 14 days), open the menu downwards to avoid hiding behind the header */
-.calendar-days > .calendar-day-niddah:nth-child(-n+14) .add-menu {
+.calendar-days > .calendar-day-niddah:nth-child(-n + 14) .add-menu {
     bottom: auto;
     top: 100%;
 }
@@ -350,7 +345,6 @@
 /* Responsive */
 @media (max-width: 768px) {
     .calendar-day-niddah {
-        min-height: 100px;
         padding: 8px;
     }
 
@@ -375,5 +369,27 @@
     .add-menu button {
         font-size: 0.8rem;
         padding: 6px 10px;
+    }
+}
+
+.info-button-mobile {
+    background: transparent;
+    border: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    margin-bottom: 5px;
+}
+
+[dir="rtl"] .info-button-mobile {
+    right: auto;
+    left: 36px;
+}
+
+@media (min-width: 1201px) {
+    .info-button-mobile {
+        display: none !important;
     }
 }
