@@ -77,48 +77,46 @@ export function Header({
   };
 
   return (
-    <header className="glass-panel p-2 md:p-4 px-3 md:px-6 flex flex-wrap items-center justify-between main-header gap-3 md:gap-4">
-      {/* Top Row / Left Side */}
-      <div className="flex items-center justify-between w-full md:w-auto gap-4">
-        <div className="flex items-center gap-2 md:gap-4">
-          <button
-            onClick={onSettingsClick}
-            className=""
-            style={{
-              border: '0',
-              color: 'var(--accent-amber)',
-              backgroundColor: 'transparent',
-            }}
-            title={lang === 'he' ? 'הגדרות' : 'Settings'}
-          >
-            <Menu size={20} />
-          </button>
-          <div className="flex items-center gap-3">
-            <div className="p-1 bg-accent-amber/10 rounded-xl overflow-hidden shadow-inner hidden sm:block">
-              <div
-                style={{
-                  width: '100px',
-                  height: '100px',
-                  backgroundImage: 'url(icons/logo.png)',
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat',
-                }}
-              >
-                {/* <img src="icons/icon-192.png" alt={lang === 'he' ? 'לוח טהרה' : 'Luach Tahara'} /> */}
-              </div>
-            </div>
-            <h1 className="text-xl font-black tracking-tight hidden sm:block">
-              {lang === 'he' ? 'לוח טהרה' : 'Luach Tahara'}
-            </h1>
-          </div>
-        </div>
+    <header className="glass-panel main-header flex flex-wrap items-center justify-between gap-3 md:gap-4">
+      {/* Brand & Menu Group */}
+      <div className="header-brand-group flex items-center gap-3">
+        {/* 0. Hamburger Menu */}
+        <button
+          onClick={onSettingsClick}
+          className="header-hamburger"
+          style={{
+            border: '0',
+            color: 'var(--accent-amber)',
+            backgroundColor: 'transparent',
+            cursor: 'pointer',
+          }}
+          title={lang === 'he' ? 'הגדרות' : 'Settings'}
+        >
+          <Menu size={20} />
+        </button>
 
-        {/* Mobile: Date & Title handled differently or stacked? For now keeping flexible */}
+        {/* Brand Logo & Title */}
+        <div className="header-logo flex items-center gap-3">
+          <div className="p-1 bg-accent-amber/10 rounded-xl overflow-hidden shadow-inner logo-image-wrapper">
+            <div
+              className="logo-image"
+              style={{
+                backgroundImage: 'url(icons/logo.png)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+              }}
+            >
+            </div>
+          </div>
+          <h1 className="logo-title text-xl font-black tracking-tight">
+            {lang === 'he' ? 'לוח טהרה' : 'Luach Tahara'}
+          </h1>
+        </div>
       </div>
 
-      {/* Date Navigation Center */}
-      <div className="flex flex-col md:flex-row items-center gap-2 md:gap-6 w-full md:w-auto justify-center">
+      {/* Button Section 1: Date Navigation (Current month directly below it) */}
+      <div className="header-section-1 flex flex-col items-center justify-center gap-1">
         <DateNavigation
           className="nav-controls"
           lang={lang as 'en' | 'he'}
@@ -128,21 +126,20 @@ export function Header({
           handleGoToToday={handleGoToToday}
           setIsJumpModalOpen={setIsJumpModalOpen}
         />
-        <h1 className="flex gap-2 md:gap-4 flex-row justify-between items-center calendar-month-year text-lg md:text-xl">
+        <h1 className="flex gap-4 flex-row justify-center items-center calendar-month-year">
           <div className="font-bold">
             {currentMonthName} {currentYearName}
           </div>
-          <div className="secondary-month-year text-sm opacity-60 font-medium">
+          <div className="secondary-month-year  opacity-60">
             {secondaryDateRange}
           </div>
         </h1>
       </div>
 
-      {/* Right Side: Tools & Auth */}
-      <div className="flex items-center gap-2 w-full md:w-auto justify-end">
-        {/* Helper Navigation Icons (Hidden on very small screens or moved to bottom/sidebar ideally) */}
+      {/* Button Section 2: Show Lists */}
+      <div className="header-section-2 flex items-center gap-2">
         <div
-          className="flex items-center gap-1 mr-2"
+          className="flex items-center gap-1"
           style={{
             background: 'var(--btn-bg)',
             borderRadius: '10px',
@@ -217,6 +214,31 @@ export function Header({
         </div>
 
         <button
+          onClick={onUserEventsClick}
+          className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-sm font-semibold"
+          style={{
+            background: 'var(--btn-bg)',
+            border: '1px solid var(--btn-border)',
+            color: 'var(--text-secondary)',
+          }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLElement).style.color = 'var(--accent-amber)';
+            (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent-amber)';
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)';
+            (e.currentTarget as HTMLElement).style.borderColor = 'var(--btn-border)';
+          }}
+          title={lang === 'he' ? 'אירועים' : 'User Events'}
+        >
+          <CalendarIcon size={16} />
+          {lang === 'he' ? 'אירועים' : 'Events'}
+        </button>
+      </div>
+
+      {/* Button Section 3: Change Language / Theme / Calendar View & Auth */}
+      <div className="header-section-3 flex items-center gap-2">
+        <button
           onClick={() => setCalendarView(calendarView === 'jewish' ? 'secular' : 'jewish')}
           className="p-2 rounded-lg transition-all"
           style={{
@@ -276,33 +298,11 @@ export function Header({
           {getThemeIcon(theme)}
         </button>
 
-        {/* User Events & Auth Buttons */}
+        {/* Auth Buttons */}
         <div
           className="flex items-center gap-2 pl-2 ml-1"
           style={{ borderLeft: '1px solid var(--glass-border)' }}
         >
-          <button
-            onClick={onUserEventsClick}
-            className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-sm font-semibold"
-            style={{
-              background: 'var(--btn-bg)',
-              border: '1px solid var(--btn-border)',
-              color: 'var(--text-secondary)',
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.color = 'var(--accent-amber)';
-              (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent-amber)';
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)';
-              (e.currentTarget as HTMLElement).style.borderColor = 'var(--btn-border)';
-            }}
-            title={lang === 'he' ? 'אירועים' : 'User Events'}
-          >
-            <CalendarIcon size={16} />
-            {lang === 'he' ? 'אירועים' : 'Events'}
-          </button>
-
           {user ? (
             <button
               onClick={onLogout}
