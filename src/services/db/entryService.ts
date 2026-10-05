@@ -11,6 +11,8 @@ export interface EntryData {
     ignoreForFlaggedDates: boolean;
     ignoreForKavuah: boolean;
     comments?: string;
+    endDate?: JewishDate;
+    endOnah?: NightDay;
 }
 
 export type EntryRecord = LuachTaharaDB['entries']['value'];
@@ -32,6 +34,8 @@ export async function createEntry(data: EntryData): Promise<EntryRecord> {
         ignoreForFlaggedDates: data.ignoreForFlaggedDates,
         ignoreForKavuah: data.ignoreForKavuah,
         comments: data.comments,
+        endDate: data.endDate,
+        endOnah: data.endOnah,
         createdAt: now,
         updatedAt: now,
         syncStatus: 'pending',
@@ -60,6 +64,8 @@ export async function addEntries(dataList: EntryData[]): Promise<EntryRecord[]> 
             ignoreForFlaggedDates: data.ignoreForFlaggedDates,
             ignoreForKavuah: data.ignoreForKavuah,
             comments: data.comments,
+            endDate: data.endDate,
+            endOnah: data.endOnah,
             createdAt: now,
             updatedAt: now,
             syncStatus: 'pending',

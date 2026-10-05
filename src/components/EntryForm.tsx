@@ -35,6 +35,13 @@ export function EntryForm({
     existingEntry?.date || (initialDate ? fromJDate(initialDate) : fromJDate(new jDate()))
   );
   const [onah, setOnah] = useState<NightDay>(existingEntry?.onah || NightDay.Night);
+  const [endDate, setEndDate] = useState<JewishDate>(
+    existingEntry?.endDate || existingEntry?.date || (initialDate ? fromJDate(initialDate) : fromJDate(new jDate()))
+  );
+  const [endOnah, setEndOnah] = useState<NightDay>(
+    existingEntry?.endOnah || existingEntry?.onah || NightDay.Night
+  );
+  const [showEndDate, setShowEndDate] = useState(!!existingEntry?.endDate);
   const [comments, setComments] = useState(existingEntry?.notes || '');
   const [ignoreForFlaggedDates, setIgnoreForFlaggedDates] = useState(
     existingEntry?.ignoreForFlaggedDates || false
@@ -67,6 +74,9 @@ export function EntryForm({
         }
         setDate(validDate);
         setOnah(existingEntry.onah);
+        setEndDate(existingEntry.endDate || validDate);
+        setEndOnah(existingEntry.endOnah || existingEntry.onah);
+        setShowEndDate(!!existingEntry.endDate);
         setComments(existingEntry.notes || '');
         setIgnoreForFlaggedDates(existingEntry.ignoreForFlaggedDates);
         setIgnoreForKavuah(existingEntry.ignoreForKavuah);
@@ -79,6 +89,9 @@ export function EntryForm({
       } else if (initialDate) {
         setDate(fromJDate(initialDate));
         setOnah(NightDay.Night);
+        setEndDate(fromJDate(initialDate));
+        setEndOnah(NightDay.Night);
+        setShowEndDate(false);
         setComments('');
         setIgnoreForFlaggedDates(false);
         setIgnoreForKavuah(false);
@@ -106,6 +119,8 @@ export function EntryForm({
       id: existingEntry?.id || nanoid(),
       date,
       onah,
+      endDate: showEndDate ? endDate : undefined,
+      endOnah: showEndDate ? endOnah : undefined,
       haflaga: calculateHaflaga(),
       ignoreForFlaggedDates,
       ignoreForKavuah,
@@ -144,6 +159,16 @@ export function EntryForm({
 
     setDate({
       ...date,
+      [field]: numValue,
+    });
+  };
+
+  const handleEndDateChange = (field: 'year' | 'month' | 'day', value: string) => {
+    const numValue = parseInt(value, 10);
+    if (isNaN(numValue)) return;
+
+    setEndDate({
+      ...endDate,
       [field]: numValue,
     });
   };
@@ -245,6 +270,8 @@ export function EntryForm({
         ? 'אל תשכח שאחרי השקיעה, התאריך העברי משתנה.'
         : 'Do not forget that after sunset, the Jewish Date changes.',
     deleteConfirmation: lang === 'he' ? 'האם למחוק ראייה זו?' : 'Delete this entry?',
+    flowEnd: lang === 'he' ? 'סיום הראייה' : 'Flow End',
+    setEndDate: lang === 'he' ? 'הגדר תאריך סיום' : 'Set End Date',
   };
 
   return (
@@ -364,6 +391,80 @@ export function EntryForm({
               <p>
                 <strong>{t.pleaseMakeSure}</strong> {t.nightWarning}
               </p>
+            </div>
+          )}
+        </div>
+
+        {/* Flow End Section */}
+        <div className="form-section">
+          <h3 className="section-title">{t.flowEnd}</h3>
+          
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={showEndDate}
+              onChange={e => setShowEndDate(e.target.checked)}
+            />
+            <span>{t.setEndDate}</span>
+          </label>
+
+          {showEndDate && (
+            <div className="end-date-container mt-4 p-4 bg-glass-surface rounded-lg border border-glass-border">
+              <div className="date-inputs mb-4">
+                <div className="form-group">
+                  <label className="form-label">{t.year}</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    value={endDate.year}
+                    onChange={e => handleEndDateChange('year', e.target.value)}
+                    required={showEndDate}
+                    min={5000}
+                    max={6000}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">{t.month}</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    value={endDate.month}
+                    onChange={e => handleEndDateChange('month', e.target.value)}
+                    required={showEndDate}
+                    min={1}
+                    max={13}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">{t.day}</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    value={endDate.day}
+                    onChange={e => handleEndDateChange('day', e.target.value)}
+                    required={showEndDate}
+                    min={1}
+                    max={30}
+                  />
+                </div>
+              </div>
+
+              <div className="onah-selector">
+                <button
+                  type="button"
+                  className={`onah-button ${endOnah === NightDay.Night ? 'active' : ''}`}
+                  onClick={() => setEndOnah(NightDay.Night)}
+                >
+                  {t.night}
+                </button>
+                <button
+                  type="button"
+                  className={`onah-button ${endOnah === NightDay.Day ? 'active' : ''}`}
+                  onClick={() => setEndOnah(NightDay.Day)}
+                >
+                  {t.dayOnah}
+                </button>
+              </div>
             </div>
           )}
         </div>

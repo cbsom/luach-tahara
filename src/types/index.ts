@@ -27,6 +27,8 @@ export interface Entry {
     haflaga?: number;
     ignoreForFlaggedDates: boolean;
     ignoreForKavuah: boolean;
+    endDate?: JewishDate;
+    endOnah?: NightDay;
     notes?: string;
     hefsekTaharaReminder?: {
         daysAfter: number;

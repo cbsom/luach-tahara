@@ -21,6 +21,7 @@ import type { TaharaEvent, TaharaEventType } from '../types';
 import { useUserEvents } from '../services/db/hooks';
 import { EventModal } from './events/EventModal';
 import { EventsListModal } from './events/EventsListModal';
+import { EndFlowModal } from './EndFlowModal';
 import { UserEventTypes } from '../types-luach-web';
 import { nanoid } from 'nanoid';
 import { DailyInfoSidebar } from './DailyInfoSidebar';
@@ -146,6 +147,8 @@ export function Calendar({
         ignoreForFlaggedDates: r.ignoreForFlaggedDates,
         ignoreForKavuah: r.ignoreForKavuah,
         notes: r.comments,
+        endDate: (r as any).endDate,
+        endOnah: (r as any).endOnah,
         createdAt: r.createdAt,
         updatedAt: r.updatedAt,
       })),
@@ -645,6 +648,8 @@ export function Calendar({
       ignoreForFlaggedDates: entry.ignoreForFlaggedDates,
       ignoreForKavuah: entry.ignoreForKavuah,
       comments: (entry as any).notes || (entry as any).comments,
+      endDate: entry.endDate,
+      endOnah: entry.endOnah,
     };
 
     // Ensure jewishDate is plain object (convert class or reference)
@@ -694,6 +699,21 @@ export function Calendar({
   // Handle delete
   const handleDeleteEntry = async (entry: EntryData) => {
     await removeEntry(entry.id);
+  };
+
+  const [endFlowModalState, setEndFlowModalState] = useState<{ entry: EntryData; date: jDate } | null>(null);
+
+  const handleEndFlowClick = (entry: EntryData, date: jDate) => {
+    setEndFlowModalState({ entry, date });
+  };
+
+  const handleSaveEndFlow = async (entry: EntryData, date: jDate, endOnah: NightDay) => {
+    const updated = {
+      ...entry,
+      endDate: { year: date.Year, month: date.Month, day: date.Day },
+      endOnah,
+    };
+    await handleSaveEntry(updated);
   };
 
   // Shared Entry List Import replaced by Remote SQLite Backup Migration
@@ -788,6 +808,7 @@ export function Calendar({
           dayStatus={statusMap}
           onAddTaharaEvent={handleAddTaharaEvent}
           onRemoveTaharaEvent={handleDeleteTaharaEvent}
+          onAddEndFlow={handleEndFlowClick}
           onAddUserEvent={handleAddNewUserEvent}
           showEvents={settings?.showEvents ?? true}
         />
@@ -803,6 +824,17 @@ export function Calendar({
         lang={lang as 'en' | 'he'}
         location={location}
       />
+
+      {endFlowModalState && (
+        <EndFlowModal
+          isOpen={true}
+          onClose={() => setEndFlowModalState(null)}
+          onSave={handleSaveEndFlow}
+          entry={endFlowModalState.entry}
+          date={endFlowModalState.date}
+          lang={lang as 'en' | 'he'}
+        />
+      )}
 
       <KavuahSuggestionDialog
         isOpen={!suggestionsSnoozed && kavuahSuggestions.length > 0}

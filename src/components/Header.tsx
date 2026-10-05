@@ -191,7 +191,7 @@ export function Header({
               (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)';
               (e.currentTarget as HTMLElement).style.background = 'transparent';
             }}
-            title={lang === 'he' ? 'וסתות' : 'Kavuahs'}
+            title={lang === 'he' ? 'רשימת וסת קבוע' : 'Kavuahs'}
           >
             <Repeat size={18} />
           </button>

@@ -48,7 +48,7 @@ export const KavuahList: React.FC<KavuahListProps> = ({ isOpen, onClose, lang })
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={t('Kavuah List', 'רשימת וסתות')}
+      title={t('Kavuah List', 'רשימת וסת קבוע')}
       className="kavuah-list-modal"
       maxWidth="600px"
     >
@@ -70,7 +70,7 @@ export const KavuahList: React.FC<KavuahListProps> = ({ isOpen, onClose, lang })
                 className="flex items-center gap-2 px-3 py-1.5 bg-accent-amber text-white text-sm rounded-lg hover:bg-opacity-90"
               >
                 <Plus size={16} />
-                {t('Add Kavuah', 'הוסף וסת')}
+                {t('Add Kavuah', 'הוסף וסת קבוע')}
               </button>
             </div>
             {loading ? (
@@ -80,7 +80,7 @@ export const KavuahList: React.FC<KavuahListProps> = ({ isOpen, onClose, lang })
             ) : kavuahs.length === 0 ? (
               <div className="flex flex-col items-center justify-center p-8 text-center opacity-60">
                 <Activity size={48} className="mb-4 text-glass-border" />
-                <p>{t('No Kavuahs found', 'לא נמצאו וסתות')}</p>
+                <p>{t('No Kavuahs found', 'לא נמצאו וסתות קבועות')}</p>
               </div>
             ) : (
               <div className="flex-grow overflow-y-auto space-y-3 p-1">

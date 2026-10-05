@@ -32,6 +32,7 @@ interface CalendarProps {
   onAddTaharaEvent: (type: 'hefsek' | 'bedika' | 'shailah' | 'mikvah', date: jDate) => void;
   onRemoveTaharaEvent: (event: TaharaEvent) => void;
   onAddUserEvent: (date: jDate) => void;
+  onAddEndFlow: (entry: Entry, date: jDate) => void;
   showEvents: boolean;
 }
 
@@ -56,6 +57,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   onAddTaharaEvent,
   onRemoveTaharaEvent,
   onAddUserEvent,
+  onAddEndFlow,
   showEvents,
 }) => {
   // Memoize sorted entries for daysSinceEntry calculation
@@ -217,6 +219,37 @@ export const Calendar: React.FC<CalendarProps> = ({
                 }
               }
 
+              // Calculate if it's a flow day (between start and end date inclusive)
+              let isFlowDay = false;
+              if (entries) {
+                for (const e of entries) {
+                  if (e.endDate) {
+                    const eStart = new jDate(e.date.year, e.date.month, e.date.day).Abs;
+                    const eEnd = new jDate(e.endDate.year, e.endDate.month, e.endDate.day).Abs;
+                    if (date.Abs >= eStart && date.Abs <= eEnd) {
+                      isFlowDay = true;
+                      break;
+                    }
+                  }
+                }
+              }
+
+              // Find the closest entry on or before this date to allow closing
+              let closestEntry: typeof entries[0] | undefined = undefined;
+              let minDiff = Infinity;
+              
+              if (entries) {
+                for (const e of entries) {
+                  const eAbs = new jDate(e.date.year, e.date.month, e.date.day).Abs;
+                  const diff = date.Abs - eAbs;
+                  if (diff >= 0 && diff < minDiff) {
+                    minDiff = diff;
+                    closestEntry = e;
+                  }
+                }
+              }
+              const canEndFlow = closestEntry && !closestEntry.endDate;
+
               return (
                 <CalendarDay
                   key={i}
@@ -226,6 +259,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                   isOtherMonth={isOtherMonth}
                   entry={entry}
                   daysSinceEntry={daysSinceEntry}
+                  isFlowDay={isFlowDay}
                   calendarView={calendarView}
                   lang={lang as 'en' | 'he'}
                   taharaEvents={dayTaharaEvents}
@@ -252,6 +286,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                   onAddMikvah={() => onAddTaharaEvent('mikvah', date)}
                   onAddTaharaEvent={type => onAddTaharaEvent(type, date)}
                   onRemoveTaharaEvent={onRemoveTaharaEvent}
+                  onAddEndFlow={canEndFlow ? () => onAddEndFlow(closestEntry!, date) : undefined}
                   onAddUserEvent={() => onAddUserEvent(date)}
                   theme={theme}
                 />

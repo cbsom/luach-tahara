@@ -17,6 +17,7 @@ interface CalendarDayProps {
   isOtherMonth: boolean;
   entry?: Entry; // Entry that started on this day
   daysSinceEntry?: number; // Days since previous entry
+  isFlowDay?: boolean; // Whether this day is within an active flow
   flaggedOnahs?: ProblemOnah[]; // Flagged onahs for this day
   taharaEvents?: TaharaEvent[]; // Tahara events on this day
   userEvents?: UserEvent[]; // Regular events (from luach-web)
@@ -40,6 +41,7 @@ interface CalendarDayProps {
   onShowDailyInfo?: () => void;
   onAddTaharaEvent: (type: TaharaEventType) => void;
   onRemoveTaharaEvent: (event: TaharaEvent) => void;
+  onAddEndFlow?: () => void;
   onEditEntry?: (entry: Entry) => void;
   onEditUserEvent?: (event: UserEvent) => void;
   status?: NiddahStatus;
@@ -53,6 +55,7 @@ export function CalendarDay({
   isOtherMonth,
   entry,
   daysSinceEntry,
+  isFlowDay,
   flaggedOnahs,
   taharaEvents = [],
   userEvents = [],
@@ -71,6 +74,7 @@ export function CalendarDay({
   onAddMikvah,
   onAddTaharaEvent,
   onRemoveTaharaEvent,
+  onAddEndFlow,
   onEditEntry,
   onEditUserEvent,
   onAddUserEvent,
@@ -84,39 +88,37 @@ export function CalendarDay({
   const hasNightFlag = flaggedOnahs?.some(f => f.nightDay === NightDay.Night);
   const hasDayFlag = flaggedOnahs?.some(f => f.nightDay === NightDay.Day);
 
-  // Determine background styling
-  // Holiday/Shabbos adds `--holiday-bg` as the "plain" half in the split gradient
-  const holidayBg = isHoliday || isShabbos ? 'var(--holiday-bg)' : 'transparent';
-
   const getBackgroundStyle = () => {
+    // 1. Determine the base background color
+    let backgroundColor = 'transparent';
+    if (isHoliday || isShabbos) {
+      backgroundColor = 'var(--holiday-bg)';
+    } else if (userEvents.length > 0 && userEvents[0].backColor) {
+      backgroundColor = userEvents[0].backColor + '33';
+    }
+
+    // 2. Determine the overlay layers
+    let backgroundImage = '';
+
     if (entry || hasNightFlag || hasDayFlag) {
       const direction = lang === 'he' ? 'to left' : 'to right';
       const entryAlpha = 'rgba(252, 165, 165, 0.20)';
       const flagAlpha = 'rgba(251, 191, 36, 0.20)';
 
-      // Only shade a half if it has an entry or flag — otherwise use holiday bg or transparent
-      const nightHalf = hasNightEntry ? entryAlpha : hasNightFlag ? flagAlpha : holidayBg;
-      const dayHalf = hasDayEntry ? entryAlpha : hasDayFlag ? flagAlpha : holidayBg;
+      const nightHalf = hasNightEntry ? entryAlpha : hasNightFlag ? flagAlpha : 'transparent';
+      const dayHalf = hasDayEntry ? entryAlpha : hasDayFlag ? flagAlpha : 'transparent';
 
-      return {
-        background: `linear-gradient(${direction}, ${nightHalf} 0%, ${nightHalf} 50%, ${dayHalf} 50%, ${dayHalf} 100%)`,
-      };
+      backgroundImage = `linear-gradient(${direction}, ${nightHalf} 0%, ${nightHalf} 50%, ${dayHalf} 50%, ${dayHalf} 100%)`;
+    } else if (isFlowDay) {
+      backgroundImage = `linear-gradient(rgba(252, 165, 165, 0.15), rgba(252, 165, 165, 0.15))`;
+    } else if (status === NiddahStatus.Niddah) {
+      backgroundImage = `linear-gradient(rgba(252, 165, 165, 0.04), rgba(252, 165, 165, 0.04))`;
     }
 
-    // Holiday / Shabbos takes priority over generic Niddah tint
-    if (isHoliday || isShabbos) {
-      return { backgroundColor: 'var(--holiday-bg)' };
-    }
-
-    if (status === NiddahStatus.Niddah) {
-      return { backgroundColor: 'rgba(252, 165, 165, 0.04)' };
-    }
-
-    if (userEvents.length > 0 && userEvents[0].backColor) {
-      return { backgroundColor: userEvents[0].backColor + '33' };
-    }
-
-    return {};
+    return {
+      backgroundColor,
+      ...(backgroundImage ? { backgroundImage } : {})
+    };
   };
 
   const getTaharaEventIcon = (event: TaharaEvent) => {
@@ -174,6 +176,20 @@ export function CalendarDay({
           </svg>
         </div>
       )}
+      
+      {/* Flow Sequence Connecting Bar */}
+      {isFlowDay && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '4px',
+          backgroundColor: 'rgba(252, 165, 165, 0.6)',
+          zIndex: 1
+        }} />
+      )}
+
       {/* Date Number */}
       <div className="day-number-container">
         {calendarView === 'jewish' ? (
@@ -372,6 +388,18 @@ export function CalendarDay({
           <Plus size={14} />
         </button>
         <div className="add-menu">
+          {onAddEndFlow && (
+            <button
+              onClick={e => {
+                e.stopPropagation();
+                onAddEndFlow();
+                e.currentTarget.parentElement?.classList.remove('show');
+              }}
+              style={{ color: 'var(--accent-coral)', fontWeight: 'bold' }}
+            >
+              {lang === 'he' ? 'סיום ראייה' : 'End Flow'}
+            </button>
+          )}
           <button
             onClick={e => {
               e.stopPropagation();

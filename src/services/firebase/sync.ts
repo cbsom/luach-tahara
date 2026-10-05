@@ -226,6 +226,8 @@ export async function syncToFirebase(): Promise<{ success: boolean; error?: stri
                         haflaga: entry.haflaga,
                         ignoreForFlaggedDates: entry.ignoreForFlaggedDates,
                         ignoreForKavuah: entry.ignoreForKavuah,
+                        endDate: entry.endDate || null,
+                        endOnah: entry.endOnah ?? null,
                         createdAt: entry.createdAt,
                         updatedAt: entry.updatedAt,
                         deleted: entry.deleted || false,

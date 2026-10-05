@@ -28,6 +28,8 @@ export interface LuachTaharaDB extends DBSchema {
             updatedAt: number;
             syncStatus: 'synced' | 'pending' | 'conflict';
             deleted?: boolean;
+            endDate?: JewishDate;
+            endOnah?: NightDay;
         };
         indexes: {
             'by-date': [number, number, number]; // [year, month, day]
