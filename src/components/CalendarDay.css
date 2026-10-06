@@ -242,10 +242,14 @@
 /* Add Menu */
 .add-menu-container {
     z-index: 100; /* Increased Z-Index */
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
 }
 
 [dir="rtl"] .add-menu-container {
     right: auto;
+    left: 10px;
 }
 
 .add-button {

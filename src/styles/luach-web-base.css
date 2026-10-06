@@ -271,7 +271,11 @@ body,
 .calendar-month-year {
   color: var(--accent-coral) !important;
   font-size: 25pt;
-
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
 }
 
 .calendar-month-year .secondary-month-year {
@@ -1001,16 +1005,15 @@ select {
 }
 
 /* Override any old main-header display: none rules */
-.main-header h1,
-.main-header .p-1.bg-accent-amber\/10,
 .logo-title,
+.main-header .p-1.bg-accent-amber\/10,
 .logo-image-wrapper {
   display: block !important;
 }
 
 @media (max-width: 600px) {
 
-  .main-header h1,
+  .logo-title,
   .main-header .p-1.bg-accent-amber\/10 {
     display: block !important;
     /* Ensure logo/title are shown under buttons on small screens */

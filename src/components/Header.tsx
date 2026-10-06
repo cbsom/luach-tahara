@@ -126,7 +126,7 @@ export function Header({
           handleGoToToday={handleGoToToday}
           setIsJumpModalOpen={setIsJumpModalOpen}
         />
-        <h1 className="flex gap-4 flex-row justify-center items-center calendar-month-year">
+        <h1 className="flex gap-4 flex-row flex-wrap justify-center items-baseline calendar-month-year">
           <div className="font-bold">
             {currentMonthName} {currentYearName}
           </div>

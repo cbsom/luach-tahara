@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { jDate } from 'jcal-zmanim';
 import { Modal } from './Modal';
 import { NightDay } from '../types';
-import type { EntryData } from '../services/db/entryService';
+import type { Entry as EntryData } from '../types';
 import './EntryForm.css'; // Reusing onah-selector styles
 
 interface EndFlowModalProps {

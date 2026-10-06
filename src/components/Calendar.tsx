@@ -235,7 +235,7 @@ export const Calendar: React.FC<CalendarProps> = ({
               }
 
               // Find the closest entry on or before this date to allow closing
-              let closestEntry: typeof entries[0] | undefined = undefined;
+              let closestEntry: any = undefined;
               let minDiff = Infinity;
               
               if (entries) {
