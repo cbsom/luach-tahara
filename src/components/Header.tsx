@@ -3,11 +3,13 @@ import {
   List,
   Repeat,
   AlertTriangle,
-  Calendar as CalendarIcon,
+  CalendarClockIcon,
   Languages,
   CalendarDays,
   Info,
   HelpCircle,
+  LogOut,
+  LogIn
 } from 'lucide-react';
 import { getThemeIcon, cycleTheme } from '../utils.tsx';
 import { Themes } from '../types-luach-web';
@@ -109,8 +111,7 @@ export function Header({
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',
               }}
-            >
-            </div>
+            ></div>
           </div>
           <h1 className="logo-title text-xl font-black tracking-tight">
             {lang === 'he' ? 'לוח טהרה' : 'Luach Tahara'}
@@ -133,192 +134,97 @@ export function Header({
           <div className="font-bold">
             {currentMonthName} {currentYearName}
           </div>
-          <div className="secondary-month-year  opacity-60">
-            {secondaryDateRange}
-          </div>
+          <div className="secondary-month-year  opacity-60">{secondaryDateRange}</div>
         </h1>
       </div>
 
       {/* Button Section 2: Show Lists */}
       <div className="header-section-2 flex items-center gap-2">
-        <div
-          className="flex items-center gap-1"
-          style={{
-            background: 'var(--btn-bg)',
-            borderRadius: '10px',
-            padding: '3px',
-            border: '1px solid var(--btn-border)',
-          }}
-        >
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onUserEventsClick}
+            className="header-icon-btn"
+            title={lang === 'he' ? 'אירועים' : 'User Events'}
+          >
+            <CalendarClockIcon size={18} />
+            {lang === 'he' ? 'אירועים' : 'User Events'}
+          </button>
           <button
             onClick={onEntriesClick}
-            className="p-2 rounded-lg transition-colors"
-            style={{ color: 'var(--text-secondary)' }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.color = 'var(--accent-amber)';
-              (e.currentTarget as HTMLElement).style.background = 'var(--btn-bg-hover)';
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)';
-              (e.currentTarget as HTMLElement).style.background = 'transparent';
-            }}
+            className="header-icon-btn"
             title={lang === 'he' ? 'ראיות' : 'Entries'}
           >
             <List size={18} />
+            {lang === 'he' ? 'ראיות' : 'Entries'}
           </button>
           <button
             onClick={onFlaggedDatesClick}
-            className="p-2 rounded-lg transition-colors"
-            style={{ color: 'var(--text-secondary)' }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.color = 'var(--accent-amber)';
-              (e.currentTarget as HTMLElement).style.background = 'var(--btn-bg-hover)';
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)';
-              (e.currentTarget as HTMLElement).style.background = 'transparent';
-            }}
+            className="header-icon-btn"
             title={lang === 'he' ? 'התראות' : 'Alerts'}
           >
             <AlertTriangle size={18} />
+            {lang === 'he' ? 'התראות' : 'Alerts'}
           </button>
           <button
             onClick={onKavuahsClick}
-            className="p-2 rounded-lg transition-colors"
-            style={{ color: 'var(--text-secondary)' }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.color = 'var(--accent-amber)';
-              (e.currentTarget as HTMLElement).style.background = 'var(--btn-bg-hover)';
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)';
-              (e.currentTarget as HTMLElement).style.background = 'transparent';
-            }}
+            className="header-icon-btn"
             title={lang === 'he' ? 'רשימת וסת קבוע' : 'Kavuahs'}
           >
             <Repeat size={18} />
+            {lang === 'he' ? 'רשימת וסת קבוע' : 'Kavuahs'}
           </button>
           <button
             onClick={onDailyInfoClick}
-            className="p-2 rounded-lg transition-colors"
-            style={{ color: 'var(--text-secondary)' }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.color = 'var(--accent-amber)';
-              (e.currentTarget as HTMLElement).style.background = 'var(--btn-bg-hover)';
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)';
-              (e.currentTarget as HTMLElement).style.background = 'transparent';
-            }}
+            className="header-icon-btn"
             title={lang === 'he' ? 'מידע יומי' : 'Daily Info'}
           >
             <Info size={18} />
+            {lang === 'he' ? 'מידע יומי' : 'Daily Info'}
           </button>
         </div>
-
-        <button
-          onClick={onUserEventsClick}
-          className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-sm font-semibold"
-          style={{
-            background: 'var(--btn-bg)',
-            border: '1px solid var(--btn-border)',
-            color: 'var(--text-secondary)',
-          }}
-          onMouseEnter={e => {
-            (e.currentTarget as HTMLElement).style.color = 'var(--accent-amber)';
-            (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent-amber)';
-          }}
-          onMouseLeave={e => {
-            (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)';
-            (e.currentTarget as HTMLElement).style.borderColor = 'var(--btn-border)';
-          }}
-          title={lang === 'he' ? 'אירועים' : 'User Events'}
-        >
-          <CalendarIcon size={16} />
-          {lang === 'he' ? 'אירועים' : 'Events'}
-        </button>
       </div>
 
       {/* Button Section 3: Change Language / Theme / Calendar View & Auth */}
       <div className="header-section-3 flex items-center gap-2">
         <button
           onClick={() => setCalendarView(calendarView === 'jewish' ? 'secular' : 'jewish')}
-          className="p-2 rounded-lg transition-all"
-          style={{
-            background: 'var(--btn-bg)',
-            border: '1px solid var(--btn-border)',
-            color: 'var(--text-secondary)',
-          }}
-          onMouseEnter={e => {
-            (e.currentTarget as HTMLElement).style.color = 'var(--accent-amber)';
-          }}
-          onMouseLeave={e => {
-            (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)';
-          }}
+          className="header-icon-btn"
           title={
             calendarView === 'jewish' ? textInLanguage.secularMonth : textInLanguage.jewishMonth
           }
         >
           <CalendarDays size={18} />
+          {
+            calendarView === 'jewish' ? textInLanguage.secularMonth : textInLanguage.jewishMonth
+          }
         </button>
 
         <button
           onClick={() => onLangChange(lang === 'en' ? 'he' : 'en')}
-          className="p-2 rounded-lg transition-all"
-          style={{
-            background: 'var(--btn-bg)',
-            border: '1px solid var(--btn-border)',
-            color: 'var(--text-secondary)',
-          }}
-          onMouseEnter={e => {
-            (e.currentTarget as HTMLElement).style.color = 'var(--accent-amber)';
-          }}
-          onMouseLeave={e => {
-            (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)';
-          }}
+          className="header-icon-btn"
           title={lang === 'he' ? 'Switch to English' : 'עבור לעברית'}
         >
           <Languages size={18} />
-          <span className="sr-only">{lang === 'he' ? 'En' : 'He'}</span>
+          {lang === 'he' ? 'En' : 'He'}
         </button>
 
         <button
           onClick={() => cycleTheme(theme, onThemeChange)}
-          className="p-2 rounded-lg transition-all"
-          style={{
-            background: 'var(--btn-bg)',
-            border: '1px solid var(--btn-border)',
-            color: 'var(--text-secondary)',
-          }}
-          onMouseEnter={e => {
-            (e.currentTarget as HTMLElement).style.color = 'var(--accent-amber)';
-          }}
-          onMouseLeave={e => {
-            (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)';
-          }}
+          className="header-icon-btn"
           title={textInLanguage.colorTheme}
         >
           {getThemeIcon(theme)}
+          {textInLanguage.colorTheme}
         </button>
 
         {onHelpClick && (
           <button
             onClick={onHelpClick}
-            className="p-2 rounded-lg transition-all"
-            style={{
-              background: 'var(--btn-bg)',
-              border: '1px solid var(--btn-border)',
-              color: 'var(--text-secondary)',
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.color = 'var(--accent-amber)';
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)';
-            }}
+            className="header-icon-btn"            
             title={lang === 'he' ? 'עזרה ומדריך למשתמש' : 'Help & User Guide'}
           >
             <HelpCircle size={18} />
+            {lang === 'he' ? 'עזרה' : 'Help'}
           </button>
         )}
 
@@ -330,39 +236,17 @@ export function Header({
           {user ? (
             <button
               onClick={onLogout}
-              className="text-xs font-semibold px-2 py-1.5 rounded-lg transition-all"
-              style={{
-                background: 'var(--btn-bg)',
-                border: '1px solid var(--btn-border)',
-                color: 'var(--text-secondary)',
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.color = 'var(--accent-coral)';
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)';
-              }}
+              className="header-icon-btn"
             >
+              <LogOut size={18} />
               {lang === 'he' ? 'התנתק' : 'Logout'}
             </button>
           ) : (
             <button
               onClick={onLogin}
-              className="text-xs font-semibold px-2 py-1.5 rounded-lg transition-all"
-              style={{
-                background: 'var(--btn-bg)',
-                border: '1px solid var(--accent-amber)',
-                color: 'var(--accent-amber)',
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.background = 'var(--accent-amber)';
-                (e.currentTarget as HTMLElement).style.color = 'var(--btn-bg)';
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLElement).style.background = 'var(--btn-bg)';
-                (e.currentTarget as HTMLElement).style.color = 'var(--accent-amber)';
-              }}
+              className="header-icon-btn"
             >
+              <LogIn size={18} />
               {lang === 'he' ? 'התחבר' : 'Login'}
             </button>
           )}
