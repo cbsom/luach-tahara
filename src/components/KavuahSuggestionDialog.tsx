@@ -69,7 +69,7 @@ export const KavuahSuggestionDialog: React.FC<KavuahSuggestionDialogProps> = ({
                 {lang === 'he' ? 'תמיד תתעלם מהוסת' : 'Ignore this Kavuah'}
               </button>
               <button
-                className="px-4 py-2 rounded-lg bg-accent-amber text-white shadow-lg hover:shadow-xl hover:brightness-110 transition-all text-sm font-bold"
+                className="theme-accent-action-btn px-4 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all text-sm font-bold"
                 onClick={() => onAccept(s)}
               >
                 {lang === 'he' ? 'קבע וסת' : 'Set the Kavuah'}

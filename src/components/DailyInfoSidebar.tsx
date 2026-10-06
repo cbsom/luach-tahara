@@ -130,7 +130,7 @@ export const DailyInfoSidebar: React.FC<DailyInfoSidebarProps> = ({
               </div>
 
               <button
-                className="close-btn sidebar-close-btn p-2 rounded-full hover:bg-white/10"
+                className="close-btn sidebar-close-btn p-2 rounded-full"
                 onClick={() => {
                   if (window.innerWidth > 1024 && !isDesktopHidden) {
                     onToggleDesktopMode?.();
@@ -272,7 +272,7 @@ export const DailyInfoSidebar: React.FC<DailyInfoSidebarProps> = ({
                           e.stopPropagation();
                           deleteEvent(entry.id, 'entry');
                         }}
-                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-black/5 rounded transition-opacity"
+                        className="daily-info-icon-action-btn opacity-0 group-hover:opacity-100 p-1 rounded transition-opacity"
                       >
                         <Trash size={14} className="text-accent-coral" />
                       </button>
@@ -324,7 +324,7 @@ export const DailyInfoSidebar: React.FC<DailyInfoSidebarProps> = ({
                           e.stopPropagation();
                           deleteEvent(event.id, 'tahara');
                         }}
-                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-black/5 rounded transition-opacity"
+                        className="daily-info-icon-action-btn opacity-0 group-hover:opacity-100 p-1 rounded transition-opacity"
                       >
                         <Trash size={14} className="text-accent-teal" />
                       </button>
@@ -395,7 +395,7 @@ export const DailyInfoSidebar: React.FC<DailyInfoSidebarProps> = ({
                       className="relative p-3 rounded-xl border border-glass-border group hover:brightness-105 transition-all shadow-md cursor-pointer"
                       style={{
                         backgroundColor: event.backColor || 'var(--accent-amber)',
-                        color: event.textColor || '#ffffff',
+                        color: event.textColor || 'var(--text-primary)',
                       }}
                       onClick={() => handleEditEvent(event, selectedJDate)}
                     >
@@ -416,7 +416,7 @@ export const DailyInfoSidebar: React.FC<DailyInfoSidebarProps> = ({
                             e.stopPropagation();
                             deleteEvent(event.id, 'user');
                           }}
-                          className="p-1 hover:bg-black/10 rounded-md transition-all"
+                          className="daily-info-icon-action-btn p-1 rounded-md transition-all"
                         >
                           <Trash size={14} />
                         </button>
@@ -486,7 +486,7 @@ export const DailyInfoSidebar: React.FC<DailyInfoSidebarProps> = ({
                   <div
                     key={idx}
                     className={`flex items-center justify-between p-1 ${
-                      isSolarEvent ? 'solar-zman-highlight' : 'bg-white/5'
+                      isSolarEvent ? 'solar-zman-highlight' : 'daily-info-zman-row'
                     }`}
                   >
                     <span className="text-xs font-bold text-text-secondary">

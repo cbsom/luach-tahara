@@ -67,7 +67,7 @@ export const KavuahList: React.FC<KavuahListProps> = ({ isOpen, onClose, lang })
             <div className="flex justify-end mb-4 px-1">
               <button
                 onClick={() => setIsAdding(true)}
-                className="flex items-center gap-2 px-3 py-1.5 bg-accent-amber text-white text-sm rounded-lg hover:bg-opacity-90"
+                className="theme-accent-action-btn flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg"
               >
                 <Plus size={16} />
                 {t('Add Kavuah', 'הוסף וסת קבוע')}

@@ -9,7 +9,7 @@ import {
   Info,
   HelpCircle,
   LogOut,
-  LogIn
+  LogIn,
 } from 'lucide-react';
 import { getThemeIcon, cycleTheme } from '../utils.tsx';
 import { Themes } from '../types-luach-web';
@@ -85,21 +85,6 @@ export function Header({
     <header className="glass-panel main-header flex flex-wrap items-center justify-between gap-3 md:gap-4">
       {/* Brand & Menu Group */}
       <div className="header-brand-group flex items-center gap-3">
-        {/* 0. Hamburger Menu */}
-        <button
-          onClick={onSettingsClick}
-          className="header-hamburger"
-          style={{
-            border: '0',
-            color: 'var(--accent-amber)',
-            backgroundColor: 'transparent',
-            cursor: 'pointer',
-          }}
-          title={lang === 'he' ? 'הגדרות' : 'Settings'}
-        >
-          <Menu size={20} />
-        </button>
-
         {/* Brand Logo & Title */}
         <div className="header-logo flex items-center gap-3">
           <div className="p-1 bg-accent-amber/10 rounded-xl overflow-hidden shadow-inner logo-image-wrapper">
@@ -194,9 +179,7 @@ export function Header({
           }
         >
           <CalendarDays size={18} />
-          {
-            calendarView === 'jewish' ? textInLanguage.secularMonth : textInLanguage.jewishMonth
-          }
+          {calendarView === 'jewish' ? textInLanguage.secularMonth : textInLanguage.jewishMonth}
         </button>
 
         <button
@@ -205,7 +188,7 @@ export function Header({
           title={lang === 'he' ? 'Switch to English' : 'עבור לעברית'}
         >
           <Languages size={18} />
-          {lang === 'he' ? 'En' : 'He'}
+          {lang === 'he' ? 'Enlish' : 'עברית'}
         </button>
 
         <button
@@ -220,7 +203,7 @@ export function Header({
         {onHelpClick && (
           <button
             onClick={onHelpClick}
-            className="header-icon-btn"            
+            className="header-icon-btn"
             title={lang === 'he' ? 'עזרה ומדריך למשתמש' : 'Help & User Guide'}
           >
             <HelpCircle size={18} />
@@ -234,22 +217,26 @@ export function Header({
           style={{ borderLeft: '1px solid var(--glass-border)' }}
         >
           {user ? (
-            <button
-              onClick={onLogout}
-              className="header-icon-btn"
-            >
+            <button onClick={onLogout} className="header-icon-btn">
               <LogOut size={18} />
               {lang === 'he' ? 'התנתק' : 'Logout'}
             </button>
           ) : (
-            <button
-              onClick={onLogin}
-              className="header-icon-btn"
-            >
+            <button onClick={onLogin} className="header-icon-btn">
               <LogIn size={18} />
               {lang === 'he' ? 'התחבר' : 'Login'}
             </button>
           )}
+          
+          {/* 0. Hamburger Menu */}
+          <button
+            onClick={onSettingsClick}
+            className="header-icon-btn"
+            title={lang === 'he' ? 'הגדרות' : 'Settings'}
+          >
+            <Menu size={20} />
+            {lang === 'he' ? 'הגדרות' : 'Settings'}
+          </button>
         </div>
       </div>
     </header>

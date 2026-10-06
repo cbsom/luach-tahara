@@ -347,7 +347,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     onChange={e => setLocationSearch(e.target.value)}
                   />
                   {locationSearch && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-glass-border rounded-lg shadow-xl z-50 max-h-48 overflow-y-auto">
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-glass-surface border border-glass-border rounded-lg shadow-xl z-50 max-h-48 overflow-y-auto">
                       {Locations.filter(loc =>
                         loc.Name.toLowerCase().includes(locationSearch.toLowerCase())
                       )
@@ -421,12 +421,9 @@ const TabButton: React.FC<{
 }> = ({ active, onClick, icon, label }) => (
   <button
     onClick={onClick}
-    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
-      active ? 'text-white font-bold' : 'hover:bg-glass-hover'
+    className={`settings-tab-btn flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
+      active ? 'is-active font-bold' : ''
     }`}
-    style={{
-      backgroundColor: active ? 'var(--accent-amber)' : 'var(--glass-surface)',
-    }}
   >
     {icon}
     <span>{label}</span>

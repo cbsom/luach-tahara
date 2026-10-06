@@ -117,7 +117,7 @@ export const KavuahForm: React.FC<KavuahFormProps> = ({ initialData, onSave, onC
           type="number"
           value={formData.specialNumber}
           onChange={e => setFormData({ ...formData, specialNumber: Number(e.target.value) })}
-          className="bg-glass-surface rounded-lg p-2 border border-glass-border focus:border-accent-amber focus:outline-none"
+          className="form-input bg-glass-surface rounded-lg p-2 border border-glass-border focus:border-accent-amber focus:outline-none"
           required
         />
       </div>
@@ -150,14 +150,14 @@ export const KavuahForm: React.FC<KavuahFormProps> = ({ initialData, onSave, onC
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 rounded-lg hover:bg-glass-hover text-text-secondary flex items-center gap-2"
+          className="theme-secondary-action-btn px-4 py-2 rounded-lg flex items-center gap-2"
         >
           <X size={18} />
           {t('Cancel', 'ביטול')}
         </button>
         <button
           type="submit"
-          className="px-4 py-2 rounded-lg bg-accent-amber text-white font-medium hover:bg-opacity-90 flex items-center gap-2"
+          className="theme-accent-action-btn px-4 py-2 rounded-lg font-medium flex items-center gap-2"
         >
           <Save size={18} />
           {t('Save Kavuah', 'שמור וסת')}

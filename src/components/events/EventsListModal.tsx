@@ -431,7 +431,7 @@ export const EventsListModal: React.FC<EventsListModalProps> = ({
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder={lang === 'he' ? 'סינון אירועים...' : 'Filter your events...'}
-              className={`w-full bg-white/5 border border-glass-border rounded-xl py-4 ${
+              className={`events-list-search-input w-full border border-glass-border rounded-xl py-4 ${
                 lang === 'he' ? 'pr-12 pl-6 text-right' : 'pl-12 pr-6'
               } text-base focus:outline-none focus:border-accent-amber/50 transition-all`}
               style={{ paddingRight: '16px', fontSize: '1.3em' }}
@@ -496,7 +496,7 @@ export const EventsListModal: React.FC<EventsListModalProps> = ({
                     <div className="flex-1 min-w-0 flex items-center gap-2">
                       <h3
                         className="font-bold truncate text-sm"
-                        style={{ color: event.textColor || '#ffffff' }}
+                        style={{ color: event.textColor || 'var(--text-primary)' }}
                       >
                         {event.name}
                       </h3>
@@ -507,7 +507,7 @@ export const EventsListModal: React.FC<EventsListModalProps> = ({
                         <div
                           style={{
                             color: event.backColor || 'var(--accent-amber)',
-                            backgroundColor: event.textColor || '#ffffff',
+                            backgroundColor: event.textColor || 'var(--text-primary)',
                             padding: '2px 4px',
                             borderRadius: '4px',
                             fontSize: '11px',
@@ -523,7 +523,7 @@ export const EventsListModal: React.FC<EventsListModalProps> = ({
                           e.stopPropagation();
                           handleEditEvent(event, eventDate);
                         }}
-                        className="p-1.5 hover:bg-black/10 rounded transition-all"
+                        className="events-list-icon-btn p-1.5 rounded transition-all"
                       >
                         <Edit2 size={16} style={{ color: event.textColor }} />
                       </button>
