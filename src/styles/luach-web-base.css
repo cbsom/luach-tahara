@@ -412,8 +412,8 @@ body,
 }
 
 .modal-content.scroll-affordance.at-bottom {
-  border-bottom-left-radius: 28px !important;
-  border-bottom-right-radius: 28px !important;
+  border-bottom-left-radius: 20px !important;
+  border-bottom-right-radius: 20px !important;
 }
 
 /* Custom Scrollbar for Settings Sidebar */
@@ -709,6 +709,95 @@ body,
   width: 100%;
   max-width: 450px;
   animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 20px !important;
+  overflow: hidden;
+}
+
+.help-modal-layout {
+  display: block;
+}
+
+.help-modal-mobile-nav {
+  display: block;
+}
+
+.help-modal-desktop-nav {
+  display: none;
+}
+
+.help-modal-desktop-nav-btn {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.help-modal-desktop-nav-btn:hover {
+  color: var(--text-primary);
+  background: var(--btn-bg-hover);
+  border-color: var(--btn-border-hover);
+}
+
+.help-modal-desktop-nav-btn.is-active {
+  color: var(--accent-amber);
+  border-color: rgba(251, 191, 36, 0.45);
+  background: rgba(251, 191, 36, 0.16);
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.12);
+}
+
+.help-modal-desktop-nav-btn-icon {
+  border: 1px solid currentColor;
+  opacity: 0.65;
+}
+
+.help-modal-desktop-nav-btn.is-active .help-modal-desktop-nav-btn-icon {
+  opacity: 0.9;
+}
+
+[data-theme="warm"] .help-modal-desktop-nav-btn {
+  background: rgba(26, 15, 10, 0.42);
+}
+
+[data-theme="warm"] .help-modal-desktop-nav-btn.is-active {
+  background: rgba(251, 191, 36, 0.2);
+}
+
+[data-theme="dark"] .help-modal-desktop-nav-btn {
+  background: rgba(10, 10, 10, 0.5);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+[data-theme="dark"] .help-modal-desktop-nav-btn:hover {
+  background: rgba(42, 42, 42, 0.72);
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+[data-theme="dark"] .help-modal-desktop-nav-btn.is-active {
+  background: rgba(251, 191, 36, 0.24);
+  border-color: rgba(251, 191, 36, 0.55);
+}
+
+@media (min-width: 1025px) {
+  .help-modal-layout {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+  }
+
+  .help-modal-mobile-nav {
+    display: none;
+  }
+
+  .help-modal-desktop-nav {
+    display: block;
+    position: sticky;
+    top: 0;
+  }
 }
 
 .form-group {

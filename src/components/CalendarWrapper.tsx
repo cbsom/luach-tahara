@@ -59,6 +59,7 @@ interface CalendarWrapperProps {
   isDailyInfoOpen?: boolean;
   onCloseDailyInfo?: () => void;
   onOpenAuth?: () => void;
+  onOpenHelp?: () => void;
 }
 
 export function Calendar({
@@ -82,6 +83,7 @@ export function Calendar({
   isDailyInfoOpen = false,
   onCloseDailyInfo = () => {},
   onOpenAuth = () => {},
+  onOpenHelp,
 }: CalendarWrapperProps) {
   const today = new jDate();
 
@@ -856,6 +858,7 @@ export function Calendar({
         isSyncing={syncing}
         isAuthenticated={isAuthenticated}
         onOpenAuth={onOpenAuth}
+        onOpenHelp={onOpenHelp}
         onSignOut={async () => {
             if (confirm(lang === 'he' ? 'האם אתה בטוח שברצונך להתנתק? נתונים מקומיים יימחקו.' : 'Are you sure you want to log out? Local data will be cleared.')) {
                 await signOut();

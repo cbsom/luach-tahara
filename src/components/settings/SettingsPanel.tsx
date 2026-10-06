@@ -3,7 +3,7 @@ import { Modal } from '../Modal';
 import { Settings } from '@/types';
 import { Locations } from 'jcal-zmanim';
 
-import { Globe, BookOpen, Layout, Cloud, CloudOff, RefreshCw, LogIn } from 'lucide-react';
+import { Globe, BookOpen, Layout, Cloud, CloudOff, RefreshCw, LogIn, HelpCircle } from 'lucide-react';
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -17,6 +17,7 @@ interface SettingsPanelProps {
   isAuthenticated?: boolean;
   onOpenAuth?: () => void;
   onSignOut?: () => void;
+  onOpenHelp?: () => void;
 }
 
 type TabType = 'general' | 'halacha' | 'location';
@@ -33,6 +34,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   isAuthenticated,
   onOpenAuth,
   onSignOut,
+  onOpenHelp,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('general');
   const [locationSearch, setLocationSearch] = useState('');
@@ -234,6 +236,25 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         )}
                       </p>
                     </div>
+                  </div>
+                )}
+
+                {onOpenHelp && (
+                  <div className="pt-2">
+                    <SectionTitle>{t('User Guide & Help', 'מדריך למשתמש ועזרה')}</SectionTitle>
+                    <button
+                      onClick={() => {
+                        onClose();
+                        onOpenHelp();
+                      }}
+                      className="w-full flex items-center justify-between p-3.5 rounded-xl bg-accent-amber/10 hover:bg-accent-amber/20 border border-accent-amber/30 text-accent-amber font-semibold transition-all"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <HelpCircle size={18} />
+                        <span>{t('View How-To Guides & Help', 'צפה במדריכי שימוש ועזרה')}</span>
+                      </div>
+                      <span className="text-xs opacity-75">{t('Open', 'פתח')} →</span>
+                    </button>
                   </div>
                 )}
               </div>

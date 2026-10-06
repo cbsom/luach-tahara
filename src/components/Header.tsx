@@ -7,6 +7,7 @@ import {
   Languages,
   CalendarDays,
   Info,
+  HelpCircle,
 } from 'lucide-react';
 import { getThemeIcon, cycleTheme } from '../utils.tsx';
 import { Themes } from '../types-luach-web';
@@ -38,6 +39,7 @@ interface HeaderProps {
   calendarView: 'jewish' | 'secular';
   setCalendarView: (view: 'jewish' | 'secular') => void;
   onDailyInfoClick: () => void;
+  onHelpClick?: () => void;
 }
 
 export function Header({
@@ -63,6 +65,7 @@ export function Header({
   calendarView,
   setCalendarView,
   onDailyInfoClick,
+  onHelpClick,
 }: HeaderProps) {
   const textInLanguage = {
     goToDate: lang === 'he' ? 'עבור לתאריך' : 'Go to Date',
@@ -297,6 +300,27 @@ export function Header({
         >
           {getThemeIcon(theme)}
         </button>
+
+        {onHelpClick && (
+          <button
+            onClick={onHelpClick}
+            className="p-2 rounded-lg transition-all"
+            style={{
+              background: 'var(--btn-bg)',
+              border: '1px solid var(--btn-border)',
+              color: 'var(--text-secondary)',
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.color = 'var(--accent-amber)';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)';
+            }}
+            title={lang === 'he' ? 'עזרה ומדריך למשתמש' : 'Help & User Guide'}
+          >
+            <HelpCircle size={18} />
+          </button>
+        )}
 
         {/* Auth Buttons */}
         <div

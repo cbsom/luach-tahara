@@ -75,7 +75,7 @@ export const Modal: React.FC<ModalProps> = ({
         {subHeader && <div className="px-8 pb-4 flex-shrink-0">{subHeader}</div>}
 
         {/* Scrollable Body */}
-        <div ref={scrollRef} onScroll={checkScroll} className="flex-grow overflow-y-auto px-8 pb-8">
+        <div ref={scrollRef} onScroll={checkScroll} className="flex-grow overflow-y-auto px-8 py-8">
           {children}
         </div>
 

@@ -9,6 +9,7 @@ import { Themes } from './types-luach-web';
 import { useAuth, useAutoSync } from './services/firebase/hooks';
 import { AuthModal } from './components/auth/AuthModal';
 import { JumpDateModal } from './components/JumpDateModal';
+import { HelpModal } from './components/HelpModal';
 import { clearAllData } from './services/db';
 
 function App() {
@@ -69,6 +70,7 @@ function App() {
   const [isUserEventsListOpen, setIsUserEventsListOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isJumpModalOpen, setIsJumpModalOpen] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isDailyInfoOpen, setIsDailyInfoOpen] = useState(() => {
     // Check for window existence (in case of SSR) and width
     if (typeof window !== 'undefined') {
@@ -364,6 +366,7 @@ function App() {
         calendarView={calendarView}
         setCalendarView={setCalendarView}
         onDailyInfoClick={() => setIsDailyInfoOpen(true)}
+        onHelpClick={() => setIsHelpOpen(true)}
       />
 
       <div className="main-layout">
@@ -393,6 +396,7 @@ function App() {
             isDailyInfoOpen={isDailyInfoOpen}
             onCloseDailyInfo={() => setIsDailyInfoOpen(false)}
             onOpenAuth={() => setIsAuthModalOpen(true)}
+            onOpenHelp={() => setIsHelpOpen(true)}
           />
         </div>
       </div>
@@ -412,6 +416,12 @@ function App() {
       />
 
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+
+      <HelpModal
+        isOpen={isHelpOpen}
+        onClose={() => setIsHelpOpen(false)}
+        lang={currentLang as 'en' | 'he'}
+      />
 
       <JumpDateModal
         isOpen={isJumpModalOpen}
