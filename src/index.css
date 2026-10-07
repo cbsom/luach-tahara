@@ -300,16 +300,6 @@ body {
   background: var(--text-secondary);
 }
 
-/* Solar Zmanim Highlighting */
-.solar-zman-highlight {
-  background: var(--selected-bg) !important;
-  border-color: var(--accent-amber) !important;
-}
-
-.solar-zman-highlight .text-accent-amber {
-  color: var(--text-primary) !important;
-  font-weight: 800;
-}
 
 /* Premium Animations */
 @keyframes slideUpFade {

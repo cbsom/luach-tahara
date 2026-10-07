@@ -382,18 +382,6 @@ body,
   border-bottom-right-radius: 20px !important;
 }
 
-/* Solar Zmanim Highlighting */
-.solar-zman-highlight .font-mono {
-  color: var(--text-primary) !important;
-  font-weight: 800 !important;
-}
-
-.solar-zman-highlight span:first-child {
-  color: var(--text-primary) !important;
-  font-weight: 800 !important;
-  opacity: 0.9;
-}
-
 /* Scroll Affordance Scrollbar Styles */
 .scroll-affordance::-webkit-scrollbar,
 .scroll-affordance *::-webkit-scrollbar {
@@ -877,17 +865,6 @@ body,
 [data-theme="dark"] .daily-info-icon-action-btn:hover {
   background: rgba(42, 42, 42, 0.72);
   border-color: rgba(251, 191, 36, 0.28);
-}
-
-.daily-info-zman-row {
-  background: var(--btn-bg);
-  border: 1px solid var(--btn-border);
-  border-radius: 8px;
-}
-
-[data-theme="dark"] .daily-info-zman-row {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(255, 255, 255, 0.12);
 }
 
 .events-list-search-input {

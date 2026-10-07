@@ -259,33 +259,33 @@ export const DailyInfoSidebar: React.FC<DailyInfoSidebarProps> = ({
                       style={{ background: bg }}
                       onClick={() => handleEditEvent(entry, selectedJDate)}
                     >
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <Heart size={16} className="text-accent-coral" />
-                        <span className="font-bold text-sm">
-                          {t('Period Entry', 'ראייה')} (
-                          {entry.onah === -1 ? t('Night', 'לילה') : t('Day', 'יום')})
-                        </span>
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <Heart size={16} className="text-accent-coral" />
+                          <span className="font-bold text-sm">
+                            {t('Period Entry', 'ראייה')} (
+                            {entry.onah === -1 ? t('Night', 'לילה') : t('Day', 'יום')})
+                          </span>
+                        </div>
+                        <button
+                          onClick={e => {
+                            e.stopPropagation();
+                            deleteEvent(entry.id, 'entry');
+                          }}
+                          className="daily-info-icon-action-btn opacity-0 group-hover:opacity-100 p-1 rounded transition-opacity"
+                        >
+                          <Trash size={14} className="text-accent-coral" />
+                        </button>
                       </div>
-                      <button
-                        onClick={e => {
-                          e.stopPropagation();
-                          deleteEvent(entry.id, 'entry');
-                        }}
-                        className="daily-info-icon-action-btn opacity-0 group-hover:opacity-100 p-1 rounded transition-opacity"
-                      >
-                        <Trash size={14} className="text-accent-coral" />
-                      </button>
+                      {entry.haflaga && (
+                        <span className="text-xs opacity-70">
+                          {t('Haflaga', 'הפלגה')}: {entry.haflaga}
+                        </span>
+                      )}
+                      {entry.notes && (
+                        <p className="text-xs italic opacity-60 truncate">{entry.notes}</p>
+                      )}
                     </div>
-                    {entry.haflaga && (
-                      <span className="text-xs opacity-70">
-                        {t('Haflaga', 'הפלגה')}: {entry.haflaga}
-                      </span>
-                    )}
-                    {entry.notes && (
-                      <p className="text-xs italic opacity-60 truncate">{entry.notes}</p>
-                    )}
-                  </div>
                   );
                 })}
               </div>
@@ -358,24 +358,24 @@ export const DailyInfoSidebar: React.FC<DailyInfoSidebarProps> = ({
                       className="p-3 rounded-xl border border-accent-amber/20 flex flex-col gap-2 glass-card"
                       style={{ background: bg }}
                     >
-                    <div className="flex items-center gap-2">
-                      <div className="p-1 rounded-md bg-accent-amber/20">
-                        <AlertTriangle size={14} className="text-accent-amber" />
-                      </div>
-                      <span className="font-bold text-sm">
-                        {po.nightDay === -1
-                          ? t('Night Onah', 'עונת הלילה')
-                          : t('Day Onah', 'עונת היום')}
-                      </span>
-                    </div>
-                    <div className="flex flex-col gap-1 pl-7">
-                      {po.flagsList.map((flag: string, fidx: number) => (
-                        <span key={fidx} className="text-xs opacity-90 leading-tight">
-                          • {translateFlagDescription(flag, lang)}
+                      <div className="flex items-center gap-2">
+                        <div className="p-1 rounded-md bg-accent-amber/20">
+                          <AlertTriangle size={14} className="text-accent-amber" />
+                        </div>
+                        <span className="font-bold text-sm">
+                          {po.nightDay === -1
+                            ? t('Night Onah', 'עונת הלילה')
+                            : t('Day Onah', 'עונת היום')}
                         </span>
-                      ))}
+                      </div>
+                      <div className="flex flex-col gap-1 pl-7">
+                        {po.flagsList.map((flag: string, fidx: number) => (
+                          <span key={fidx} className="text-xs opacity-90 leading-tight">
+                            • {translateFlagDescription(flag, lang)}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
                   );
                 })}
               </div>
@@ -483,16 +483,17 @@ export const DailyInfoSidebar: React.FC<DailyInfoSidebarProps> = ({
                 const isSolarEvent = [5, 15].includes(Number(zman.zmanType.id));
 
                 return (
-                  <div
-                    key={idx}
-                    className={`flex items-center justify-between p-1 ${
-                      isSolarEvent ? 'solar-zman-highlight' : 'daily-info-zman-row'
-                    }`}
-                  >
-                    <span className="text-xs font-bold text-text-secondary">
+                  <div key={idx} className="flex items-center justify-between p-1">
+                    <span className={`text-xs font-bold ${
+                      isSolarEvent ? 'text-accent-amber' : 'text-text-secondary'
+                    }`}>
                       {lang === 'he' ? zman.zmanType.heb : zman.zmanType.eng}
                     </span>
-                    <span className="text-sm font-bold font-mono text-accent-amber">
+                    <span
+                      className={`text-sm font-bold font-mono ${
+                        isSolarEvent ? 'text-accent-amber' : ''
+                      }`}
+                    >
                       {formatTime(zman.time).toUpperCase()}
                     </span>
                   </div>
