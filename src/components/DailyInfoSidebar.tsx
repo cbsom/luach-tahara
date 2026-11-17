@@ -163,20 +163,18 @@ export const DailyInfoSidebar: React.FC<DailyInfoSidebarProps> = ({
           {/* Add Event Button (Add Entry) */}
           <button
             onClick={e => handleAddNewEventForDate(e, selectedJDate)}
-            className="daily-info-primary-action group relative w-full overflow-hidden rounded-xl p-[1px] shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99] mb-2 flex-shrink-0"
+            className="daily-info-action daily-info-primary-action group w-full rounded-xl py-2 flex items-center justify-center gap-2 text-xs font-semibold border mb-3 flex-shrink-0 shadow-sm"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-accent-amber via-accent-coral to-accent-rose opacity-70 group-hover:opacity-100 transition-opacity" />
-            <div className="daily-info-primary-action-inner relative flex flex-row h-full items-center justify-center gap-2 rounded-xl px-6 py-4 text-sm font-bold backdrop-blur-xl transition-all cursor-pointer">
               <Plus size={16} className="text-accent-amber" />
               <span>{lang === 'he' ? 'הוסף ראייה' : 'Add Entry'}</span>
-            </div>
+            
           </button>
 
           {/* Add Event Button for Occasions */}
           {showEvents && (
             <button
               onClick={e => handleAddUserEvent && handleAddUserEvent(e, selectedJDate)}
-              className="daily-info-secondary-action group w-full rounded-xl py-2 flex items-center justify-center gap-2 text-xs font-semibold border mb-3 flex-shrink-0 shadow-sm"
+              className="daily-info-action group w-full rounded-xl py-2 flex items-center justify-center gap-2 text-xs font-semibold border mb-3 flex-shrink-0 shadow-sm"
             >
               <Plus size={14} className="opacity-70 group-hover:opacity-100 transition-opacity" />
               <span>{lang === 'he' ? 'הוסף אירוע' : 'Add Event'}</span>

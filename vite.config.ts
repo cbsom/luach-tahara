@@ -21,8 +21,8 @@ export default defineConfig({
         background_color: '#1a0f0a',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/',
-        scope: '/',
+        start_url: './',
+        scope: './',
         lang: 'he',
         dir: 'rtl',
         categories: ['lifestyle', 'productivity', 'personalization'],
@@ -72,13 +72,13 @@ export default defineConfig({
           {
             name: 'View Calendar',
             short_name: 'Calendar',
-            url: '/',
+            url: './',
             icons: [{ src: 'icons/icon-192.png', sizes: '192x192' }]
           },
           {
             name: 'Add Entry',
             short_name: 'Add',
-            url: '/?add=true',
+            url: './?add=true',
             icons: [{ src: 'icons/icon-192.png', sizes: '192x192' }]
           }
         ]
